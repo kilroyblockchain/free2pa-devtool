@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { readFile, unlink } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { config } from '../config.js';
 import { verifySkill } from '../services/verifier.js';
 
@@ -23,6 +24,14 @@ router.post('/verify', upload.fields([
   if (!sidecarFile) return res.status(400).json({ success: false, error: 'No sidecar uploaded (field: sidecar).' });
 
   const trustProfile = req.body.trustProfile || 'dev';
+  const { certId }   = req.body;
+
+  // Validate certId to prevent path traversal
+  if (certId && !/^[a-z0-9-]+$/.test(certId)) {
+    return res.status(400).json({ success: false, error: 'Invalid certId.' });
+  }
+
+  const certPath = certId ? resolve(config.certsDir, `${certId}.crt`) : undefined;
 
   try {
     const [content, sidecarText] = await Promise.all([
@@ -30,7 +39,7 @@ router.post('/verify', upload.fields([
       readFile(sidecarFile.path, 'utf-8'),
     ]);
 
-    const result = await verifySkill({ content, sidecarText, trustProfile });
+    const result = await verifySkill({ content, sidecarText, trustProfile, certPath });
     res.json(result);
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });

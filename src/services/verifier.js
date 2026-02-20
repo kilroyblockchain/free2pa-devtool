@@ -1,5 +1,6 @@
 import { createHash, createVerify } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
+import { resolve, basename } from 'node:path';
 import { config } from '../config.js';
 import { canonicalJson } from '../utils/canonical.js';
 
@@ -16,7 +17,7 @@ import { canonicalJson } from '../utils/canonical.js';
  * @param {string} opts.sidecarText  Raw text of the .c2pa.json sidecar
  * @param {string} opts.trustProfile 'dev' | 'org' | 'public'
  */
-export async function verifySkill({ content, sidecarText, trustProfile = 'dev' }) {
+export async function verifySkill({ content, sidecarText, trustProfile = 'dev', certPath }) {
   // ── Parse sidecar ────────────────────────────────────────────────────────
   let sidecar;
   try {
@@ -46,7 +47,7 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev' }
   }
 
   // ── 3. Trust profile ─────────────────────────────────────────────────────
-  const trust = await checkTrust(signature.cert_pem, trustProfile);
+  const trust = await checkTrust(signature.cert_pem, trustProfile, certPath);
 
   return {
     success:        true,
@@ -59,21 +60,56 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev' }
   };
 }
 
-async function checkTrust(certPem, profile) {
+async function checkTrust(certPem, profile, certPathOverride) {
   if (profile === 'dev') {
+    // ── Specific cert selected: strict match against that cert only ──────────
+    if (certPathOverride) {
+      try {
+        const specificCert = await readFile(certPathOverride, 'utf-8');
+        const trusted      = certPem.trim() === specificCert.trim();
+        const certId       = basename(certPathOverride, '.crt');
+        return {
+          profile: 'dev',
+          trusted,
+          label:   trusted ? 'Server/Dev' : 'Not trusted under Server/Dev',
+          detail:  trusted
+            ? `Cert matches selected certificate: ${certId}`
+            : `Cert does not match selected certificate: ${certId}`,
+        };
+      } catch {
+        return { profile: 'dev', trusted: false, label: 'Server/Dev', detail: 'Selected cert file could not be read.' };
+      }
+    }
+
+    // ── No cert selected: check against every cert in the trust store ────────
+    // Trusted if the sidecar cert matches ANY cert this server knows about.
     try {
-      const serverCert = await readFile(config.certPath, 'utf-8');
-      const trusted    = certPem.trim() === serverCert.trim();
+      const files = await readdir(config.certsDir);
+      const crtFiles = files.filter(f => f.endsWith('.crt'));
+
+      for (const file of crtFiles) {
+        try {
+          const stored = await readFile(resolve(config.certsDir, file), 'utf-8');
+          if (certPem.trim() === stored.trim()) {
+            const certId = basename(file, '.crt');
+            return {
+              profile: 'dev',
+              trusted: true,
+              label:   'Server/Dev',
+              detail:  `Cert is in this server's trust store (matched: ${certId})`,
+            };
+          }
+        } catch {}
+      }
+
       return {
-        profile:  'dev',
-        trusted,
-        label:    trusted ? 'Classroom/Dev' : 'Not trusted under Classroom/Dev',
-        detail:   trusted
-          ? 'Cert matches this server\'s signing certificate.'
-          : 'Cert does not match this server\'s signing certificate.',
+        profile: 'dev',
+        trusted: false,
+        label:   'Not trusted under Server/Dev',
+        detail:  'Cert does not match any certificate in this server\'s trust store.',
       };
     } catch {
-      return { profile: 'dev', trusted: false, label: 'Dev cert unavailable on server.', detail: '' };
+      return { profile: 'dev', trusted: false, label: 'Server/Dev', detail: 'Trust store unavailable.' };
     }
   }
 
@@ -82,7 +118,7 @@ async function checkTrust(certPem, profile) {
       profile: 'org',
       trusted: null,
       label:   'Org — not yet configured',
-      detail:  'Upload a root CA bundle to enable Org trust verification.',
+      detail:  'Configure a shared CA bundle to enable org-wide trust verification.',
     };
   }
 
@@ -91,7 +127,7 @@ async function checkTrust(certPem, profile) {
       profile: 'public',
       trusted: false,
       label:   'Not trusted under Public',
-      detail:  'Self-signed cert is not on the C2PA Trust List. Public trust requires a commercially-issued certificate.',
+      detail:  'Self-signed cert is not on a public trust list. Public trust requires a commercially-issued certificate.',
     };
   }
 

@@ -269,7 +269,7 @@
 <body>
 
 <h1>Free2PA</h1>
-<p class="subtitle">Skill.md Content Credentials — sign &amp; verify with C2PA-style sidecar manifests</p>
+<p class="subtitle">AI Agent Skill Credentials — sign &amp; verify skill files with C2PA-style sidecar manifests</p>
 
 <div class="panels">
 
@@ -358,10 +358,20 @@
 
     <label for="trustProfile">Trust profile</label>
     <select id="trustProfile">
-      <option value="dev">Classroom / Dev  — matches this server's cert</option>
-      <option value="org">Org              — requires a root CA bundle (placeholder)</option>
-      <option value="public">Public           — C2PA Trust List (placeholder)</option>
+      <option value="dev">Server / Dev  — any cert in this server's trust store</option>
+      <option value="org">Org           — shared CA bundle (not yet configured)</option>
+      <option value="public">Public        — public trust list (not yet configured)</option>
     </select>
+
+    <label for="verifyCertSelect">Match against specific cert <span style="color:#4a5568; font-weight:400;">(optional)</span></label>
+    <div class="cert-row">
+      <select id="verifyCertSelect">
+        <option value="">Loading certificates…</option>
+      </select>
+      <button type="button" class="btn-icon" id="refreshVerifyCertsBtn" title="Refresh certificate list">↺</button>
+    </div>
+    <div class="cert-detail" id="verifyCertDetail"></div>
+    <p class="section-note" style="margin-bottom:0.75rem;">Leave blank to accept any cert in this server's trust store. Select a cert to verify the skill was signed by that specific issuer.</p>
 
     <button id="verifyBtn" disabled>Verify</button>
 
@@ -416,67 +426,85 @@
     el.innerHTML = html;
   }
 
-  // ── Certificate management ─────────────────────────────────────────────
-  const certSelect     = document.getElementById('signCertSelect');
-  const certDetail     = document.getElementById('certDetail');
-  const refreshCertsBtn = document.getElementById('refreshCertsBtn');
-  const toggleGenCert  = document.getElementById('toggleGenCert');
-  const genCertForm    = document.getElementById('genCertForm');
-  const genCertBtn     = document.getElementById('genCertBtn');
-  const genCertResult  = document.getElementById('genCertResult');
-
+  // ── Certificate management (shared) ───────────────────────────────────
   let availableCerts = [];
 
-  async function loadCerts(selectId) {
-    certSelect.disabled = true;
-    try {
-      const resp = await fetch('/api/certs');
-      const data = await resp.json();
-      availableCerts = data.certs ?? [];
-
-      certSelect.innerHTML = '';
-      if (availableCerts.length === 0) {
-        certSelect.innerHTML = '<option value="">No certificates — generate one below</option>';
-        certDetail.textContent = '';
-      } else {
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = '— select a certificate —';
-        certSelect.appendChild(placeholder);
-
-        availableCerts.forEach(c => {
-          const opt = document.createElement('option');
-          opt.value = c.id;
-          opt.textContent = c.id + (c.hasKey ? '' : ' (no key)');
-          certSelect.appendChild(opt);
-        });
-
-        // Pre-select: requested id, or 'signing', or first with a key
-        const target = selectId
-          || (availableCerts.find(c => c.id === 'signing' && c.hasKey) ? 'signing' : null)
-          || (availableCerts.find(c => c.hasKey)?.id ?? '');
-        certSelect.value = target;
-        updateCertDetail();
-      }
-    } catch {
-      certSelect.innerHTML = '<option value="">Could not load certificates</option>';
-    } finally {
-      certSelect.disabled = false;
-    }
+  async function fetchCerts() {
+    const resp = await fetch('/api/certs');
+    const data = await resp.json();
+    return data.certs ?? [];
   }
 
-  function updateCertDetail() {
-    const id   = certSelect.value;
+  function populateCertSelect(selectEl, detailEl, certs, selectId, { signingOnly = false } = {}) {
+    selectEl.innerHTML = '';
+    const pool = signingOnly ? certs.filter(c => c.hasKey) : certs;
+
+    if (pool.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = signingOnly ? 'No certificates with keys found' : 'No certificates found';
+      selectEl.appendChild(opt);
+      detailEl.textContent = '';
+      return;
+    }
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = '— select a certificate —';
+    selectEl.appendChild(placeholder);
+
+    pool.forEach(c => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = c.id + (c.hasKey ? '' : ' (no key)');
+      selectEl.appendChild(opt);
+    });
+
+    const target = selectId
+      || (pool.find(c => c.id === 'signing') ? 'signing' : null)
+      || pool[0]?.id
+      || '';
+    selectEl.value = target;
+    updateDetail(selectEl, detailEl);
+  }
+
+  function updateDetail(selectEl, detailEl) {
+    const id   = selectEl.value;
     const cert = availableCerts.find(c => c.id === id);
-    if (cert) {
-      certDetail.textContent = cert.subject + (cert.notAfter ? `  ·  expires ${cert.notAfter}` : '');
-    } else {
-      certDetail.textContent = id ? '' : 'Using server default certificate.';
-    }
+    detailEl.textContent = cert
+      ? cert.subject + (cert.notAfter ? `  ·  expires ${cert.notAfter}` : '')
+      : '';
   }
 
-  certSelect.addEventListener('change', updateCertDetail);
-  refreshCertsBtn.addEventListener('click', () => loadCerts(certSelect.value));
+  async function reloadCerts(signSelectId, verifySelectId) {
+    try {
+      availableCerts = await fetchCerts();
+    } catch {
+      availableCerts = [];
+    }
+    populateCertSelect(signCertSelect,   certDetail,       availableCerts, signSelectId,   { signingOnly: true });
+    populateCertSelect(verifyCertSelect, verifyCertDetail, availableCerts, verifySelectId, { signingOnly: false });
+  }
+
+  // Sign panel cert controls
+  const signCertSelect    = document.getElementById('signCertSelect');
+  const certDetail        = document.getElementById('certDetail');
+  const refreshCertsBtn   = document.getElementById('refreshCertsBtn');
+  const toggleGenCert     = document.getElementById('toggleGenCert');
+  const genCertForm       = document.getElementById('genCertForm');
+  const genCertBtn        = document.getElementById('genCertBtn');
+  const genCertResult     = document.getElementById('genCertResult');
+
+  // Verify panel cert controls
+  const verifyCertSelect      = document.getElementById('verifyCertSelect');
+  const verifyCertDetail      = document.getElementById('verifyCertDetail');
+  const refreshVerifyCertsBtn = document.getElementById('refreshVerifyCertsBtn');
+
+  signCertSelect.addEventListener('change',   () => updateDetail(signCertSelect,   certDetail));
+  verifyCertSelect.addEventListener('change', () => updateDetail(verifyCertSelect, verifyCertDetail));
+
+  refreshCertsBtn.addEventListener('click',        () => reloadCerts(signCertSelect.value,   verifyCertSelect.value));
+  refreshVerifyCertsBtn.addEventListener('click',  () => reloadCerts(signCertSelect.value,   verifyCertSelect.value));
 
   toggleGenCert.addEventListener('click', () => {
     const open = genCertForm.style.display !== 'none';
@@ -511,7 +539,7 @@
       }
       show(genCertResult, 'success',
         `Certificate <strong>${data.cert.id}</strong> generated.<br/>${data.cert.subject}`);
-      await loadCerts(data.cert.id);
+      await reloadCerts(data.cert.id, data.cert.id);
     } catch (e) {
       show(genCertResult, 'error', `<strong>Network error:</strong> ${e.message}`);
     } finally {
@@ -521,7 +549,7 @@
   });
 
   // Kick off initial cert load
-  loadCerts();
+  reloadCerts();
 
   // ── Sign ───────────────────────────────────────────────────────────────
   setupDropZone('signDrop', 'signFile', 'signFilename');
@@ -609,6 +637,7 @@
       fd.append('file',         verifyFileInput.files[0]);
       fd.append('sidecar',      sidecarFileInput.files[0]);
       fd.append('trustProfile', document.getElementById('trustProfile').value);
+      if (verifyCertSelect.value) fd.append('certId', verifyCertSelect.value);
 
       const resp = await fetch('/api/verify', { method: 'POST', body: fd });
       const data = await resp.json();

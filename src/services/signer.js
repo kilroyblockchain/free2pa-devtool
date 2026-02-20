@@ -21,10 +21,10 @@ import { canonicalJson } from '../utils/canonical.js';
  * @param {string}  [opts.instructor] Instructor name
  * @returns {object} Sidecar JSON object
  */
-export async function signSkill({ content, title, actor, course, assignment, repo, studentId, instructor }) {
+export async function signSkill({ content, title, actor, course, assignment, repo, studentId, instructor, certPath, keyPath }) {
   const [certPem, keyPem] = await Promise.all([
-    readFile(config.certPath, 'utf-8'),
-    readFile(config.keyPath,  'utf-8'),
+    readFile(certPath ?? config.certPath, 'utf-8'),
+    readFile(keyPath  ?? config.keyPath,  'utf-8'),
   ]);
 
   const now       = new Date().toISOString();

@@ -9,6 +9,7 @@ export const config = {
   port:      parseInt(process.env.PORT ?? '4001', 10),
   certPath:  resolve(root, process.env.CERT_PATH  ?? 'certs/signing.crt'),
   keyPath:   resolve(root, process.env.KEY_PATH   ?? 'certs/signing.key'),
+  certsDir:  resolve(root, process.env.CERTS_DIR  ?? 'certs'),
   uploadDir: resolve(root, process.env.UPLOAD_DIR ?? 'uploads'),
 
   claimGenerator: 'Friends of Justin / Free2PA v0.1.0',

@@ -137,6 +137,57 @@
     button:hover:not(:disabled) { background: #3b72d4; }
     button:disabled { opacity: 0.45; cursor: not-allowed; }
 
+    .btn-secondary {
+      width: auto;
+      background: transparent;
+      border: 1px solid #2d3748;
+      color: #94a3b8;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.35rem 0.75rem;
+      border-radius: 5px;
+      margin-top: 0;
+    }
+    .btn-secondary:hover:not(:disabled) { background: #1e2330; border-color: #4f8ef7; color: #e2e8f0; }
+
+    .btn-icon {
+      width: auto;
+      background: #1e2330;
+      border: 1px solid #2d3748;
+      color: #94a3b8;
+      font-size: 1rem;
+      padding: 0.35rem 0.6rem;
+      border-radius: 5px;
+      margin-top: 0;
+      line-height: 1;
+    }
+    .btn-icon:hover:not(:disabled) { border-color: #4f8ef7; color: #e2e8f0; }
+
+    .cert-row {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      align-items: stretch;
+    }
+    .cert-row select { flex: 1; margin-bottom: 0; }
+
+    .cert-detail {
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      min-height: 1.2em;
+    }
+
+    .gen-cert-form {
+      margin-top: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: #161b27;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+    }
+    .gen-cert-form label { color: #64748b; }
+    .gen-cert-form input[type="text"] { margin-bottom: 0.5rem; }
+
     .spinner {
       display: inline-block;
       width: 13px; height: 13px;
@@ -256,6 +307,32 @@
       <input type="text" id="signInstructor" placeholder="Dr. Smith" />
     </div>
 
+    <div class="field-group">
+      <h3>Signing Certificate</h3>
+
+      <label for="signCertSelect">Active certificate</label>
+      <div class="cert-row">
+        <select id="signCertSelect">
+          <option value="">Loading certificates…</option>
+        </select>
+        <button type="button" class="btn-icon" id="refreshCertsBtn" title="Refresh certificate list">↺</button>
+      </div>
+      <div class="cert-detail" id="certDetail"></div>
+
+      <button type="button" class="btn-secondary" id="toggleGenCert">+ Generate New Certificate</button>
+
+      <div class="gen-cert-form" id="genCertForm" style="display:none;">
+        <label for="genCertName">Common Name</label>
+        <input type="text" id="genCertName" placeholder="jkilroy — CSCE 4193" />
+        <label for="genCertOrg">Organization</label>
+        <input type="text" id="genCertOrg" placeholder="Friends of Justin" />
+        <label for="genCertDays">Validity (days)</label>
+        <input type="text" id="genCertDays" placeholder="365" />
+        <button type="button" id="genCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Generate Certificate</button>
+        <div class="result" id="genCertResult"></div>
+      </div>
+    </div>
+
     <button id="signBtn" disabled>Sign &amp; Download Sidecar</button>
     <div class="result" id="signResult"></div>
   </div>
@@ -339,6 +416,113 @@
     el.innerHTML = html;
   }
 
+  // ── Certificate management ─────────────────────────────────────────────
+  const certSelect     = document.getElementById('signCertSelect');
+  const certDetail     = document.getElementById('certDetail');
+  const refreshCertsBtn = document.getElementById('refreshCertsBtn');
+  const toggleGenCert  = document.getElementById('toggleGenCert');
+  const genCertForm    = document.getElementById('genCertForm');
+  const genCertBtn     = document.getElementById('genCertBtn');
+  const genCertResult  = document.getElementById('genCertResult');
+
+  let availableCerts = [];
+
+  async function loadCerts(selectId) {
+    certSelect.disabled = true;
+    try {
+      const resp = await fetch('/api/certs');
+      const data = await resp.json();
+      availableCerts = data.certs ?? [];
+
+      certSelect.innerHTML = '';
+      if (availableCerts.length === 0) {
+        certSelect.innerHTML = '<option value="">No certificates — generate one below</option>';
+        certDetail.textContent = '';
+      } else {
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = '— select a certificate —';
+        certSelect.appendChild(placeholder);
+
+        availableCerts.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c.id;
+          opt.textContent = c.id + (c.hasKey ? '' : ' (no key)');
+          certSelect.appendChild(opt);
+        });
+
+        // Pre-select: requested id, or 'signing', or first with a key
+        const target = selectId
+          || (availableCerts.find(c => c.id === 'signing' && c.hasKey) ? 'signing' : null)
+          || (availableCerts.find(c => c.hasKey)?.id ?? '');
+        certSelect.value = target;
+        updateCertDetail();
+      }
+    } catch {
+      certSelect.innerHTML = '<option value="">Could not load certificates</option>';
+    } finally {
+      certSelect.disabled = false;
+    }
+  }
+
+  function updateCertDetail() {
+    const id   = certSelect.value;
+    const cert = availableCerts.find(c => c.id === id);
+    if (cert) {
+      certDetail.textContent = cert.subject + (cert.notAfter ? `  ·  expires ${cert.notAfter}` : '');
+    } else {
+      certDetail.textContent = id ? '' : 'Using server default certificate.';
+    }
+  }
+
+  certSelect.addEventListener('change', updateCertDetail);
+  refreshCertsBtn.addEventListener('click', () => loadCerts(certSelect.value));
+
+  toggleGenCert.addEventListener('click', () => {
+    const open = genCertForm.style.display !== 'none';
+    genCertForm.style.display = open ? 'none' : 'block';
+    toggleGenCert.textContent = open ? '+ Generate New Certificate' : '− Generate New Certificate';
+  });
+
+  genCertBtn.addEventListener('click', async () => {
+    const name = document.getElementById('genCertName').value.trim();
+    if (!name) {
+      show(genCertResult, 'error', 'Common Name is required.');
+      return;
+    }
+    genCertBtn.disabled = true;
+    genCertBtn.innerHTML = '<span class="spinner"></span>Generating…';
+    genCertResult.style.display = 'none';
+
+    try {
+      const resp = await fetch('/api/certs/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name,
+          org:          document.getElementById('genCertOrg').value.trim(),
+          validityDays: document.getElementById('genCertDays').value.trim() || '365',
+        }),
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        show(genCertResult, 'error', `<strong>Error:</strong> ${data.error}`);
+        return;
+      }
+      show(genCertResult, 'success',
+        `Certificate <strong>${data.cert.id}</strong> generated.<br/>${data.cert.subject}`);
+      await loadCerts(data.cert.id);
+    } catch (e) {
+      show(genCertResult, 'error', `<strong>Network error:</strong> ${e.message}`);
+    } finally {
+      genCertBtn.disabled = false;
+      genCertBtn.textContent = 'Generate Certificate';
+    }
+  });
+
+  // Kick off initial cert load
+  loadCerts();
+
   // ── Sign ───────────────────────────────────────────────────────────────
   setupDropZone('signDrop', 'signFile', 'signFilename');
 
@@ -362,6 +546,7 @@
     try {
       const fd = new FormData();
       fd.append('file', file);
+      if (certSelect.value) fd.append('certId', certSelect.value);
       fd.append('title',      document.getElementById('signTitle').value.trim());
       fd.append('actor',      document.getElementById('signActor').value.trim());
       fd.append('course',     document.getElementById('signCourse').value.trim());

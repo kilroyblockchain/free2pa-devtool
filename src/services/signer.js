@@ -39,6 +39,7 @@ export async function signSkill({ content, title, actor, course, assignment, rep
       format:   'text/markdown',
       hash_alg: 'sha256',
       hash:     assetHash,
+      content:  Buffer.from(content, 'utf-8').toString('base64'),
     },
     assertions: [
       {

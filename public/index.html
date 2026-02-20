@@ -264,6 +264,42 @@
       margin-bottom: 0.75rem;
       line-height: 1.5;
     }
+
+    /* Diff view */
+    .diff-view {
+      margin-top: 0.75rem;
+      border-radius: 6px;
+      overflow: hidden;
+      border: 1px solid #2d3748;
+      max-height: 320px;
+      overflow-y: auto;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.7rem;
+      line-height: 1.6;
+    }
+    .diff-line {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0 0.65rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .diff-line.same   { color: #4a5568; }
+    .diff-line.add    { background: #0a2318; color: #68d391; }
+    .diff-line.remove { background: #2b0d0d; color: #fc8181; }
+    .diff-gutter {
+      flex-shrink: 0;
+      width: 1rem;
+      text-align: center;
+      opacity: 0.7;
+      user-select: none;
+    }
+    .diff-no-content {
+      font-size: 0.72rem;
+      color: #4a5568;
+      margin-top: 0.6rem;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -333,7 +369,7 @@
       </div>
     </div>
 
-    <button id="signBtn" disabled>Sign &amp; Download Sidecar</button>
+    <button type="button" id="signBtn" disabled>Sign &amp; Download Sidecar</button>
     <div class="result" id="signResult"></div>
   </div>
 
@@ -373,7 +409,7 @@
     <div class="cert-detail" id="verifyCertDetail"></div>
     <p class="section-note" style="margin-bottom:0.75rem;">Leave blank to accept any cert in this server's trust store. Select a cert to verify the skill was signed by that specific issuer.</p>
 
-    <button id="verifyBtn" disabled>Verify</button>
+    <button type="button" id="verifyBtn" disabled>Verify</button>
 
     <div id="verifyVerdicts" style="display:none;">
       <div class="verdicts">
@@ -384,6 +420,7 @@
         <div class="verdict" id="vHash">
           <div class="verdict-header"><span id="vHashIcon"></span><span id="vHashLabel"></span></div>
           <div class="verdict-detail" id="vHashDetail"></div>
+          <div class="diff-view" id="vHashDiff" style="display:none;"></div>
         </div>
         <div class="verdict" id="vTrust">
           <div class="verdict-header"><span id="vTrustIcon"></span><span id="vTrustLabel"></span></div>
@@ -558,10 +595,15 @@
   const signBtn       = document.getElementById('signBtn');
   const signResult    = document.getElementById('signResult');
 
-  signFileInput.addEventListener('change', () => {
+  function updateSignBtn() {
     signBtn.disabled = !signFileInput.files.length;
+  }
+  signFileInput.addEventListener('change', () => {
+    updateSignBtn();
     signResult.style.display = 'none';
   });
+  signFileInput.addEventListener('input', updateSignBtn);
+  updateSignBtn(); // set correct initial state on page load
 
   signBtn.addEventListener('click', async () => {
     const file = signFileInput.files[0];
@@ -574,7 +616,7 @@
     try {
       const fd = new FormData();
       fd.append('file', file);
-      if (certSelect.value) fd.append('certId', certSelect.value);
+      if (signCertSelect.value) fd.append('certId', signCertSelect.value);
       fd.append('title',      document.getElementById('signTitle').value.trim());
       fd.append('actor',      document.getElementById('signActor').value.trim());
       fd.append('course',     document.getElementById('signCourse').value.trim());
@@ -624,7 +666,10 @@
     verifyBtn.disabled = !(verifyFileInput.files.length && sidecarFileInput.files.length);
   }
   verifyFileInput.addEventListener('change',  updateVerifyBtn);
+  verifyFileInput.addEventListener('input',   updateVerifyBtn);
   sidecarFileInput.addEventListener('change', updateVerifyBtn);
+  sidecarFileInput.addEventListener('input',  updateVerifyBtn);
+  updateVerifyBtn(); // set correct initial state on page load
 
   verifyBtn.addEventListener('click', async () => {
     verifyBtn.disabled = true;
@@ -639,6 +684,9 @@
       fd.append('trustProfile', document.getElementById('trustProfile').value);
       if (verifyCertSelect.value) fd.append('certId', verifyCertSelect.value);
 
+      // Read current file text for diff (before fetch so both run in parallel is fine)
+      const currentContent = await verifyFileInput.files[0].text();
+
       const resp = await fetch('/api/verify', { method: 'POST', body: fd });
       const data = await resp.json();
 
@@ -647,7 +695,7 @@
         return;
       }
 
-      renderVerdicts(data);
+      renderVerdicts(data, currentContent);
     } catch (e) {
       show(verifyError, 'error', `<strong>Network error:</strong> ${e.message}`);
     } finally {
@@ -656,7 +704,69 @@
     }
   });
 
-  function renderVerdicts(data) {
+  // ── Diff helpers ───────────────────────────────────────────────────────
+
+  // Safely decode base64-encoded UTF-8 (handles non-ASCII characters)
+  function base64ToText(b64) {
+    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+
+  // LCS-based line diff. Returns array of {type: 'same'|'add'|'remove', line}.
+  function computeDiff(originalText, currentText) {
+    const a = originalText.split('\n');
+    const b = currentText.split('\n');
+    const m = a.length, n = b.length;
+
+    // Build LCS table
+    const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
+    for (let i = 1; i <= m; i++) {
+      for (let j = 1; j <= n; j++) {
+        dp[i][j] = a[i - 1] === b[j - 1]
+          ? dp[i - 1][j - 1] + 1
+          : Math.max(dp[i - 1][j], dp[i][j - 1]);
+      }
+    }
+
+    // Backtrack to build diff
+    const result = [];
+    let i = m, j = n;
+    while (i > 0 || j > 0) {
+      if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
+        result.unshift({ type: 'same',   line: a[i - 1] }); i--; j--;
+      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+        result.unshift({ type: 'add',    line: b[j - 1] }); j--;
+      } else {
+        result.unshift({ type: 'remove', line: a[i - 1] }); i--;
+      }
+    }
+    return result;
+  }
+
+  function renderDiff(containerEl, originalText, currentText) {
+    const chunks = computeDiff(originalText, currentText);
+    containerEl.innerHTML = '';
+
+    for (const chunk of chunks) {
+      const row     = document.createElement('div');
+      row.className = `diff-line ${chunk.type}`;
+
+      const gutter = document.createElement('span');
+      gutter.className   = 'diff-gutter';
+      gutter.textContent = chunk.type === 'add' ? '+' : chunk.type === 'remove' ? '−' : ' ';
+
+      const text = document.createElement('span');
+      text.textContent = chunk.line;
+
+      row.appendChild(gutter);
+      row.appendChild(text);
+      containerEl.appendChild(row);
+    }
+  }
+
+  // ── Verdicts ───────────────────────────────────────────────────────────
+
+  function renderVerdicts(data, currentContent) {
     // 1. Signature
     const sigOk = data.signatureValid;
     setVerdict('vSig',
@@ -669,20 +779,37 @@
     );
 
     // 2. Hash / binding
-    const hashOk = data.hashMatch;
+    const hashOk  = data.hashMatch;
+    const diffEl  = document.getElementById('vHashDiff');
     setVerdict('vHash',
       hashOk ? 'ok' : 'fail',
       hashOk ? '✅' : '❌',
       hashOk ? 'Bound to this file (hash match)' : 'File has been modified (hash mismatch)',
       hashOk
-        ? `SHA-256 of the uploaded file matches the hash in the claim.`
-        : 'The file content has changed since it was signed. The sidecar is valid but no longer bound to this file.'
+        ? 'SHA-256 of the uploaded file matches the hash recorded at signing time.'
+        : 'The file content has changed since it was signed. Differences are highlighted below.'
     );
 
+    if (!hashOk) {
+      const encodedOriginal = data.claim?.asset?.content;
+      if (encodedOriginal && currentContent !== undefined) {
+        const originalText = base64ToText(encodedOriginal);
+        renderDiff(diffEl, originalText, currentContent);
+        diffEl.style.display = 'block';
+      } else {
+        // Sidecar was created before content embedding — can't diff
+        diffEl.innerHTML = '<div class="diff-no-content" style="padding:0.5rem 0.75rem;">Diff unavailable — this sidecar was signed before content embedding was introduced. Re-sign the file to enable diffing.</div>';
+        diffEl.style.display = 'block';
+      }
+    } else {
+      diffEl.style.display = 'none';
+      diffEl.innerHTML = '';
+    }
+
     // 3. Trust profile
-    const t = data.trust;
+    const t         = data.trust;
     const trustOk   = t.trusted === true;
-    const trustWarn  = t.trusted === null;
+    const trustWarn = t.trusted === null;
     setVerdict('vTrust',
       trustOk ? 'ok' : trustWarn ? 'warn' : 'fail',
       trustOk ? '✅' : trustWarn ? '⚠️' : '❌',
@@ -698,9 +825,9 @@
   }
 
   function setVerdict(id, cls, icon, label, detail) {
-    document.getElementById(id).className = `verdict ${cls}`;
-    document.getElementById(id + 'Icon').textContent   = icon;
-    document.getElementById(id + 'Label').textContent  = label;
+    document.getElementById(id).className         = `verdict ${cls}`;
+    document.getElementById(id + 'Icon').textContent  = icon;
+    document.getElementById(id + 'Label').textContent = label;
     document.getElementById(id + 'Detail').textContent = detail;
   }
 </script>

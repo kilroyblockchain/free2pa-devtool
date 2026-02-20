@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free2PA — Skill Content Credentials</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem 1rem 3rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #f8fafc;
+      margin-bottom: 0.2rem;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-bottom: 2.5rem;
+    }
+
+    .panels {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    @media (max-width: 700px) { .panels { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: #1e2330;
+      border: 1px solid #2d3748;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .panel h2 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 1.2rem;
+    }
+
+    /* Drop zone */
+    .drop-zone {
+      border: 2px dashed #2d3748;
+      border-radius: 8px;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: #4f8ef7;
+      background: #1a2540;
+    }
+    .drop-zone input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+    }
+    .drop-zone .dz-icon  { font-size: 1.6rem; margin-bottom: 0.35rem; }
+    .drop-zone .dz-label { font-size: 0.8rem; color: #64748b; }
+    .drop-zone .dz-name  { margin-top: 0.4rem; font-size: 0.78rem; color: #4f8ef7; word-break: break-all; }
+
+    /* Form fields */
+    .field-group { margin-bottom: 1rem; }
+    .field-group h3 {
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: #4f8ef7;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 0.6rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid #2d3748;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #94a3b8;
+      margin-bottom: 0.25rem;
+    }
+    input[type="text"] {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.65rem;
+      margin-bottom: 0.7rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: #4f8ef7; }
+
+    select {
+      width: 100%;
+      background: #0f1117;
+      border: 1px solid #2d3748;
+      border-radius: 6px;
+      color: #e2e8f0;
+      font-size: 0.85rem;
+      padding: 0.45rem 0.65rem;
+      margin-bottom: 1rem;
+      outline: none;
+    }
+
+    button {
+      width: 100%;
+      background: #4f8ef7;
+      color: #fff;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 0.65rem 1rem;
+      cursor: pointer;
+      transition: background 0.2s, opacity 0.2s;
+      margin-top: 0.25rem;
+    }
+    button:hover:not(:disabled) { background: #3b72d4; }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    .spinner {
+      display: inline-block;
+      width: 13px; height: 13px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 5px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Result box */
+    .result {
+      margin-top: 1rem;
+      font-size: 0.8rem;
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      display: none;
+    }
+    .result.success { background: #0d2b1e; border: 1px solid #22543d; color: #68d391; }
+    .result.error   { background: #2b0d0d; border: 1px solid #742a2a; color: #fc8181; }
+
+    /* Verification verdict cards */
+    .verdicts {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      margin-top: 1rem;
+    }
+    .verdict {
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      border: 1px solid #2d3748;
+      background: #161b27;
+    }
+    .verdict-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 0.25rem;
+    }
+    .verdict-detail {
+      font-size: 0.75rem;
+      color: #64748b;
+      padding-left: 1.6rem;
+    }
+    .icon-ok   { color: #68d391; }
+    .icon-fail { color: #fc8181; }
+    .icon-warn { color: #f6ad55; }
+
+    .verdict.ok   { border-color: #22543d; background: #0d2b1e; }
+    .verdict.fail { border-color: #742a2a; background: #2b0d0d; }
+    .verdict.warn { border-color: #7b4a00; background: #2b1a0d; }
+
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.7rem;
+      margin-top: 0.75rem;
+      color: #64748b;
+      max-height: 220px;
+      overflow-y: auto;
+      border-top: 1px solid #2d3748;
+      padding-top: 0.5rem;
+    }
+
+    .section-note {
+      font-size: 0.72rem;
+      color: #64748b;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Free2PA</h1>
+<p class="subtitle">Skill.md Content Credentials — sign &amp; verify with C2PA-style sidecar manifests</p>
+
+<div class="panels">
+
+  <!-- ── SIGN ── -->
+  <div class="panel">
+    <h2>Sign a Skill</h2>
+    <p class="section-note">Upload a <code>.md</code> file. A <code>.c2pa.json</code> sidecar will be generated and downloaded — keep it alongside your skill file.</p>
+
+    <div class="drop-zone" id="signDrop">
+      <input type="file" id="signFile" accept=".md,.txt,.skills" />
+      <div class="dz-icon">📄</div>
+      <div class="dz-label">Drop skill.md here or click to choose</div>
+      <div class="dz-name" id="signFilename"></div>
+    </div>
+
+    <div class="field-group">
+      <h3>Provenance</h3>
+      <label for="signTitle">Title</label>
+      <input type="text" id="signTitle" placeholder="Introduction to Prompt Engineering" />
+      <label for="signActor">Your name / handle</label>
+      <input type="text" id="signActor" placeholder="jkilroy" />
+    </div>
+
+    <div class="field-group">
+      <h3>org.friends-of-justin.skill assertion</h3>
+      <label for="signCourse">Course</label>
+      <input type="text" id="signCourse" placeholder="CSCE 4193 — AI for Developers" />
+      <label for="signAssignment">Assignment</label>
+      <input type="text" id="signAssignment" placeholder="Lab 3 — Skill Authoring" />
+      <label for="signRepo">Repo URL</label>
+      <input type="text" id="signRepo" placeholder="https://github.com/jkilroy/skills" />
+      <label for="signStudentId">Student ID</label>
+      <input type="text" id="signStudentId" placeholder="u123456" />
+      <label for="signInstructor">Instructor (optional)</label>
+      <input type="text" id="signInstructor" placeholder="Dr. Smith" />
+    </div>
+
+    <button id="signBtn" disabled>Sign &amp; Download Sidecar</button>
+    <div class="result" id="signResult"></div>
+  </div>
+
+  <!-- ── VERIFY ── -->
+  <div class="panel">
+    <h2>Verify a Skill</h2>
+    <p class="section-note">Upload the <code>.md</code> file and its <code>.c2pa.json</code> sidecar together. Three things are checked independently.</p>
+
+    <div class="drop-zone" id="verifyDrop">
+      <input type="file" id="verifyFile" accept=".md,.txt,.skills" />
+      <div class="dz-icon">📄</div>
+      <div class="dz-label">Drop skill.md here</div>
+      <div class="dz-name" id="verifyFilename"></div>
+    </div>
+
+    <div class="drop-zone" id="sidecarDrop">
+      <input type="file" id="sidecarFile" accept=".json" />
+      <div class="dz-icon">🔏</div>
+      <div class="dz-label">Drop .c2pa.json sidecar here</div>
+      <div class="dz-name" id="sidecarFilename"></div>
+    </div>
+
+    <label for="trustProfile">Trust profile</label>
+    <select id="trustProfile">
+      <option value="dev">Classroom / Dev  — matches this server's cert</option>
+      <option value="org">Org              — requires a root CA bundle (placeholder)</option>
+      <option value="public">Public           — C2PA Trust List (placeholder)</option>
+    </select>
+
+    <button id="verifyBtn" disabled>Verify</button>
+
+    <div id="verifyVerdicts" style="display:none;">
+      <div class="verdicts">
+        <div class="verdict" id="vSig">
+          <div class="verdict-header"><span id="vSigIcon"></span><span id="vSigLabel"></span></div>
+          <div class="verdict-detail" id="vSigDetail"></div>
+        </div>
+        <div class="verdict" id="vHash">
+          <div class="verdict-header"><span id="vHashIcon"></span><span id="vHashLabel"></span></div>
+          <div class="verdict-detail" id="vHashDetail"></div>
+        </div>
+        <div class="verdict" id="vTrust">
+          <div class="verdict-header"><span id="vTrustIcon"></span><span id="vTrustLabel"></span></div>
+          <div class="verdict-detail" id="vTrustDetail"></div>
+        </div>
+      </div>
+      <pre id="verifyJson"></pre>
+    </div>
+
+    <div class="result" id="verifyError"></div>
+  </div>
+
+</div>
+
+<script>
+  // ── Drop zone helper ───────────────────────────────────────────────────
+  function setupDropZone(zoneId, inputId, nameId) {
+    const zone  = document.getElementById(zoneId);
+    const input = document.getElementById(inputId);
+    const lbl   = document.getElementById(nameId);
+    input.addEventListener('change', () => { lbl.textContent = input.files[0]?.name ?? ''; });
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (e.dataTransfer.files.length) {
+        const dt = new DataTransfer();
+        dt.items.add(e.dataTransfer.files[0]);
+        input.files = dt.files;
+        lbl.textContent = input.files[0].name;
+        input.dispatchEvent(new Event('change'));
+      }
+    });
+  }
+
+  function show(el, cls, html) {
+    el.className = `result ${cls}`;
+    el.style.display = 'block';
+    el.innerHTML = html;
+  }
+
+  // ── Sign ───────────────────────────────────────────────────────────────
+  setupDropZone('signDrop', 'signFile', 'signFilename');
+
+  const signFileInput = document.getElementById('signFile');
+  const signBtn       = document.getElementById('signBtn');
+  const signResult    = document.getElementById('signResult');
+
+  signFileInput.addEventListener('change', () => {
+    signBtn.disabled = !signFileInput.files.length;
+    signResult.style.display = 'none';
+  });
+
+  signBtn.addEventListener('click', async () => {
+    const file = signFileInput.files[0];
+    if (!file) return;
+
+    signBtn.disabled = true;
+    signBtn.innerHTML = '<span class="spinner"></span>Signing…';
+    signResult.style.display = 'none';
+
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      fd.append('title',      document.getElementById('signTitle').value.trim());
+      fd.append('actor',      document.getElementById('signActor').value.trim());
+      fd.append('course',     document.getElementById('signCourse').value.trim());
+      fd.append('assignment', document.getElementById('signAssignment').value.trim());
+      fd.append('repo',       document.getElementById('signRepo').value.trim());
+      fd.append('studentId',  document.getElementById('signStudentId').value.trim());
+      fd.append('instructor', document.getElementById('signInstructor').value.trim());
+
+      const resp = await fetch('/api/sign', { method: 'POST', body: fd });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
+        show(signResult, 'error', `<strong>Error:</strong> ${err.error}`);
+        return;
+      }
+
+      const blob = await resp.blob();
+      const cd   = resp.headers.get('Content-Disposition') ?? '';
+      const m    = cd.match(/filename="([^"]+)"/);
+      const name = m ? m[1] : file.name + '.c2pa.json';
+
+      const url = URL.createObjectURL(blob);
+      const a   = document.createElement('a');
+      a.href = url; a.download = name; a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      show(signResult, 'success', `Sidecar downloaded: <strong>${name}</strong><br/>Keep it next to your .md file for verification.`);
+    } catch (e) {
+      show(signResult, 'error', `<strong>Network error:</strong> ${e.message}`);
+    } finally {
+      signBtn.disabled = false;
+      signBtn.textContent = 'Sign & Download Sidecar';
+    }
+  });
+
+  // ── Verify ─────────────────────────────────────────────────────────────
+  setupDropZone('verifyDrop',   'verifyFile',   'verifyFilename');
+  setupDropZone('sidecarDrop',  'sidecarFile',  'sidecarFilename');
+
+  const verifyFileInput   = document.getElementById('verifyFile');
+  const sidecarFileInput  = document.getElementById('sidecarFile');
+  const verifyBtn         = document.getElementById('verifyBtn');
+  const verifyVerdicts    = document.getElementById('verifyVerdicts');
+  const verifyError       = document.getElementById('verifyError');
+
+  function updateVerifyBtn() {
+    verifyBtn.disabled = !(verifyFileInput.files.length && sidecarFileInput.files.length);
+  }
+  verifyFileInput.addEventListener('change',  updateVerifyBtn);
+  sidecarFileInput.addEventListener('change', updateVerifyBtn);
+
+  verifyBtn.addEventListener('click', async () => {
+    verifyBtn.disabled = true;
+    verifyBtn.innerHTML = '<span class="spinner"></span>Verifying…';
+    verifyVerdicts.style.display = 'none';
+    verifyError.style.display = 'none';
+
+    try {
+      const fd = new FormData();
+      fd.append('file',         verifyFileInput.files[0]);
+      fd.append('sidecar',      sidecarFileInput.files[0]);
+      fd.append('trustProfile', document.getElementById('trustProfile').value);
+
+      const resp = await fetch('/api/verify', { method: 'POST', body: fd });
+      const data = await resp.json();
+
+      if (!data.success) {
+        show(verifyError, 'error', `<strong>Error:</strong> ${data.error}`);
+        return;
+      }
+
+      renderVerdicts(data);
+    } catch (e) {
+      show(verifyError, 'error', `<strong>Network error:</strong> ${e.message}`);
+    } finally {
+      verifyBtn.disabled = false;
+      verifyBtn.textContent = 'Verify';
+    }
+  });
+
+  function renderVerdicts(data) {
+    // 1. Signature
+    const sigOk = data.signatureValid;
+    setVerdict('vSig',
+      sigOk ? 'ok' : 'fail',
+      sigOk ? '✅' : '❌',
+      sigOk ? 'Signature valid' : 'Signature invalid',
+      sigOk
+        ? 'ECDSA P-256 signature over the claim verified successfully.'
+        : (data.signatureError || 'Signature did not verify against the cert in the sidecar.')
+    );
+
+    // 2. Hash / binding
+    const hashOk = data.hashMatch;
+    setVerdict('vHash',
+      hashOk ? 'ok' : 'fail',
+      hashOk ? '✅' : '❌',
+      hashOk ? 'Bound to this file (hash match)' : 'File has been modified (hash mismatch)',
+      hashOk
+        ? `SHA-256 of the uploaded file matches the hash in the claim.`
+        : 'The file content has changed since it was signed. The sidecar is valid but no longer bound to this file.'
+    );
+
+    // 3. Trust profile
+    const t = data.trust;
+    const trustOk   = t.trusted === true;
+    const trustWarn  = t.trusted === null;
+    setVerdict('vTrust',
+      trustOk ? 'ok' : trustWarn ? 'warn' : 'fail',
+      trustOk ? '✅' : trustWarn ? '⚠️' : '❌',
+      `Trusted under profile: ${t.label}`,
+      t.detail
+    );
+
+    // Claim JSON (collapsed)
+    document.getElementById('verifyJson').textContent =
+      JSON.stringify(data.claim, null, 2);
+
+    verifyVerdicts.style.display = 'block';
+  }
+
+  function setVerdict(id, cls, icon, label, detail) {
+    document.getElementById(id).className = `verdict ${cls}`;
+    document.getElementById(id + 'Icon').textContent   = icon;
+    document.getElementById(id + 'Label').textContent  = label;
+    document.getElementById(id + 'Detail').textContent = detail;
+  }
+</script>
+</body>
+</html>

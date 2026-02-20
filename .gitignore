@@ -1,0 +1,7 @@
+node_modules/
+uploads/
+certs/signing.key
+certs/signing_ca.key
+certs/*.csr
+certs/*.srl
+.env

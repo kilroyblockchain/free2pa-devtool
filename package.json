@@ -1,0 +1,21 @@
+{
+  "name": "free2pa",
+  "version": "0.1.0",
+  "description": "Free2PA v0 — skill.md content credentials (C2PA-style sidecar signing)",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "generate-cert": "bash certs/generate-cert.sh"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "private": true
+}

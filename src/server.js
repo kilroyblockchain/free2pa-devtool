@@ -6,11 +6,14 @@ import { config } from './config.js';
 import signRouter   from './routes/sign.js';
 import verifyRouter from './routes/verify.js';
 import certsRouter  from './routes/certs.js';
+import skillsRouter from './routes/skills.js';
+import mcpRouter    from './routes/mcp.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export async function createServer() {
   await mkdir(config.uploadDir, { recursive: true });
+  await mkdir(config.skillsDir, { recursive: true });
 
   const app = express();
   app.use(express.json());
@@ -19,6 +22,8 @@ export async function createServer() {
   app.use('/api', signRouter);
   app.use('/api', verifyRouter);
   app.use('/api', certsRouter);
+  app.use('/api', skillsRouter);
+  app.use('/',    mcpRouter);
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', app: 'Free2PA', version: '0.1.0' }));
   app.use((_req, res) => res.status(404).json({ error: 'Not found' }));

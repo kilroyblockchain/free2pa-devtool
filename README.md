@@ -200,6 +200,110 @@ Copy `.env.example` to `.env` to override defaults.
 
 ---
 
+## Using the Web UI
+
+Open `http://localhost:4001/` in your browser. The page has two panels side by side: **Sign a Skill** on the left and **Verify a Skill** on the right.
+
+---
+
+### Sign a Skill
+
+**1. Drop your skill file**
+
+Drag a `.md` file onto the 📄 drop zone, or click it to open a file picker. The filename appears below the zone when a file is selected. The **Sign & Download Sidecar** button activates once a file is chosen.
+
+**2. Fill in the Provenance fields**
+
+| Field | What it stores | Example |
+|---|---|---|
+| Skill name | `dc:title` in the claim | `weather` |
+| Your name / handle | `actor` in the action record | `jkilroy` |
+| Your email | author email address | `kilroy@uark.edu` |
+
+All fields are optional — the sidecar is valid without them — but they make the provenance record meaningful.
+
+**3. Fill in the Purpose field**
+
+The **Purpose** field is stored in the `org.friends-of-justin.skill` assertion. Write a one-sentence description of what the skill does.
+
+**4. Select a signing certificate**
+
+The **Active certificate** dropdown lists every certificate in the `certs/` trust store that has a corresponding private key (signing-capable certs). The subject and expiry date are shown below the dropdown.
+
+Two icon buttons sit next to the dropdown:
+
+| Button | Action |
+|---|---|
+| **↺** | Refreshes the certificate list from the server |
+| **⬇** | Downloads the selected `.crt` file to your computer — use this to share your cert with peers |
+
+**5. Generate a new certificate (optional)**
+
+Click **+ Generate New Certificate** to expand the form. Fill in:
+
+- **Common Name** — your name, handle, or role (e.g., `jkilroy — CSCE 4193`). This is also used to derive the filename (`jkilroy-csce-4193.crt`).
+- **Organization** — defaults to `Friends of Justin`.
+- **Validity (days)** — how long the cert is valid. Defaults to 365. Max is 3650.
+
+Click **Generate Certificate**. The cert and key are written to `certs/` on the server and the dropdown updates automatically.
+
+**6. Import a peer certificate (optional)**
+
+Click **+ Import Certificate(s)** to expand the import form. Use this to add a peer's `.crt` to your trust store so their skills pass the Trust check on your server.
+
+- **Single cert:** Drop one `.crt` file onto the 🔑 drop zone. Optionally type a name in **Save as** (e.g., `jkilroy-team-a`) — this becomes the filename. Click **Import Certificate(s)**. The file is validated as a real X.509 certificate before being saved.
+- **Team bundle:** Drop multiple `.crt` files at once (or Ctrl/Cmd+click in the file picker). Each file is validated and saved individually under its own filename. The results list shows which imported successfully and which failed.
+
+After a successful import the dropdown refreshes automatically.
+
+**7. Sign**
+
+Click **Sign & Download Sidecar**. The server signs the file with the selected certificate and the browser downloads a `<filename>.c2pa.json` sidecar file automatically.
+
+Keep the sidecar file alongside your skill file — they are a matched pair. The sidecar is useless without the skill file it was signed against, and the skill file is unverifiable without the sidecar.
+
+A green success message confirms the download and names the sidecar file. If something goes wrong, a red error message explains what failed.
+
+---
+
+### Verify a Skill
+
+**1. Drop the skill file**
+
+Drag the `.md` skill file onto the 📄 drop zone, or click to choose it.
+
+**2. Drop the sidecar**
+
+Drag the `.c2pa.json` sidecar onto the 🔏 drop zone, or click to choose it. The **Verify** button activates once both files are selected.
+
+**3. Select a trust profile**
+
+| Profile | What it checks |
+|---|---|
+| **Server / Dev** | The signing cert matches any `.crt` in this server's `certs/` directory. Default. |
+| **Org** | Shared CA bundle — not yet configured. |
+| **Public** | Public trust list — not yet configured. |
+
+**4. Match against a specific cert (optional)**
+
+The **Match against specific cert** dropdown lists every certificate in the trust store. Leave it blank to accept any trusted cert. Select a cert to require that the skill was signed by that exact issuer — useful for identity confirmation ("was this signed by jkilroy specifically?").
+
+Click **↺** to refresh the list if you recently imported a cert.
+
+**5. Verify**
+
+Click **Verify**. Three verdict cards appear:
+
+| Card | Green ✅ means | Red ❌ means |
+|---|---|---|
+| **Signature valid** | The ECDSA P-256 signature in the sidecar verifies against the embedded cert. The claim record is intact. | The signature is invalid — the sidecar has been altered, or the wrong cert is embedded. |
+| **Bound to this file (hash match)** | The SHA-256 of the uploaded file matches the hash recorded at signing time. | The file content has changed since signing. A line-by-line diff appears showing what changed. |
+| **Trusted under profile** | The signing cert is recognized under the selected trust profile. | The signing cert is not in the trust store, or did not match the specific cert selected. |
+
+Below the verdict cards, the full claim JSON is shown in a collapsible code block — this is the raw sidecar content, useful for debugging or extracting a peer's cert PEM.
+
+---
+
 ## API Reference
 
 All endpoints are under `/api`.
@@ -258,6 +362,51 @@ Generates a new ECDSA P-256 self-signed certificate and adds it to the trust sto
   }
 }
 ```
+
+---
+
+### `GET /api/certs/:id/download`
+
+Downloads the named certificate as a `.crt` file.
+
+| Parameter | Description |
+|---|---|
+| `:id` | Certificate ID (e.g., `signing`, `jkilroy-team-a`) — must match `[a-z0-9-]+` |
+
+**Response:** `application/x-pem-file` with `Content-Disposition: attachment; filename="<id>.crt"`
+
+Returns 404 if the cert does not exist.
+
+---
+
+### `POST /api/certs/import`
+
+Imports one or more `.crt` files into the trust store. Each file is validated as a real X.509 certificate before being saved.
+
+**Request:** `multipart/form-data`
+
+| Field | Required | Description |
+|---|---|---|
+| `files` | yes | One or more `.crt` files (field name `files`, up to 50 files) |
+| `name` | no | Override save filename for single-file imports (e.g., `jkilroy-team-a`). Ignored for multi-file uploads. |
+
+**Response:**
+```json
+{
+  "success": true,
+  "results": [
+    {
+      "file":     "jkilroy.crt",
+      "success":  true,
+      "id":       "jkilroy",
+      "subject":  "O = Friends of Justin, CN = jkilroy",
+      "notAfter": "Feb 20 18:30:00 2027 GMT"
+    }
+  ]
+}
+```
+
+For bundle imports, `results` contains one entry per uploaded file. HTTP 207 is returned if some files succeeded and some failed. Each failed entry includes an `error` field explaining why (`"Not a valid X.509 certificate."` is the most common).
 
 ---
 
@@ -397,7 +546,7 @@ free2pa/
 │   ├── routes/
 │   │   ├── sign.js             POST /api/sign
 │   │   ├── verify.js           POST /api/verify
-│   │   ├── certs.js            GET /api/certs, POST /api/certs/generate
+│   │   ├── certs.js            GET /api/certs, GET /api/certs/:id/download, POST /api/certs/generate, POST /api/certs/import
 │   │   ├── skills.js           GET /api/skills, POST /api/skills/:name/verify
 │   │   └── mcp.js              POST /mcp  (MCP server — Streamable HTTP)
 │   ├── services/

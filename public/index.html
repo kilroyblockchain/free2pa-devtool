@@ -346,6 +346,7 @@
           <option value="">Loading certificates…</option>
         </select>
         <button type="button" class="btn-icon" id="refreshCertsBtn" title="Refresh certificate list">↺</button>
+        <button type="button" class="btn-icon" id="exportCertBtn" title="Download selected certificate (.crt)">⬇</button>
       </div>
       <div class="cert-detail" id="certDetail"></div>
 
@@ -360,6 +361,22 @@
         <input type="text" id="genCertDays" placeholder="365" />
         <button type="button" id="genCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Generate Certificate</button>
         <div class="result" id="genCertResult"></div>
+      </div>
+
+      <button type="button" class="btn-secondary" id="toggleImportCert" style="margin-top:0.5rem;">+ Import Certificate(s)</button>
+
+      <div class="gen-cert-form" id="importCertForm" style="display:none;">
+        <p class="section-note" style="margin-bottom:0.6rem;">Drop one <code>.crt</code> file to import a peer cert, or multiple files to import a team bundle all at once.</p>
+        <div class="drop-zone" id="importCertDrop">
+          <input type="file" id="importCertFile" accept=".crt" multiple />
+          <div class="dz-icon">🔑</div>
+          <div class="dz-label">Drop .crt file(s) here or click to choose</div>
+          <div class="dz-name" id="importCertFilenames"></div>
+        </div>
+        <label for="importCertName">Save as <span style="color:#4a5568; font-weight:400;">(optional — single file only)</span></label>
+        <input type="text" id="importCertName" placeholder="jkilroy-team-a" />
+        <button type="button" id="importCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Import Certificate(s)</button>
+        <div class="result" id="importCertResult"></div>
       </div>
     </div>
 
@@ -576,6 +593,92 @@
     } finally {
       genCertBtn.disabled = false;
       genCertBtn.textContent = 'Generate Certificate';
+    }
+  });
+
+  // ── Cert export ────────────────────────────────────────────────────────
+  document.getElementById('exportCertBtn').addEventListener('click', () => {
+    const id = signCertSelect.value;
+    if (!id) return;
+    const a = document.createElement('a');
+    a.href     = `/api/certs/${id}/download`;
+    a.download = `${id}.crt`;
+    a.click();
+  });
+
+  // ── Cert import ────────────────────────────────────────────────────────
+  const toggleImportCert = document.getElementById('toggleImportCert');
+  const importCertForm   = document.getElementById('importCertForm');
+  const importCertFile   = document.getElementById('importCertFile');
+  const importCertBtn    = document.getElementById('importCertBtn');
+  const importCertResult = document.getElementById('importCertResult');
+
+  // Multi-file drop zone for cert import
+  (function setupImportDropZone() {
+    const zone = document.getElementById('importCertDrop');
+    const lbl  = document.getElementById('importCertFilenames');
+    function updateLabel() {
+      const files = Array.from(importCertFile.files);
+      lbl.textContent = files.length === 0 ? ''
+        : files.length === 1 ? files[0].name
+        : `${files.length} files selected`;
+    }
+    importCertFile.addEventListener('change', updateLabel);
+    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      const dt = new DataTransfer();
+      for (const f of e.dataTransfer.files) {
+        if (f.name.toLowerCase().endsWith('.crt')) dt.items.add(f);
+      }
+      if (dt.files.length) {
+        importCertFile.files = dt.files;
+        updateLabel();
+        importCertFile.dispatchEvent(new Event('change'));
+      }
+    });
+  })();
+
+  toggleImportCert.addEventListener('click', () => {
+    const open = importCertForm.style.display !== 'none';
+    importCertForm.style.display = open ? 'none' : 'block';
+    toggleImportCert.textContent = open ? '+ Import Certificate(s)' : '− Import Certificate(s)';
+  });
+
+  importCertBtn.addEventListener('click', async () => {
+    const files = importCertFile.files;
+    if (!files.length) {
+      show(importCertResult, 'error', 'Choose at least one .crt file.');
+      return;
+    }
+    importCertBtn.disabled = true;
+    importCertBtn.innerHTML = '<span class="spinner"></span>Importing…';
+    importCertResult.style.display = 'none';
+
+    try {
+      const fd = new FormData();
+      for (const f of files) fd.append('files', f);
+      const name = document.getElementById('importCertName').value.trim();
+      if (name) fd.append('name', name);
+
+      const resp = await fetch('/api/certs/import', { method: 'POST', body: fd });
+      const data = await resp.json();
+
+      const msgs = (data.results ?? []).map(r =>
+        r.success ? `✓ ${r.id}.crt — ${r.subject}` : `✗ ${r.file}: ${r.error}`
+      ).join('<br/>') || data.error;
+
+      show(importCertResult, data.success ? 'success' : 'error', msgs);
+
+      const first = (data.results ?? []).find(r => r.success)?.id;
+      if (first) await reloadCerts(first, first);
+    } catch (e) {
+      show(importCertResult, 'error', `<strong>Network error:</strong> ${e.message}`);
+    } finally {
+      importCertBtn.disabled = false;
+      importCertBtn.textContent = 'Import Certificate(s)';
     }
   });
 

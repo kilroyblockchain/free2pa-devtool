@@ -70,11 +70,7 @@ The sidecar is a JSON document with three top-level fields:
       {
         "label": "org.friends-of-justin.skill",
         "data": {
-          "course":     "optional provenance metadata",
-          "assignment": "...",
-          "repo":       "...",
-          "student_id": "...",
-          "instructor": "..."
+          "purpose": "what this skill does"
         }
       }
     ],
@@ -198,6 +194,7 @@ npm run dev
 | `KEY_PATH` | `certs/signing.key` | Default signing key path |
 | `CERTS_DIR` | `certs` | Trust store directory |
 | `UPLOAD_DIR` | `uploads` | Temp dir for multipart uploads |
+| `SKILLS_DIR` | `radio_intern` | Skill folder scanned by the test client and MCP server |
 
 Copy `.env.example` to `.env` to override defaults.
 
@@ -274,13 +271,10 @@ Signs a skill file and returns the sidecar manifest as a downloadable JSON file.
 |---|---|---|
 | `file` | yes | The skill file to sign (`.md`, `.txt`, etc.) |
 | `certId` | no | ID of the signing cert to use (e.g., `jkilroy`). Defaults to `signing`. |
-| `title` | no | `dc:title` in the claim |
+| `title` | no | Skill name (`dc:title` in the claim) |
 | `actor` | no | Author name or handle |
-| `course` | no | Course name/ID |
-| `assignment` | no | Assignment name/ID |
-| `repo` | no | Repository URL |
-| `studentId` | no | Student or publisher ID |
-| `instructor` | no | Instructor name |
+| `email` | no | Author email address |
+| `purpose` | no | What the skill does (stored in `org.friends-of-justin.skill` assertion) |
 
 **Response:** `application/json` with `Content-Disposition: attachment; filename="<name>.c2pa.json"`
 
@@ -321,6 +315,62 @@ Verifies a skill file against its sidecar. Returns three independent verdicts.
 
 ---
 
+### `GET /api/skills`
+
+Lists all skill folders in `radio_intern` (or `SKILLS_DIR`) that contain a `SKILL.md`.
+
+**Response:**
+```json
+{
+  "success": true,
+  "skills": [
+    { "name": "transcription", "hasSidecar": true },
+    { "name": "weather",       "hasSidecar": false }
+  ]
+}
+```
+
+`hasSidecar: true` means a `SKILL.md.c2pa.json` sidecar exists alongside the skill file and verification is possible.
+
+---
+
+### `POST /api/skills/:name/verify`
+
+Reads `radio_intern/<name>/SKILL.md` and `radio_intern/<name>/SKILL.md.c2pa.json` from disk and runs the full three-check verification. No file upload needed.
+
+**Response:** same shape as `POST /api/verify`.
+
+---
+
+### `POST /mcp`
+
+MCP server endpoint (Streamable HTTP transport). Exposes two tools:
+
+| Tool | Description |
+|---|---|
+| `list_skills` | Returns the same list as `GET /api/skills` |
+| `verify_skill` | Takes `{ name }`, verifies the named skill, returns `PASS`/`FAIL` with all three check results |
+
+Example tool call result:
+```json
+{
+  "skill":          "transcription",
+  "verdict":        "PASS",
+  "signatureValid": true,
+  "hashMatch":      true,
+  "trust": {
+    "profile": "dev",
+    "trusted": true,
+    "label":   "Server/Dev",
+    "detail":  "Cert is in this server's trust store (matched: signing)"
+  }
+}
+```
+
+`GET /mcp` returns endpoint metadata for discoverability.
+
+---
+
 ### `GET /health`
 
 ```json
@@ -335,14 +385,21 @@ Verifies a skill file against its sidecar. Returns three independent verdicts.
 free2pa/
 ├── index.js                    Entry point
 ├── public/
-│   └── index.html              Web UI (sign + verify panels)
+│   ├── index.html              Web UI — Sign & Verify panels
+│   └── test.html               Skill Test Client — PASS/FAIL with robot face
+├── radio_intern/               Skill folder (default SKILLS_DIR)
+│   └── <skill-name>/
+│       ├── SKILL.md            The skill file
+│       └── SKILL.md.c2pa.json  Sidecar (created by signing)
 ├── src/
 │   ├── server.js               Express app factory
 │   ├── config.js               Environment-aware config
 │   ├── routes/
 │   │   ├── sign.js             POST /api/sign
 │   │   ├── verify.js           POST /api/verify
-│   │   └── certs.js            GET /api/certs, POST /api/certs/generate
+│   │   ├── certs.js            GET /api/certs, POST /api/certs/generate
+│   │   ├── skills.js           GET /api/skills, POST /api/skills/:name/verify
+│   │   └── mcp.js              POST /mcp  (MCP server — Streamable HTTP)
 │   ├── services/
 │   │   ├── signer.js           Claim construction + ECDSA signing
 │   │   └── verifier.js         Hash check + signature verify + trust check
@@ -368,31 +425,67 @@ free2pa/
 
 ---
 
-## Roadmap: MCP Server Integration
+## MCP Server
 
-The immediate next step for Free2PA is packaging the verification logic as an **MCP (Model Context Protocol) server**. This turns the verifier into a gatekeeper that sits between an agent runtime and its skill registry.
-
-**Planned flow:**
+Free2PA includes an MCP (Model Context Protocol) server at `POST /mcp`. It uses the Streamable HTTP transport and exposes two tools that let an AI agent verify skills before loading them.
 
 ```
 Agent Runtime
     │
-    │  "load skill: web-search.md"
+    │  verify_skill("transcription")
     ▼
-MCP Server (Free2PA)
+Free2PA MCP Server  (POST /mcp)
     │
-    ├─ fetch web-search.md + web-search.md.c2pa.json from registry
-    ├─ POST /api/verify  →  { signatureValid, hashMatch, trust }
+    ├─ reads radio_intern/transcription/SKILL.md
+    ├─ reads radio_intern/transcription/SKILL.md.c2pa.json
+    ├─ runs three checks: signature · hash · trust
     │
-    ├─ all three pass → skill is returned to agent
-    └─ any fail       → MCP returns error; skill is not loaded
+    ├─ all pass  →  { verdict: "PASS", ... }
+    └─ any fail  →  { verdict: "FAIL", ... }
 ```
 
-Key design decisions for the MCP phase:
+**Connecting a Claude Code agent:**
 
-- **Trust store management** stays filesystem-based — operators add/remove `.crt` files to control which publishers are trusted.
-- **`Org` profile** will support a shared CA bundle so large teams can issue per-agent or per-role signing identities without coordinating individual certs across every MCP instance.
-- **Audit log** — every verification event (skill ID, verdict, matched cert, timestamp) will be emitted so operators can trace exactly what ran.
-- **Revocation** — removing a cert from `certs/` immediately revokes trust for any skill signed with it, without requiring sidecar updates.
+Add to your `claude_desktop_config.json` (or MCP client config):
 
-The threat model this addresses: an attacker who gains write access to a skill registry can inject a malicious skill file. Without credential checking, the agent loads and executes it. With Free2PA MCP gating, the injected file either has no sidecar (rejected), a sidecar signed with an untrusted cert (rejected), or a valid sidecar whose hash no longer matches the tampered file (rejected).
+```json
+{
+  "mcpServers": {
+    "free2pa": {
+      "type": "http",
+      "url":  "http://localhost:4001/mcp"
+    }
+  }
+}
+```
+
+The agent can then call `list_skills` to see what is available and `verify_skill` to check any skill by name before using it.
+
+**Trust store management** stays filesystem-based — add/remove `.crt` files in `certs/` to control which publishers are trusted. Removing a cert immediately revokes trust for any skill signed with it, without requiring sidecar updates.
+
+**Roadmap:**
+- `Org` profile — shared CA bundle so teams can issue per-agent signing identities without coordinating individual certs across every MCP instance
+- Audit log — verification events (skill, verdict, matched cert, timestamp) for traceability
+- `Public` profile — commercially-issued certs for open skill marketplaces
+
+The threat model: an attacker who gains write access to a skill folder can inject a modified skill file. Without credential checking, the agent loads it. With Free2PA gating, the injected file either has no sidecar (rejected), a sidecar signed with an untrusted cert (rejected), or a valid sidecar whose hash no longer matches the tampered file (rejected).
+
+---
+
+## Skill Test Client
+
+Open `http://localhost:4001/test.html` to interactively test skills in `radio_intern`.
+
+1. The page lists every skill folder that contains a `SKILL.md`
+2. Skills with a sidecar show a green **sidecar ✓** badge; others show **no sidecar**
+3. Select a skill and click **Test Selected Skill**
+4. The result shows a robot face — happy green for PASS, distressed red for FAIL — with individual check details
+
+To add a skill to the test client:
+
+```
+radio_intern/
+  my-skill/
+    SKILL.md               ← your skill file
+    SKILL.md.c2pa.json     ← sign it via http://localhost:4001/ then drop the sidecar here
+```

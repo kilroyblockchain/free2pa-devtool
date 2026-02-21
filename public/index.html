@@ -323,24 +323,18 @@
 
     <div class="field-group">
       <h3>Provenance</h3>
-      <label for="signTitle">Title</label>
-      <input type="text" id="signTitle" placeholder="Introduction to Prompt Engineering" />
+      <label for="signTitle">Skill name</label>
+      <input type="text" id="signTitle" placeholder="weather" />
       <label for="signActor">Your name / handle</label>
       <input type="text" id="signActor" placeholder="jkilroy" />
+      <label for="signEmail">Your email</label>
+      <input type="text" id="signEmail" placeholder="kilroy@uark.edu" />
     </div>
 
     <div class="field-group">
       <h3>org.friends-of-justin.skill assertion</h3>
-      <label for="signCourse">Course</label>
-      <input type="text" id="signCourse" placeholder="CSCE 4193 — AI for Developers" />
-      <label for="signAssignment">Assignment</label>
-      <input type="text" id="signAssignment" placeholder="Lab 3 — Skill Authoring" />
-      <label for="signRepo">Repo URL</label>
-      <input type="text" id="signRepo" placeholder="https://github.com/jkilroy/skills" />
-      <label for="signStudentId">Student ID</label>
-      <input type="text" id="signStudentId" placeholder="u123456" />
-      <label for="signInstructor">Instructor (optional)</label>
-      <input type="text" id="signInstructor" placeholder="Dr. Smith" />
+      <label for="signPurpose">Purpose</label>
+      <input type="text" id="signPurpose" placeholder="Get current weather and forecasts for any location." />
     </div>
 
     <div class="field-group">
@@ -617,13 +611,10 @@
       const fd = new FormData();
       fd.append('file', file);
       if (signCertSelect.value) fd.append('certId', signCertSelect.value);
-      fd.append('title',      document.getElementById('signTitle').value.trim());
-      fd.append('actor',      document.getElementById('signActor').value.trim());
-      fd.append('course',     document.getElementById('signCourse').value.trim());
-      fd.append('assignment', document.getElementById('signAssignment').value.trim());
-      fd.append('repo',       document.getElementById('signRepo').value.trim());
-      fd.append('studentId',  document.getElementById('signStudentId').value.trim());
-      fd.append('instructor', document.getElementById('signInstructor').value.trim());
+      fd.append('title',   document.getElementById('signTitle').value.trim());
+      fd.append('actor',   document.getElementById('signActor').value.trim());
+      fd.append('email',   document.getElementById('signEmail').value.trim());
+      fd.append('purpose', document.getElementById('signPurpose').value.trim());
 
       const resp = await fetch('/api/sign', { method: 'POST', body: fd });
 

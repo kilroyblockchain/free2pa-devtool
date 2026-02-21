@@ -12,16 +12,13 @@ import { canonicalJson } from '../utils/canonical.js';
  *
  * @param {object} opts
  * @param {string}  opts.content      Raw text content of the .md file
- * @param {string}  [opts.title]      dc:title
- * @param {string}  [opts.actor]      Student name / handle
- * @param {string}  [opts.course]     Course name/ID
- * @param {string}  [opts.assignment] Assignment name/ID
- * @param {string}  [opts.repo]       Repository URL or name
- * @param {string}  [opts.studentId]  Student ID or handle
- * @param {string}  [opts.instructor] Instructor name
+ * @param {string}  [opts.title]      dc:title (skill name)
+ * @param {string}  [opts.actor]      Author name / handle
+ * @param {string}  [opts.email]      Author email address
+ * @param {string}  [opts.purpose]    What the skill does
  * @returns {object} Sidecar JSON object
  */
-export async function signSkill({ content, title, actor, course, assignment, repo, studentId, instructor, certPath, keyPath }) {
+export async function signSkill({ content, title, actor, email, purpose, certPath, keyPath }) {
   const [certPem, keyPem] = await Promise.all([
     readFile(certPath ?? config.certPath, 'utf-8'),
     readFile(keyPath  ?? config.keyPath,  'utf-8'),
@@ -50,17 +47,14 @@ export async function signSkill({ content, title, actor, course, assignment, rep
             when:          now,
             softwareAgent: { name: config.appName, version: config.appVersion },
             ...(actor ? { actor } : {}),
+            ...(email ? { email } : {}),
           }],
         },
       },
       {
         label: 'org.friends-of-justin.skill',
         data: {
-          ...(course     ? { course }              : {}),
-          ...(assignment ? { assignment }           : {}),
-          ...(repo       ? { repo }                : {}),
-          ...(studentId  ? { student_id: studentId } : {}),
-          ...(instructor ? { instructor }           : {}),
+          ...(purpose ? { purpose } : {}),
         },
       },
     ],

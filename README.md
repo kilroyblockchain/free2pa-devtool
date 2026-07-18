@@ -68,15 +68,15 @@ the verifier, not a universal authority, defines the trust boundary.
 
 ## Quick start
 
-Prerequisites:
+Supported platforms and prerequisites:
 
+- macOS or Linux (verified on macOS and GitHub-hosted Ubuntu)
 - Node.js 20 or newer
 - OpenSSL on `PATH`
-- macOS, Linux, or Windows through WSL
 
 ```bash
 git clone https://github.com/kilroyblockchain/free2pa-devtool.git
-cd free2pa
+cd free2pa-devtool
 npm ci
 npm link
 free2pa --version
@@ -273,6 +273,9 @@ work:
 The dated development record is in
 [`docs/BUILD_WEEK.md`](docs/BUILD_WEEK.md). The submission checklist is in
 [`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md).
+
+For a two-minute, no-install evaluation path, see
+[`docs/JUDGE_GUIDE.md`](docs/JUDGE_GUIDE.md).
 
 ## How we collaborated with Codex
 

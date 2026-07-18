@@ -67,6 +67,18 @@ Delivered additions:
 - Scanned every commit in the public release history for private-key and API-key
   patterns before publication; no matches remain.
 
+## July 18 progress
+
+- Rendered a 2 minute 41 second English explainer with real deployed verdicts,
+  GPT-5.6 audit evidence, and CI output. Azure Neural HD supplies the narration.
+  The normalized 1080p H.264/AAC file passes a full FFmpeg decode check and
+  stays below the three-minute submission limit.
+- Replaced third-party-branded CI imagery with a neutral result view for the
+  submission video.
+- Added a no-account judge guide with exact live-demo and clean-install steps.
+- Re-verified the public repository workflow on GitHub-hosted Ubuntu in
+  [run 29630699533](https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29630699533).
+
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare
 the release and submission materials. Product scope, security policy, trust

@@ -40,6 +40,8 @@
     "!src/services/hardBoundVerifier.js",
     "!src/services/trustList.js",
     "public/",
+    "!public/free2pa.png",
+    "!public/test.html",
     "index.js",
     "README.md",
     "LICENSE"

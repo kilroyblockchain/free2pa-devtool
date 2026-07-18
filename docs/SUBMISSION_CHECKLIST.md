@@ -22,7 +22,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 
 ## Judge access
 
-- [ ] Clean install succeeds on every listed supported platform.
+- [x] Clean install succeeds on the listed macOS and Linux platforms.
 - [x] Automated test suite passes from a clean checkout.
 - [x] Public demo is deployed and remains available through August 5, 2026.
 - [x] Demo audit endpoint uses a scoped server-side Azure managed identity.
@@ -31,22 +31,22 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 
 ## Devpost materials
 
-- [ ] English project description explains the problem, audience, and features.
+- [x] English project description explains the problem, audience, and features.
 - [ ] Category is set to Developer Tools.
 - [ ] Public YouTube demonstration is under three minutes.
-- [ ] Demo audio explains what was built and how Codex and GPT-5.6 were used.
-- [ ] Video contains no unlicensed music, third-party marks, or private data.
+- [x] Demo audio explains what was built and how Codex and GPT-5.6 were used.
+- [x] Video contains no unlicensed music, third-party marks, or private data.
 - [ ] Repository URL is entered.
 - [ ] Live demo or test-build URL is entered.
-- [ ] Installation, supported-platform, and judge-testing instructions are entered.
-- [ ] README contains the required Codex collaboration narrative.
+- [x] Installation, supported-platform, and judge-testing instructions are written.
+- [x] README contains the required Codex collaboration narrative.
 - [ ] `/feedback` Codex Session ID for the primary build thread is entered.
 - [ ] Submission is finalized before July 21 at 5:00 PM Pacific Time.
 
 ## Final verification
 
-- [ ] Video claims match the tested build exactly.
-- [ ] Screenshots and text describe only hackathon-period additions as new work.
+- [x] Video claims match the tested build exactly.
+- [x] Screenshots and text describe only hackathon-period additions as new work.
 - [ ] All submitted content is owned or properly licensed.
 - [x] No secrets, credentials, personal data, or compromised certificates remain.
 - [ ] Devpost draft and all URLs are checked in a logged-out browser session.

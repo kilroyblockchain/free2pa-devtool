@@ -81,8 +81,9 @@ Delivered additions:
 
 ## July 18 progress
 
-- Rendered a 2 minute 45.5 second English explainer with real deployed verdicts,
-  GPT-5.6 audit evidence, and CI output. Azure Neural HD supplies the narration.
+- Rendered a 2 minute 51.4 second English explainer with the live two-lane
+  Agentic Factory, real deployed verdicts, guarded repair, the Codex skill, and
+  GPT-5.6 audit evidence. Azure Neural HD supplies the narration.
   The normalized 1080p H.264/AAC file passes a full FFmpeg decode check and
   stays below the three-minute submission limit.
 - Replaced third-party-branded CI imagery with a neutral result view for the
@@ -94,6 +95,17 @@ Delivered additions:
   keeps CLI and package versions synchronized. The 35 KB tarball installed in
   an empty directory and passed key generation, signing, trust admission, and
   verification through its installed executable.
+- Released `v0.3.0` with a production Agentic Factory that compares the same
+  Nerve Center file with and without Free2PA, and exposes Block, Repair,
+  Alert-and-continue, and Log response policies.
+- Added `free2pa repair`, which restores only from a valid, current, locally
+  trusted signed receipt and preserves the rejected file as evidence.
+- Added the installable `free2pa-protect-agent` Codex skill and the one-command
+  `free2pa codex-skill install` workflow for retrofitting existing agentic apps.
+- Re-verified the exact public `v0.3.0` source in
+  [run 29644256018](https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29644256018),
+  then clean-installed the 48 KB release archive and installed its bundled
+  Codex skill from the packaged executable.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

@@ -18,7 +18,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] GPT-5.6 is materially integrated as the behavioral security auditor.
 - [x] A live GPT-5.6 audit succeeds through the deployment's managed identity.
 - [x] Third-party licenses and integration terms are reviewed.
-- [ ] Private signing keys are absent from the submitted repository and package.
+- [x] Private signing keys are absent from the submitted repository and package.
 
 ## Judge access
 
@@ -27,7 +27,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Public demo is deployed and remains available through August 5, 2026.
 - [x] Demo audit endpoint uses a scoped server-side Azure managed identity.
 - [x] Testing instructions require no rebuild and no paid account.
-- [ ] Repository is public with a license, or shared with both judging addresses.
+- [x] Repository is public with an Apache-2.0 license.
 
 ## Devpost materials
 
@@ -48,5 +48,5 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [ ] Video claims match the tested build exactly.
 - [ ] Screenshots and text describe only hackathon-period additions as new work.
 - [ ] All submitted content is owned or properly licensed.
-- [ ] No secrets, credentials, personal data, or compromised certificates remain.
+- [x] No secrets, credentials, personal data, or compromised certificates remain.
 - [ ] Devpost draft and all URLs are checked in a logged-out browser session.

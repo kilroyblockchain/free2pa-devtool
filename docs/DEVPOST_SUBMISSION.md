@@ -132,7 +132,7 @@ claim C2PA consumer interoperability. Its JSON sidecar is a Free2PA format.
 - Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.0
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - YouTube demo: `TODO`
-- Primary Codex `/feedback` Session ID: `TODO`
+- Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
 
 ## Judge testing instructions
 

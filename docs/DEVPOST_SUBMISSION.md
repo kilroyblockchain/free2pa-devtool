@@ -98,6 +98,26 @@ Free2PA service. The repository is the product: each developer decides where
 the verifier runs, which public certificates define that deployment's trust
 group, and which interface fits the surrounding agent system.
 
+## Why it matters
+
+Agent developers are the primary audience. A single changed instruction in a
+high-leverage control file can alter every later action an agent takes, yet
+asking people to review sidecars or hashes by hand does not scale. Free2PA
+makes provenance an automatic load-time control that can be added to an
+existing ChatGPT app, MCP server, OpenClaw project, or agent framework without
+requiring a permanent central authority.
+
+The distinctive behavior is verifier-local trust. The same authentic,
+unchanged file can pass for the temporary group that admitted its publisher
+and fail everywhere else. That makes the boundary useful for classes, small
+teams, open-source collaborations, and short engagements where the members and
+their trust relationships change faster than a durable public PKI.
+
+The result is practical defense in depth: deterministic checks decide whether
+the file may load, the host chooses what happens on failure, and GPT-5.6 can
+separately explain behavioral risk. Developers get tamper evidence and policy
+enforcement; users do not acquire another security chore.
+
 ## How we built it
 
 The implementation uses Node.js 20, Express, the Model Context Protocol SDK,
@@ -119,8 +139,8 @@ machine-readable reason codes such as `LOCAL_TRUST`, `EXPLICIT_MATCH`,
 
 ## How we used Codex and GPT-5.6
 
-Karen Kilroy supplied the central product concept and made the key trust-policy and
-scope decisions. Codex audited three related research repositories, helped
+Karen Kilroy supplied the central product concept and made the key trust-policy
+and scope decisions. Codex audited three related research repositories, helped
 select the focused agent-skill baseline, implemented the distributable CLI and
 verifier workflow, added tests and security hardening, reviewed dependency and
 browser risks, and prepared reproducible release and judging materials.
@@ -147,6 +167,12 @@ Week extension separately.
 
 ## Accomplishments
 
+- Live two-lane Agentic Factory comparing the same control file with and
+  without programmatic Free2PA verification.
+- Explicit Block, Repair-and-report, Alert-and-continue, and Log host policies.
+- Guarded `repair` command that restores a trusted signed original while
+  preserving the rejected file as evidence.
+- Installable `free2pa-protect-agent` Codex skill with a one-command installer.
 - Complete ad-hoc verifier lifecycle from the command line.
 - Outside-group rejection, certificate admission, and immediate revocation.
 - Tamper detection with a human-readable diff.
@@ -169,7 +195,8 @@ review complement one another only when their responsibilities remain clear.
 
 - Signed verification-event logs for group accountability.
 - Optional skill dependency and ingredient assertions.
-- GitHub Action templates for changed-skill policy checks.
+- Framework-specific loader adapters for OpenClaw, the Agents SDK, and ChatGPT
+  app MCP servers.
 - Publisher discovery URLs and certificate fingerprint confirmation.
 - Versioned supersession and provenance-completeness assertions.
 
@@ -198,15 +225,16 @@ does not claim C2PA endorsement.
 
 No account, rebuild, API key, or payment is required.
 
-1. Open the live demo and select **Demo files**.
-2. Verify the trusted fixture and observe that all cryptographic and local-trust
-   gates pass.
-3. Verify the outside-group fixture and observe `UNTRUSTED_ISSUER` even though
-   its signature and content binding pass.
-4. Verify the tampered fixture and observe the integrity failure and displayed
-   content difference even though its publisher is trusted.
-5. Audit the malicious fixture and inspect GPT-5.6's structured behavioral
-   findings and recorded model, provider, timestamp, and asset hash.
+1. Open the live Agentic Factory. Leave **Changed** and **Block** selected and
+   choose **Run file**. Compare the unchecked load with the protected
+   `QUARANTINE` response.
+2. Select **Repair + report** and run the changed file again. Observe the
+   guarded `RESTORE + REPORT` response.
+3. Run **Outside group** and observe that signature and file checks pass while
+   group trust fails with `UNTRUSTED_ISSUER`.
+4. Run **Trusted** and observe that all checks pass and the agent loads it.
+5. Open **Research workbench**, use **Demo files** to load the behavioral-risk
+   fixture, and inspect GPT-5.6's structured audit and model metadata.
 
 Supported installation platforms are macOS and Linux with Node.js 20 or newer
 and OpenSSL. Full install and CLI instructions are in `docs/JUDGE_GUIDE.md`.
@@ -215,25 +243,29 @@ and OpenSSL. Full install and CLI instructions are in `docs/JUDGE_GUIDE.md`.
 
 Title:
 
-> Free2PA: Ad-Hoc Trust Groups for AI Agent Skills | OpenAI Build Week
+> Free2PA Agentic Factory: A Seat Belt for Agent Control Files | OpenAI Build Week
 
 Description:
 
-> Free2PA is an Apache-2.0 developer tool for launching an ad-hoc verifier and
-> choosing which AI agent-skill publishers a group trusts. It combines
-> deterministic signature, content-integrity, certificate-validity, and local
-> trust gates with an independent GPT-5.6 behavioral security audit.
+> Agent frameworks put developers in the driver's seat. Free2PA is the seat
+> belt for the files that steer the agent. This Apache-2.0 developer toolkit
+> adds signed receipts, exact-file integrity, and project-local publisher trust
+> to an agentic Nerve Center. The host consumes PASS or FAIL programmatically
+> and can block, repair and report, alert and continue, or log. Free2PA also
+> ships an installable Codex skill and an independent GPT-5.6 behavioral audit.
 >
 > Live demo: https://free2pa-buildweek.azurewebsites.net
 >
 > Source: https://github.com/kilroyblockchain/free2pa-devtool
 
-Upload `artifacts/Free2PA-Build-Week-final.mp4` as a public video. It is 2:45.5,
+Upload `artifacts/Free2PA-Build-Week-final.mp4` as a public video. It is 2:51.4,
 1920x1080 H.264/AAC, has Azure Neural HD English narration, no music, and
-normalized speech at approximately -16.6 LUFS.
+normalized speech at approximately -16.8 LUFS.
 
 ## Gallery assets
 
-- Cover: `artifacts/Free2PA-cover.png`
-- Trust-boundary proof: `artifacts/Free2PA-trust-boundary.png`
+- Logo: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-logo.png
+- Cover: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Agentic-Factory.png
+- Programmatic result: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Agentic-Factory-Result.png
+- Mobile experience: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Agentic-Factory-Mobile.png
 - GPT-5.6 audit proof: `artifacts/Free2PA-gpt-audit.png`

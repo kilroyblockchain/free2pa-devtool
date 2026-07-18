@@ -55,15 +55,22 @@ they want to protect.
 
 The hosted verifier is read-only so visitors cannot change its trust policy or
 use its signing identity. Its deployment trust store contains only the scoped
-Build Week demo publisher and expires after judging. Open **Demo files** in the header to download prepared
-fixtures, then use the Verify panel:
+Build Week demo publisher and expires after judging. The home page is a live
+Agentic Factory that runs the same Nerve Center file through agent lanes with
+and without Free2PA:
 
-1. `trusted/SKILL.md` with its sidecar passes every check.
-2. `outside/SKILL.md` with its sidecar has a valid signature and unchanged
-   content but fails group trust.
-3. `tampered/SKILL.md` with its original sidecar comes from a trusted publisher
-   but fails content integrity and displays the changed instruction.
-4. `malicious/SKILL.md` is the prepared GPT-5.6 behavioral-audit case.
+1. Run **Changed** with **Block**. The unprotected agent loads the file, while
+   the live Free2PA lane returns `SIGN PASS`, `FILE FAIL`, `GROUP PASS`, and
+   `QUARANTINE`.
+2. Select **Repair + report** and run **Changed** again. The host can restore
+   the signed original and preserve the rejected copy as evidence.
+3. Run **Outside group**. The signature and file pass, but local group trust
+   fails and the protected lane rejects the file.
+4. Run **Trusted**. Every gate passes and the protected lane loads the file.
+
+The original sign, verify, diff, and GPT-5.6 audit interface remains available
+through **Research workbench** in the header. Its **Demo files** menu provides
+the exact public fixtures used by the factory.
 
 The same integrity gate can protect other text-based Nerve Center controls,
 including `SOUL.md`; `SKILL.md` is the focused reference implementation used

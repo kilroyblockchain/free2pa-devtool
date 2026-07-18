@@ -8,20 +8,28 @@ The deployment is a reference verifier. The submitted product is the toolkit:
 developers install it, provide the public certificates their group accepts,
 and integrate the CLI, CI action, HTTP API, or MCP tools into their own system.
 The surrounding application consumes the verification result at startup or
-file-load time and applies its own programmed response: block, alert, or log.
+file-load time and applies its own programmed response: block, guarded repair,
+alert and continue, or log.
 
 ## Live test in two minutes
 
-Open <https://free2pa-buildweek.azurewebsites.net> and select **Demo files**.
+Open <https://free2pa-buildweek.azurewebsites.net>. No files are required for
+the primary test; each button calls the submitted verifier with a prepared
+public fixture.
 
-1. Verify `trusted/SKILL.md` with its sidecar. Signature, content integrity,
-   certificate validity, and local group trust all pass.
-2. Verify `outside/SKILL.md` with its sidecar. Its signature and content pass,
-   but local trust fails with `UNTRUSTED_ISSUER`.
-3. Verify `tampered/SKILL.md` with its sidecar. Its publisher remains trusted,
-   but content integrity fails and the changed instruction is displayed.
-4. Audit `malicious/SKILL.md`. GPT-5.6 returns structured behavioral findings
-   and records the model deployment, provider, audit time, and asset hash.
+1. Leave **Changed** and **Block** selected, then choose **Run file**. The
+   unprotected lane loads the changed control file. The protected lane returns
+   `SIGN PASS`, `FILE FAIL`, `GROUP PASS`, and `QUARANTINE`.
+2. Set the protected policy to **Repair + report** and run again. The protected
+   lane returns `RESTORE + REPORT`; the CLI implementation preserves the
+   rejected copy and restores only a current, locally trusted signed original.
+3. Select **Outside group** and run. Signature and file integrity pass, local
+   trust fails with `UNTRUSTED_ISSUER`, and the protected lane rejects it.
+4. Select **Trusted** and run. All three gates pass and the protected lane
+   returns `LOAD`.
+5. Open **Research workbench**, download the behavioral-risk fixture from
+   **Demo files**, and run **GPT-5.6 Audit**. The structured result records the
+   model, Azure managed-identity provider, audit time, and asset hash.
 
 The hosted verifier is intentionally read-only. Trust-store mutation, signing,
 and key generation return HTTP 403 so public visitors cannot alter its policy.

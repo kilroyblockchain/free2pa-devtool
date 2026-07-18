@@ -6,8 +6,8 @@ Free2PA
 
 ## Tagline
 
-Launch an ad-hoc verifier and trust only the AI agent-skill publishers your
-group chooses.
+Agent frameworks put developers in the driver's seat. Free2PA is the seat belt
+for the files that steer the agent.
 
 ## Category
 
@@ -20,6 +20,13 @@ research demo in response to a practical need she observed among college
 students collaborating through OpenClaw agentic nerve centers: they needed
 publisher trust groups that could form quickly around a project and end when
 the collaboration ended.
+
+Karen calls the collection of skills and critical agent-control files the
+**Nerve Center**. It can include files such as `SKILL.md` and `SOUL.md` that
+shape what an agent can do. A file may be changed by an external attack, by
+someone outside the trust group, or by the agent itself. In every case, the
+operational question is the same: does this exact file still have provenance
+the local group accepts?
 
 People form temporary trust groups constantly. A college class trusts its
 members for a semester. Two teams trust each other for one assignment. A
@@ -36,6 +43,11 @@ outside that boundary.
 
 ## What it does
 
+Free2PA puts a signed receipt beside the files that tell an AI agent who it is
+and what it can do. Before the agent uses one, Free2PA checks two facts anyone
+can understand: has this file changed, and did it come from someone this group
+trusts?
+
 Free2PA signs AI agent skill files with ECDSA P-256 credentials and binds each
 credential to the exact file content with SHA-256. A verifier checks:
 
@@ -48,6 +60,22 @@ Removing it revokes trust on the next verification without modifying any
 credential. Trust can be one-way, team-wide, class-wide, or deliberately
 short-lived.
 
+No human has to inspect every receipt. Verification happens programmatically
+when an agent starts, loads a skill, or accepts a changed control file. Free2PA
+returns machine-readable facts; the host application can block or quarantine,
+alert and continue, log the event, or restore a known trusted version. The
+`repair` command restores only content embedded in a valid, current, locally
+trusted signed receipt and preserves the rejected file for reporting. Critical Nerve Center files should
+normally fail closed, but enforcement remains an application policy rather
+than a hidden decision inside Free2PA.
+
+Free2PA places that decision at the Nerve Center's admission boundary. The
+sidecar preserves the signed publisher and asset hash. If a protected file
+changes, even when an agent rewrites its own `SOUL.md`, the integrity gate
+fails and the implementation can quarantine the file instead of loading it.
+This release demonstrates the pattern with `SKILL.md`; the same exact-byte
+binding applies to other text-based control files.
+
 GPT-5.6 adds an independent structured behavioral audit for prompt injection,
 secret access, data exfiltration, destructive actions, unsafe downloads,
 supply-chain behavior, and excessive permissions. Cryptographic verification
@@ -56,6 +84,14 @@ remains the hard gate; the model cannot turn a failed credential into a pass.
 Developers can use Free2PA through an installable CLI, browser interface, HTTP
 API, or Streamable HTTP MCP server. JSON output and nonzero exit codes support
 CI and agent-policy enforcement.
+
+The repository also includes a Codex skill for retrofitting Free2PA into an
+existing OpenClaw project, ChatGPT app, MCP server, or other agentic system. A
+developer can ask Codex to identify the application's Nerve Center, install the
+pinned freeware release, place verification before the load boundary, and
+prove that both changed files and publishers outside the project group are
+rejected. The developer still owns every trust and signing decision.
+The packaged CLI installs the skill with `free2pa codex-skill install`.
 
 The Azure page is a reference verifier and judge sandbox, not a centralized
 Free2PA service. The repository is the product: each developer decides where
@@ -105,8 +141,9 @@ make the system difficult to reason about. Free2PA instead uses deterministic
 cryptographic gates and presents GPT-5.6 analysis as a distinct assessment.
 
 Another challenge was making a research prototype judge-ready without claiming
-old work as new. The repository identifies commit `cd5c2c3` as the pre-event
-baseline and documents every submitted Build Week extension separately.
+old work as new. The public repository identifies sanitized commit `cd5c2c3` as
+the content-equivalent pre-event baseline and documents every submitted Build
+Week extension separately.
 
 ## Accomplishments
 
@@ -139,7 +176,7 @@ review complement one another only when their responsibilities remain clear.
 ## C2PA disclosure
 
 C2PA has a formal conformance program in which conforming Content Credentials
-are verified by conforming verifiers. Free2PA `0.2.1` is C2PA-inspired but is
+are verified by conforming verifiers. Free2PA `0.3.0` is C2PA-inspired but is
 not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
 provenance credentials in a Free2PA format: a signed publisher identity traces
 origin and asset binding reveals edits. It then addresses an adjacent concern
@@ -151,8 +188,9 @@ does not claim C2PA endorsement.
 ## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.1
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.0
 - Live demo: https://free2pa-buildweek.azurewebsites.net
+- Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Build-Week-demo.mp4
 - YouTube demo: `TODO`
 - Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
 
@@ -172,3 +210,30 @@ No account, rebuild, API key, or payment is required.
 
 Supported installation platforms are macOS and Linux with Node.js 20 or newer
 and OpenSSL. Full install and CLI instructions are in `docs/JUDGE_GUIDE.md`.
+
+## YouTube upload
+
+Title:
+
+> Free2PA: Ad-Hoc Trust Groups for AI Agent Skills | OpenAI Build Week
+
+Description:
+
+> Free2PA is an Apache-2.0 developer tool for launching an ad-hoc verifier and
+> choosing which AI agent-skill publishers a group trusts. It combines
+> deterministic signature, content-integrity, certificate-validity, and local
+> trust gates with an independent GPT-5.6 behavioral security audit.
+>
+> Live demo: https://free2pa-buildweek.azurewebsites.net
+>
+> Source: https://github.com/kilroyblockchain/free2pa-devtool
+
+Upload `artifacts/Free2PA-Build-Week-final.mp4` as a public video. It is 2:45.5,
+1920x1080 H.264/AAC, has Azure Neural HD English narration, no music, and
+normalized speech at approximately -16.6 LUFS.
+
+## Gallery assets
+
+- Cover: `artifacts/Free2PA-cover.png`
+- Trust-boundary proof: `artifacts/Free2PA-trust-boundary.png`
+- GPT-5.6 audit proof: `artifacts/Free2PA-gpt-audit.png`

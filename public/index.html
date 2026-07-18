@@ -1,1160 +1,502 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Free2PA — Skill Content Credentials</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free2PA | The seat belt for agent control files</title>
+  <meta name="description" content="See the same agentic Nerve Center run with and without Free2PA provenance and ad-hoc trust verification.">
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { width: 100%; max-width: 100%; }
+    :root {
+      color-scheme: dark;
+      --ink: #0c0f0d;
+      --surface: #141815;
+      --surface-2: #1a201c;
+      --line: #343c37;
+      --line-soft: #252b27;
+      --paper: #f0f2ef;
+      --muted: #929b95;
+      --green: #42dc8d;
+      --green-dark: #122c1e;
+      --amber: #f3b84b;
+      --amber-dark: #30230f;
+      --red: #ff6b68;
+      --red-dark: #321514;
+      --blue: #76a9ff;
+      --radius: 8px;
+    }
 
+    * { box-sizing: border-box; }
+    html { background: var(--ink); }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #111312;
-      color: #e8ece9;
+      margin: 0;
+      min-width: 320px;
       min-height: 100vh;
-      padding: 2rem 1rem 3rem;
-      overflow-x: hidden;
+      background: var(--ink);
+      color: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     }
+    button, select { font: inherit; }
+    button { cursor: pointer; }
+    code, .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
 
-    h1 {
-      text-align: center;
-      font-size: 1.6rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      color: #f6f7f5;
-      margin-bottom: 0.2rem;
-    }
-    .subtitle {
-      text-align: center;
-      font-size: 0.8rem;
-      color: #858d88;
-      margin-bottom: 2.5rem;
-      max-width: 40rem;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .utility-row {
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      gap: 1rem;
-      min-height: 2.5rem;
-      margin-top: -1.5rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.78rem;
-    }
-    .utility-row > a, .utility-row summary {
-      color: #35b878;
-      text-decoration: none;
-      cursor: pointer;
-      border-bottom: 1px solid #343836;
-      padding-bottom: 1px;
-    }
-    .demo-menu { position: relative; }
-    .demo-menu summary { list-style: none; }
-    .demo-menu summary::-webkit-details-marker { display: none; }
-    .demo-links {
-      position: absolute;
-      z-index: 10;
-      top: 1.7rem;
-      right: 0;
-      width: 15rem;
-      padding: 0.45rem;
-      border: 1px solid #343836;
-      border-radius: 6px;
-      background: #1b1d1c;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
-    }
-    .demo-links a {
-      display: block;
-      color: #d1d6d2;
-      text-decoration: none;
-      padding: 0.5rem 0.6rem;
-      border-radius: 4px;
-    }
-    .demo-links a:hover { background: #17241d; color: #f6f7f5; }
-
-    .panels {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 1.5rem;
-      max-width: 1360px;
-      width: 100%;
-      margin: 0 auto;
-    }
-    @media (max-width: 1100px) { .panels { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (max-width: 700px) { .panels { grid-template-columns: minmax(0, 1fr); } }
-
-    .panel {
-      background: #1b1d1c;
-      border: 1px solid #343836;
-      border-radius: 8px;
-      padding: 1.5rem;
-      min-width: 0;
-      max-width: 100%;
-    }
-    .panel h2 {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: #aab1ad;
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 1.2rem;
-    }
-
-    /* Drop zone */
-    .drop-zone {
-      border: 2px dashed #343836;
-      border-radius: 8px;
-      padding: 1.5rem 1rem;
-      text-align: center;
-      cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-      margin-bottom: 1rem;
-      position: relative;
-    }
-    .drop-zone:hover, .drop-zone.drag-over {
-      border-color: #35b878;
-      background: #17241d;
-    }
-    .drop-zone input[type="file"] {
-      position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
-    }
-    .drop-zone .dz-icon  { font-size: 1.6rem; margin-bottom: 0.35rem; }
-    .drop-zone .dz-label { font-size: 0.8rem; color: #858d88; }
-    .drop-zone .dz-name  { margin-top: 0.4rem; font-size: 0.78rem; color: #35b878; word-break: break-all; }
-
-    /* Form fields */
-    .field-group { margin-bottom: 1rem; }
-    .field-group h3 {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: #35b878;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.6rem;
-      padding-bottom: 0.3rem;
-      border-bottom: 1px solid #343836;
-    }
-    label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: #aab1ad;
-      margin-bottom: 0.25rem;
-    }
-    input[type="text"] {
-      width: 100%;
-      background: #111312;
-      border: 1px solid #343836;
-      border-radius: 6px;
-      color: #e8ece9;
-      font-size: 0.85rem;
-      padding: 0.45rem 0.65rem;
-      margin-bottom: 0.7rem;
-      outline: none;
-      transition: border-color 0.2s;
-    }
-    input[type="text"]:focus { border-color: #35b878; }
-
-    select {
-      width: 100%;
-      background: #111312;
-      border: 1px solid #343836;
-      border-radius: 6px;
-      color: #e8ece9;
-      font-size: 0.85rem;
-      padding: 0.45rem 0.65rem;
-      margin-bottom: 1rem;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      background: #35b878;
-      color: #fff;
-      border: none;
-      border-radius: 7px;
-      font-size: 0.9rem;
-      font-weight: 600;
-      padding: 0.65rem 1rem;
-      cursor: pointer;
-      transition: background 0.2s, opacity 0.2s;
-      margin-top: 0.25rem;
-    }
-    button:hover:not(:disabled) { background: #2f9e69; }
-    button:disabled { opacity: 0.45; cursor: not-allowed; }
-
-    .btn-secondary {
-      width: auto;
-      background: transparent;
-      border: 1px solid #343836;
-      color: #aab1ad;
-      font-size: 0.75rem;
-      font-weight: 500;
-      padding: 0.35rem 0.75rem;
-      border-radius: 5px;
-      margin-top: 0;
-    }
-    .btn-secondary:hover:not(:disabled) { background: #1b1d1c; border-color: #35b878; color: #e8ece9; }
-
-    .btn-icon {
-      width: auto;
-      background: #1b1d1c;
-      border: 1px solid #343836;
-      color: #aab1ad;
-      font-size: 1rem;
-      padding: 0.35rem 0.6rem;
-      border-radius: 5px;
-      margin-top: 0;
-      line-height: 1;
-    }
-    .btn-icon:hover:not(:disabled) { border-color: #35b878; color: #e8ece9; }
-
-    .cert-row {
-      display: flex;
-      gap: 0.5rem;
-      margin-bottom: 0.5rem;
-      align-items: stretch;
-    }
-    .cert-row select { flex: 1; margin-bottom: 0; }
-    .cert-row select { min-width: 0; }
-
-    .cert-detail {
-      font-size: 0.72rem;
-      color: #858d88;
-      margin-bottom: 0.75rem;
-      min-height: 1.2em;
-    }
-
-    .gen-cert-form {
-      margin-top: 0.75rem;
-      padding: 0.85rem 1rem;
-      background: #171a18;
-      border: 1px solid #343836;
-      border-radius: 8px;
-    }
-    .gen-cert-form label { color: #858d88; }
-    .gen-cert-form input[type="text"] { margin-bottom: 0.5rem; }
-
-    .spinner {
-      display: inline-block;
-      width: 13px; height: 13px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      vertical-align: middle;
-      margin-right: 5px;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* Result box */
-    .result {
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      border-radius: 8px;
-      padding: 0.8rem 1rem;
-      display: none;
-      white-space: pre-line;
-    }
-    .result.success { background: #0d2b1e; border: 1px solid #22543d; color: #68d391; }
-    .result.error   { background: #2b0d0d; border: 1px solid #742a2a; color: #fc8181; }
-
-    /* Verification verdict cards */
-    .verdicts {
-      display: flex;
-      flex-direction: column;
-      gap: 0.6rem;
-      margin-top: 1rem;
-    }
-    .verdict {
-      border-radius: 8px;
-      padding: 0.75rem 1rem;
-      border: 1px solid #343836;
-      background: #171a18;
-    }
-    .verdict-header {
+    .shell { width: min(1480px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar {
+      height: 70px;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 0.25rem;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
     }
-    .verdict-detail {
-      font-size: 0.75rem;
-      color: #858d88;
-      padding-left: 1.6rem;
+    .brand { display: flex; align-items: center; gap: 11px; color: var(--paper); text-decoration: none; }
+    .brand img { width: 34px; height: 34px; color: var(--green); filter: invert(79%) sepia(50%) saturate(574%) hue-rotate(91deg) brightness(93%); }
+    .brand-name { font-size: 1.05rem; font-weight: 760; }
+    .brand-tag { margin-left: 4px; color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav { display: flex; align-items: center; gap: 18px; }
+    .nav a { color: var(--muted); text-decoration: none; font-size: 0.76rem; }
+    .nav a:hover { color: var(--paper); }
+
+    .intro {
+      display: grid;
+      grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
+      gap: 48px;
+      align-items: end;
+      padding: 38px 0 28px;
     }
-    .icon-ok   { color: #68d391; }
-    .icon-fail { color: #fc8181; }
-    .icon-warn { color: #f6ad55; }
+    .eyebrow { color: var(--green); font-size: 0.68rem; font-weight: 760; text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 10px; }
+    h1 { max-width: 880px; margin: 0; color: var(--paper); font-size: clamp(2rem, 4.2vw, 4.15rem); line-height: 1.02; font-weight: 760; letter-spacing: 0; }
+    .intro-copy { color: var(--muted); font-size: 0.93rem; line-height: 1.65; max-width: 540px; }
+    .intro-copy strong { color: var(--paper); font-weight: 650; }
 
-    .verdict.ok   { border-color: #22543d; background: #0d2b1e; }
-    .verdict.fail { border-color: #742a2a; background: #2b0d0d; }
-    .verdict.warn { border-color: #7b4a00; background: #2b1a0d; }
-
-    pre {
-      white-space: pre-wrap;
-      word-break: break-word;
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 0.7rem;
-      margin-top: 0.75rem;
-      color: #858d88;
-      max-height: 220px;
-      overflow-y: auto;
-      border-top: 1px solid #343836;
-      padding-top: 0.5rem;
-    }
-
-    .section-note {
-      font-size: 0.72rem;
-      color: #858d88;
-      margin-bottom: 0.75rem;
-      line-height: 1.5;
-    }
-
-    /* Diff view */
-    .diff-view {
-      margin-top: 0.75rem;
-      border-radius: 6px;
+    .factory {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
       overflow: hidden;
-      border: 1px solid #343836;
-      max-height: 320px;
-      overflow-y: auto;
-      font-family: "SF Mono", "Fira Code", monospace;
+      background: var(--surface);
+      box-shadow: 0 18px 50px rgba(0,0,0,.28);
+    }
+    .factory-toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 18px;
+      align-items: center;
+      min-height: 66px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--line);
+      background: #111512;
+    }
+    .factory-title { font-size: 0.8rem; font-weight: 720; }
+    .factory-title span { display: block; color: var(--muted); font-size: 0.66rem; font-weight: 500; margin-top: 3px; }
+    .segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+    .segment {
+      min-height: 34px;
+      padding: 0 12px;
+      border: 0;
+      border-right: 1px solid var(--line);
+      background: var(--surface-2);
+      color: var(--muted);
       font-size: 0.7rem;
-      line-height: 1.6;
+      font-weight: 650;
+      white-space: nowrap;
     }
-    .diff-line {
-      display: flex;
-      gap: 0.5rem;
-      padding: 0 0.65rem;
-      white-space: pre-wrap;
-      word-break: break-all;
+    .segment:last-child { border-right: 0; }
+    .segment[aria-selected="true"] { background: var(--green); color: #08150e; }
+    .policy-control { display: flex; align-items: center; gap: 8px; }
+    .policy-control label { color: var(--muted); font-size: 0.67rem; }
+    select {
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface-2);
+      color: var(--paper);
+      padding: 0 30px 0 10px;
+      font-size: 0.7rem;
     }
-    .diff-line.same   { color: #727a75; }
-    .diff-line.add    { background: #0a2318; color: #68d391; }
-    .diff-line.remove { background: #2b0d0d; color: #fc8181; }
-    .diff-gutter {
-      flex-shrink: 0;
-      width: 1rem;
-      text-align: center;
-      opacity: 0.7;
-      user-select: none;
-    }
-    .diff-no-content {
+    .run-button {
+      height: 36px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--green);
+      color: #08150e;
+      padding: 0 16px;
       font-size: 0.72rem;
-      color: #727a75;
-      margin-top: 0.6rem;
-      font-style: italic;
+      font-weight: 760;
     }
-    @media (max-width: 700px) {
-      body { padding: 1.5rem 0.75rem 2rem; }
-      .panel { padding: 1rem; }
-      .cert-row { flex-wrap: wrap; }
-      .cert-row select { flex-basis: calc(100% - 5.5rem); }
+    .run-button:disabled { opacity: .55; cursor: wait; }
+
+    .factory-grid { display: grid; grid-template-columns: 210px minmax(0,1fr); min-height: 430px; }
+    .input-rack { border-right: 1px solid var(--line); padding: 16px; background: #111512; }
+    .rack-label, .lane-label { color: var(--muted); font-size: 0.63rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; }
+    .rack-help { color: #717a74; font-size: 0.67rem; line-height: 1.45; margin: 7px 0 14px; }
+    .file-button {
+      width: 100%; min-height: 58px; margin-bottom: 8px; padding: 9px 10px;
+      text-align: left; border: 1px solid var(--line-soft); border-radius: 6px;
+      background: var(--surface); color: var(--paper);
     }
-    .audit-summary {
-      margin-top: 1rem;
-      border: 1px solid #343836;
-      border-radius: 8px;
-      padding: 0.85rem 1rem;
-      background: #171a18;
+    .file-button[aria-selected="true"] { border-color: var(--green); background: var(--green-dark); }
+    .file-name { display: block; font-size: 0.73rem; font-weight: 700; }
+    .file-note { display: block; color: var(--muted); font-size: 0.62rem; margin-top: 4px; line-height: 1.25; }
+    .file-button[data-case="changed"] .file-note { color: var(--amber); }
+    .file-button[data-case="outside"] .file-note { color: var(--blue); }
+
+    .lanes { display: grid; grid-template-rows: 1fr 1fr; min-width: 0; }
+    .lane { position: relative; min-width: 0; padding: 16px 18px; }
+    .lane + .lane { border-top: 1px solid var(--line); }
+    .lane-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .lane-badge { font-size: 0.61rem; padding: 3px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
+    .lane.with .lane-badge { color: var(--green); border-color: #286a48; background: var(--green-dark); }
+    .flow {
+      display: grid;
+      grid-template-columns: minmax(110px, .85fr) 34px minmax(140px, 1.1fr) 34px minmax(120px, .9fr) 34px minmax(150px, 1.1fr);
+      align-items: stretch;
+      min-height: 132px;
     }
-    .risk-label {
-      display: inline-block;
-      padding: 0.2rem 0.45rem;
-      border-radius: 4px;
-      font-size: 0.68rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      margin-bottom: 0.55rem;
+    .flow-node {
+      display: flex; flex-direction: column; justify-content: center; min-width: 0;
+      border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); padding: 10px;
     }
-    .risk-critical, .risk-high { color: #fc8181; background: #2b0d0d; border: 1px solid #742a2a; }
-    .risk-medium { color: #f6ad55; background: #2b1a0d; border: 1px solid #7b4a00; }
-    .risk-low { color: #68d391; background: #0d2b1e; border: 1px solid #22543d; }
-    .audit-summary p { font-size: 0.8rem; color: #d1d6d2; line-height: 1.5; }
-    .audit-summary .audit-metadata {
-      margin-top: 0.8rem;
-      padding-top: 0.65rem;
-      border-top: 1px solid #333a36;
-      color: #8f9993;
-      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-      font-size: 0.68rem;
-      overflow-wrap: anywhere;
+    .node-top { color: var(--muted); font-size: 0.59rem; font-weight: 730; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; }
+    .node-main { font-size: 0.72rem; font-weight: 700; overflow-wrap: anywhere; }
+    .node-sub { color: var(--muted); font-size: 0.61rem; line-height: 1.4; margin-top: 5px; }
+    .flow-arrow { display: flex; align-items: center; justify-content: center; color: #657068; font-size: 1.05rem; }
+    .bypass { border-style: dashed; color: var(--amber); }
+    .gate { border-color: #286a48; background: var(--green-dark); }
+    .checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 7px; }
+    .check { padding: 4px 3px; border-radius: 4px; background: #0e1b14; color: var(--muted); text-align: center; font-size: .55rem; }
+    .check.pass { color: var(--green); }
+    .check.fail { color: var(--red); background: var(--red-dark); }
+    .outcome { border-color: var(--line); }
+    .outcome.good { border-color: #286a48; background: var(--green-dark); }
+    .outcome.warn { border-color: #745827; background: var(--amber-dark); }
+    .outcome.bad { border-color: #7d3533; background: var(--red-dark); }
+    .outcome .node-main { font-size: .78rem; }
+
+    .machine-log {
+      display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
+      min-height: 46px; padding: 8px 16px; border-top: 1px solid var(--line);
+      background: #0a0d0b; font-family: "SFMono-Regular", Consolas, monospace; font-size: .63rem;
     }
-    .finding {
-      margin-top: 0.75rem;
-      padding: 0.8rem 0;
-      border-top: 1px solid #343836;
+    .log-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+    .log-pulse.live { background: var(--green); box-shadow: 0 0 0 4px rgba(66,220,141,.1); }
+    .log-text { color: #a8b1ab; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .log-time { color: #68706b; }
+
+    .below {
+      display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
+      gap: 0; margin: 28px 0 48px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
     }
-    .finding h3 { font-size: 0.82rem; color: #e8ece9; margin-bottom: 0.35rem; }
-    .finding p { font-size: 0.74rem; color: #aab1ad; line-height: 1.45; margin-top: 0.25rem; }
+    .below section { padding: 24px 26px; }
+    .below section + section { border-left: 1px solid var(--line); }
+    .below h2 { margin: 0 0 8px; font-size: 1rem; }
+    .below p { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.55; }
+    .install-row { display: flex; gap: 8px; margin-top: 14px; }
+    .install-code { flex: 1; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #0a0d0b; color: #c5cdc8; font-size: .65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .copy-button { width: 78px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--paper); font-size: .68rem; }
+    .skill-link { display: inline-block; margin-top: 12px; color: var(--green); font-size: .7rem; text-decoration: none; }
+    .skill-link:hover { text-decoration: underline; }
+    .three-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
+    .fact { border-left: 2px solid var(--line); padding-left: 9px; }
+    .fact strong { display: block; font-size: .68rem; margin-bottom: 3px; }
+    .fact span { color: var(--muted); font-size: .62rem; line-height: 1.35; }
+
+    @media (max-width: 1050px) {
+      .factory-toolbar { grid-template-columns: 1fr auto; }
+      .factory-title { grid-column: 1 / -1; }
+      .factory-grid { grid-template-columns: 175px minmax(0,1fr); }
+      .flow { grid-template-columns: minmax(90px,.8fr) 22px minmax(120px,1fr) 22px minmax(105px,.9fr) 22px minmax(120px,1fr); }
+    }
+    @media (max-width: 780px) {
+      .shell { width: min(100% - 24px, 1480px); }
+      .brand-tag { display: none; }
+      .nav a:first-child { display: none; }
+      .intro { grid-template-columns: 1fr; gap: 14px; padding-top: 28px; }
+      .factory-toolbar { grid-template-columns: 1fr; }
+      .segmented { width: 100%; }
+      .segment { flex: 1; padding: 0 7px; }
+      .policy-control { justify-content: space-between; }
+      .run-button { width: 100%; }
+      .factory-grid { grid-template-columns: 1fr; }
+      .input-rack { border-right: 0; border-bottom: 1px solid var(--line); }
+      .file-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .file-button { margin: 0; }
+      .flow { grid-template-columns: 1fr; gap: 6px; }
+      .flow-arrow { transform: rotate(90deg); min-height: 14px; }
+      .below { grid-template-columns: 1fr; }
+      .below section + section { border-left: 0; border-top: 1px solid var(--line); }
+    }
+    @media (max-width: 510px) {
+      .topbar { height: 58px; }
+      .nav { gap: 10px; }
+      h1 { font-size: 2rem; }
+      .file-list { grid-template-columns: 1fr; }
+      .lane { padding: 14px 10px; }
+      .three-facts { grid-template-columns: 1fr; }
+      .machine-log { grid-template-columns: auto 1fr; }
+      .log-time { display: none; }
+    }
   </style>
 </head>
 <body>
+  <header class="shell topbar">
+    <a class="brand" href="/" aria-label="Free2PA home">
+      <img src="/free2pa-mark.svg" alt="">
+      <span class="brand-name">Free2PA</span>
+      <span class="brand-tag">Ad-hoc agent trust</span>
+    </a>
+    <nav class="nav" aria-label="Project links">
+      <a href="/workbench.html">Research workbench</a>
+      <a href="https://github.com/kilroyblockchain/free2pa-devtool">Repository</a>
+      <a href="https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.0">Freeware</a>
+    </nav>
+  </header>
 
-<h1>Free2PA</h1>
-<p class="subtitle">Provenance, trust verification, and GPT-5.6 security auditing for AI agent skills</p>
-<nav class="utility-row" aria-label="Utilities">
-  <details class="demo-menu">
-    <summary>Demo files</summary>
-    <div class="demo-links">
-      <a href="/demo/trusted/SKILL.md" download>Trusted skill</a>
-      <a href="/demo/trusted/SKILL.md.c2pa.json" download>Trusted sidecar</a>
-      <a href="/demo/outside/SKILL.md" download>Outside-group skill</a>
-      <a href="/demo/outside/SKILL.md.c2pa.json" download>Outside-group sidecar</a>
-      <a href="/demo/outside/outside-publisher.crt" download>Outside publisher cert</a>
-      <a href="/demo/tampered/SKILL.md" download>Tampered skill</a>
-      <a href="/demo/tampered/SKILL.md.c2pa.json" download>Original sidecar</a>
-      <a href="/demo/malicious/SKILL.md" download>Behavioral-risk skill</a>
-    </div>
-  </details>
-</nav>
-
-<div class="panels">
-
-  <!-- ── SIGN ── -->
-  <div class="panel">
-    <h2>Sign a Skill</h2>
-    <p class="section-note">Upload a <code>.md</code> file. A <code>.c2pa.json</code> sidecar will be generated and downloaded — keep it alongside your skill file.</p>
-
-    <div class="drop-zone" id="signDrop">
-      <input type="file" id="signFile" accept=".md,.txt,.skills" />
-      <div class="dz-icon">📄</div>
-      <div class="dz-label">Drop skill.md here or click to choose</div>
-      <div class="dz-name" id="signFilename"></div>
-    </div>
-
-    <div class="field-group">
-      <h3>Provenance</h3>
-      <label for="signTitle">Skill name</label>
-      <input type="text" id="signTitle" placeholder="weather" />
-      <label for="signActor">Your name / handle</label>
-      <input type="text" id="signActor" placeholder="publisher-name" />
-      <label for="signEmail">Your email</label>
-      <input type="text" id="signEmail" placeholder="publisher@example.org" />
-    </div>
-
-    <div class="field-group">
-      <h3>org.free2pa.skill assertion</h3>
-      <label for="signPurpose">Purpose</label>
-      <input type="text" id="signPurpose" placeholder="Get current weather and forecasts for any location." />
-    </div>
-
-    <div class="field-group">
-      <h3>Signing Certificate</h3>
-
-      <label for="signCertSelect">Active certificate</label>
-      <div class="cert-row">
-        <select id="signCertSelect">
-          <option value="">Loading certificates…</option>
-        </select>
-        <button type="button" class="btn-icon" id="refreshCertsBtn" title="Refresh certificate list">↺</button>
-        <button type="button" class="btn-icon" id="exportCertBtn" title="Download selected certificate (.crt)">⬇</button>
+  <main class="shell">
+    <section class="intro">
+      <div>
+        <div class="eyebrow">Live agentic factory</div>
+        <h1>The seat belt for the files that steer your agent.</h1>
       </div>
-      <div class="cert-detail" id="certDetail"></div>
+      <p class="intro-copy"><strong>Free2PA puts a signed receipt beside an agent's critical control files.</strong> When the agent starts or loads a file, code checks whether it changed and whether its publisher belongs to this project's temporary trust group.</p>
+    </section>
 
-      <button type="button" class="btn-secondary" id="toggleGenCert">+ Generate New Certificate</button>
-
-      <div class="gen-cert-form" id="genCertForm" style="display:none;">
-        <label for="genCertName">Common Name</label>
-        <input type="text" id="genCertName" placeholder="study-group-publisher" />
-        <label for="genCertOrg">Organization</label>
-        <input type="text" id="genCertOrg" placeholder="Friends of Justin" />
-        <label for="genCertDays">Validity (days)</label>
-        <input type="text" id="genCertDays" placeholder="365" />
-        <button type="button" id="genCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Generate Certificate</button>
-        <div class="result" id="genCertResult"></div>
-      </div>
-
-      <button type="button" class="btn-secondary" id="toggleImportCert" style="margin-top:0.5rem;">+ Import Certificate(s)</button>
-
-      <div class="gen-cert-form" id="importCertForm" style="display:none;">
-        <p class="section-note" style="margin-bottom:0.6rem;">Drop one <code>.crt</code> file to import a peer cert, or multiple files to import a team bundle all at once.</p>
-        <div class="drop-zone" id="importCertDrop">
-          <input type="file" id="importCertFile" accept=".crt" multiple />
-          <div class="dz-icon">🔑</div>
-          <div class="dz-label">Drop .crt file(s) here or click to choose</div>
-          <div class="dz-name" id="importCertFilenames"></div>
+    <section class="factory" aria-labelledby="factoryTitle">
+      <div class="factory-toolbar">
+        <div class="factory-title" id="factoryTitle">Run the same file through both agent lanes<span>The protected lane calls the deployed Free2PA verifier. The other lane deliberately skips it.</span></div>
+        <div class="segmented" role="tablist" aria-label="Nerve Center file scenario">
+          <button class="segment" type="button" role="tab" data-case="trusted" aria-selected="false">Trusted</button>
+          <button class="segment" type="button" role="tab" data-case="changed" aria-selected="true">Changed</button>
+          <button class="segment" type="button" role="tab" data-case="outside" aria-selected="false">Outside group</button>
         </div>
-        <label for="importCertName">Save as <span style="color:#727a75; font-weight:400;">(optional — single file only)</span></label>
-        <input type="text" id="importCertName" placeholder="study-group" />
-        <button type="button" id="importCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Import Certificate(s)</button>
-        <div class="result" id="importCertResult"></div>
-      </div>
-    </div>
-
-    <button type="button" id="signBtn" disabled>Sign &amp; Download Sidecar</button>
-    <div class="result" id="signResult"></div>
-  </div>
-
-  <!-- ── VERIFY ── -->
-  <div class="panel">
-    <h2>Verify a Skill</h2>
-    <p class="section-note">Upload the <code>.md</code> file and its <code>.c2pa.json</code> sidecar together. Three things are checked independently.</p>
-
-    <div class="drop-zone" id="verifyDrop">
-      <input type="file" id="verifyFile" accept=".md,.txt,.skills" />
-      <div class="dz-icon">📄</div>
-      <div class="dz-label">Drop skill.md here</div>
-      <div class="dz-name" id="verifyFilename"></div>
-    </div>
-
-    <div class="drop-zone" id="sidecarDrop">
-      <input type="file" id="sidecarFile" accept=".json" />
-      <div class="dz-icon">🔏</div>
-      <div class="dz-label">Drop .c2pa.json sidecar here</div>
-      <div class="dz-name" id="sidecarFilename"></div>
-    </div>
-
-    <label for="trustProfile">Trust profile</label>
-    <select id="trustProfile">
-      <option value="dev">Server / Dev  — any cert in this server's trust store</option>
-      <option value="org">Org           — shared CA bundle (not yet configured)</option>
-      <option value="public">Public        — public trust list (not yet configured)</option>
-    </select>
-
-    <label for="verifyCertSelect">Match against specific cert <span style="color:#727a75; font-weight:400;">(optional)</span></label>
-    <div class="cert-row">
-      <select id="verifyCertSelect">
-        <option value="">Loading certificates…</option>
-      </select>
-      <button type="button" class="btn-icon" id="refreshVerifyCertsBtn" title="Refresh certificate list">↺</button>
-    </div>
-    <div class="cert-detail" id="verifyCertDetail"></div>
-    <p class="section-note" style="margin-bottom:0.75rem;">Leave blank to accept any cert in this server's trust store. Select a cert to verify the skill was signed by that specific issuer.</p>
-
-    <button type="button" id="verifyBtn" disabled>Verify</button>
-
-    <div id="verifyVerdicts" style="display:none;">
-      <div class="verdicts">
-        <div class="verdict" id="vSig">
-          <div class="verdict-header"><span id="vSigIcon"></span><span id="vSigLabel"></span></div>
-          <div class="verdict-detail" id="vSigDetail"></div>
-        </div>
-        <div class="verdict" id="vHash">
-          <div class="verdict-header"><span id="vHashIcon"></span><span id="vHashLabel"></span></div>
-          <div class="verdict-detail" id="vHashDetail"></div>
-          <div class="diff-view" id="vHashDiff" style="display:none;"></div>
-        </div>
-        <div class="verdict" id="vTrust">
-          <div class="verdict-header"><span id="vTrustIcon"></span><span id="vTrustLabel"></span></div>
-          <div class="verdict-detail" id="vTrustDetail"></div>
+        <div class="policy-control">
+          <label for="responsePolicy">Protected lane policy</label>
+          <select id="responsePolicy">
+            <option value="block">Block</option>
+            <option value="repair">Repair + report</option>
+            <option value="alert">Alert + continue</option>
+            <option value="log">Log only</option>
+          </select>
+          <button class="run-button" id="runFactory" type="button">Run file</button>
         </div>
       </div>
-      <pre id="verifyJson"></pre>
+
+      <div class="factory-grid">
+        <aside class="input-rack" aria-label="Nerve Center files">
+          <div class="rack-label">Nerve Center input</div>
+          <p class="rack-help">Files that shape identity, tools, permissions, and behavior.</p>
+          <div class="file-list">
+            <button class="file-button" type="button" data-case="trusted" aria-selected="false">
+              <span class="file-name mono">SKILL.md</span>
+              <span class="file-note">Signed by a group member</span>
+            </button>
+            <button class="file-button" type="button" data-case="changed" aria-selected="true">
+              <span class="file-name mono">SOUL.md</span>
+              <span class="file-note">Instructions changed after signing</span>
+            </button>
+            <button class="file-button" type="button" data-case="outside" aria-selected="false">
+              <span class="file-name mono">TOOL.md</span>
+              <span class="file-note">Valid signature, outside this group</span>
+            </button>
+          </div>
+        </aside>
+
+        <div class="lanes">
+          <div class="lane without">
+            <div class="lane-heading"><div class="lane-label">Agent without Free2PA</div><span class="lane-badge">No provenance check</span></div>
+            <div class="flow">
+              <div class="flow-node"><div class="node-top">Control file</div><div class="node-main mono lane-file">SOUL.md</div><div class="node-sub lane-file-note">Changed after signing</div></div>
+              <div class="flow-arrow">›</div>
+              <div class="flow-node bypass"><div class="node-top">Load boundary</div><div class="node-main">Unchecked</div><div class="node-sub">No signed receipt is inspected.</div></div>
+              <div class="flow-arrow">›</div>
+              <div class="flow-node"><div class="node-top">Agent runtime</div><div class="node-main">Instructions loaded</div><div class="node-sub">The agent cannot see provenance on its own.</div></div>
+              <div class="flow-arrow">›</div>
+              <div class="flow-node outcome warn" id="plainOutcome"><div class="node-top">Result</div><div class="node-main" id="plainAction">RUNS UNCHECKED</div><div class="node-sub" id="plainReason">The changed file reaches the agent.</div></div>
+            </div>
+          </div>
+
+          <div class="lane with">
+            <div class="lane-heading"><div class="lane-label">Agent with Free2PA</div><span class="lane-badge">Real verifier response</span></div>
+            <div class="flow">
+              <div class="flow-node"><div class="node-top">Control file + receipt</div><div class="node-main mono lane-file">SOUL.md</div><div class="node-sub">Neighboring <span class="mono">.c2pa.json</span> sidecar</div></div>
+              <div class="flow-arrow">›</div>
+              <div class="flow-node gate"><div class="node-top">Free2PA gate</div><div class="node-main" id="gateStatus">Ready to verify</div><div class="checks"><span class="check" id="checkSig">SIGN</span><span class="check" id="checkHash">FILE</span><span class="check" id="checkTrust">GROUP</span></div></div>
+              <div class="flow-arrow">›</div>
+              <div class="flow-node"><div class="node-top">Host policy</div><div class="node-main" id="policyName">Block</div><div class="node-sub">The application consumes the result in code.</div></div>
+              <div class="flow-arrow">›</div>
+              <div class="flow-node outcome" id="protectedOutcome"><div class="node-top">Result</div><div class="node-main" id="protectedAction">WAITING</div><div class="node-sub" id="protectedReason">Run this file through the live verifier.</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="machine-log" aria-live="polite">
+        <span class="log-pulse" id="logPulse"></span>
+        <span class="log-text" id="machineLog">verifier.ready { interface: "HTTP", consumer: "agent runtime" }</span>
+        <span class="log-time" id="logTime">waiting</span>
+      </div>
+    </section>
+
+    <div class="below">
+      <section>
+        <div class="eyebrow">Installable Codex skill</div>
+        <h2>Ask Codex to protect an existing agent.</h2>
+        <p>The included skill finds the application's Nerve Center, wires verification before file loading, and proves the trusted, changed, and outside-group cases. Install it with <span class="mono">free2pa codex-skill install</span>. The developer owns every trust decision.</p>
+        <a class="skill-link" href="https://github.com/kilroyblockchain/free2pa-devtool/tree/main/integrations/codex/free2pa-protect-agent">View <span class="mono">free2pa-protect-agent</span> →</a>
+      </section>
+      <section>
+        <div class="eyebrow">Freeware developer toolkit</div>
+        <h2>CLI, CI action, HTTP API, and MCP.</h2>
+        <p>Use the interface that fits the agent system. Results are deterministic and machine-readable; GPT-5.6 behavioral review stays independent from the cryptographic trust gate.</p>
+        <div class="install-row">
+          <div class="install-code mono" id="installCommand">npm install free2pa-0.3.0.tgz</div>
+          <button class="copy-button" id="copyInstall" type="button">Copy URL</button>
+        </div>
+        <div class="three-facts">
+          <div class="fact"><strong>Changed</strong><span>Signed bytes no longer match.</span></div>
+          <div class="fact"><strong>Outside</strong><span>Publisher is not in this group.</span></div>
+          <div class="fact"><strong>Programmable</strong><span>Block, alert, or log in code.</span></div>
+        </div>
+      </section>
     </div>
+  </main>
 
-    <div class="result" id="verifyError"></div>
-  </div>
-
-  <!-- AUDIT -->
-  <div class="panel">
-    <h2>Audit a Skill</h2>
-    <p class="section-note">GPT-5.6 reviews behavioral risk independently from signature and trust verification.</p>
-
-    <div class="drop-zone" id="auditDrop">
-      <input type="file" id="auditFile" accept=".md,.txt,.skills" />
-      <div class="dz-icon">AI</div>
-      <div class="dz-label">Drop SKILL.md here</div>
-      <div class="dz-name" id="auditFilename"></div>
-    </div>
-
-    <div class="field-group">
-      <h3>Security review</h3>
-      <p class="section-note">Checks prompt injection, secret access, data exfiltration, destructive actions, supply-chain behavior, and excessive permissions.</p>
-    </div>
-
-    <button type="button" id="auditBtn" disabled>Run GPT-5.6 Audit</button>
-    <div class="result" id="auditError"></div>
-    <div class="audit-summary" id="auditResult" style="display:none;"></div>
-  </div>
-
-</div>
-
-<script>
-  let deploymentReadOnly = false;
-
-  // ── Drop zone helper ───────────────────────────────────────────────────
-  function setupDropZone(zoneId, inputId, nameId) {
-    const zone  = document.getElementById(zoneId);
-    const input = document.getElementById(inputId);
-    const lbl   = document.getElementById(nameId);
-    input.addEventListener('change', () => { lbl.textContent = input.files[0]?.name ?? ''; });
-    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      if (e.dataTransfer.files.length) {
-        const dt = new DataTransfer();
-        dt.items.add(e.dataTransfer.files[0]);
-        input.files = dt.files;
-        lbl.textContent = input.files[0].name;
-        input.dispatchEvent(new Event('change'));
+  <script>
+    const cases = {
+      trusted: {
+        file: '/demo/trusted/SKILL.md', sidecar: '/demo/trusted/SKILL.md.c2pa.json',
+        display: 'SKILL.md', note: 'Signed by a group member', plain: 'The file reaches the agent without an identity or integrity check.'
+      },
+      changed: {
+        file: '/demo/tampered/SKILL.md', sidecar: '/demo/tampered/SKILL.md.c2pa.json',
+        display: 'SOUL.md', note: 'Instructions changed after signing', plain: 'The changed file reaches the agent.'
+      },
+      outside: {
+        file: '/demo/outside/SKILL.md', sidecar: '/demo/outside/SKILL.md.c2pa.json',
+        display: 'TOOL.md', note: 'Valid signature, outside this group', plain: 'The outside publisher reaches the agent.'
       }
+    };
+    const installUrl = 'https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/free2pa-0.3.0.tgz';
+    let activeCase = 'changed';
+
+    const byId = (id) => document.getElementById(id);
+    const all = (selector) => Array.from(document.querySelectorAll(selector));
+
+    function selectCase(name) {
+      activeCase = name;
+      all('[data-case]').forEach((item) => item.setAttribute('aria-selected', String(item.dataset.case === name)));
+      const selected = cases[name];
+      all('.lane-file').forEach((item) => { item.textContent = selected.display; });
+      all('.lane-file-note').forEach((item) => { item.textContent = selected.note; });
+      byId('plainReason').textContent = selected.plain;
+      byId('plainAction').textContent = name === 'trusted' ? 'RUNS UNCHECKED' : 'RUNS UNCHECKED';
+      byId('plainOutcome').className = `flow-node outcome ${name === 'trusted' ? 'warn' : 'bad'}`;
+      resetProtected();
+    }
+
+    function resetProtected() {
+      ['checkSig', 'checkHash', 'checkTrust'].forEach((id) => { byId(id).className = 'check'; });
+      byId('gateStatus').textContent = 'Ready to verify';
+      byId('protectedAction').textContent = 'WAITING';
+      byId('protectedReason').textContent = 'Run this file through the live verifier.';
+      byId('protectedOutcome').className = 'flow-node outcome';
+      byId('logPulse').className = 'log-pulse';
+      byId('machineLog').textContent = 'verifier.ready { interface: "HTTP", consumer: "agent runtime" }';
+      byId('logTime').textContent = 'waiting';
+    }
+
+    function setCheck(id, pass) {
+      byId(id).className = `check ${pass ? 'pass' : 'fail'}`;
+      byId(id).textContent = `${id === 'checkSig' ? 'SIGN' : id === 'checkHash' ? 'FILE' : 'GROUP'} ${pass ? 'PASS' : 'FAIL'}`;
+    }
+
+    async function fetchBlob(url) {
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Could not load fixture: ${response.status}`);
+      return response.blob();
+    }
+
+    async function runFactory() {
+      const button = byId('runFactory');
+      const scenario = cases[activeCase];
+      button.disabled = true;
+      button.textContent = 'Checking';
+      byId('gateStatus').textContent = 'Verifying in code';
+      byId('logPulse').className = 'log-pulse live';
+      byId('machineLog').textContent = `POST /api/verify { asset: "${scenario.display}", policy: "${byId('responsePolicy').value}" }`;
+      byId('logTime').textContent = 'running';
+
+      try {
+        const [asset, sidecar] = await Promise.all([fetchBlob(scenario.file), fetchBlob(scenario.sidecar)]);
+        const form = new FormData();
+        form.append('file', asset, scenario.display);
+        form.append('sidecar', sidecar, `${scenario.display}.c2pa.json`);
+        form.append('trustProfile', 'dev');
+        const response = await fetch('/api/verify', { method: 'POST', body: form });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || `Verifier returned ${response.status}`);
+
+        const signature = result.signatureValid === true;
+        const integrity = result.hashMatch === true;
+        const trusted = result.trust?.trusted === true && result.certificate?.valid !== false;
+        const passed = signature && integrity && trusted;
+        setCheck('checkSig', signature);
+        setCheck('checkHash', integrity);
+        setCheck('checkTrust', trusted);
+        byId('gateStatus').textContent = passed ? 'Verification passed' : 'Verification failed';
+
+        const policy = byId('responsePolicy').value;
+        let action = 'LOAD';
+        let reason = 'The signed file is unchanged and its publisher belongs to this group.';
+        let outcomeClass = 'good';
+        if (!passed && policy === 'block') {
+          action = activeCase === 'changed' ? 'QUARANTINE' : 'REJECT';
+          reason = integrity ? 'The publisher is outside this project group.' : 'The current file does not match its signed receipt.';
+          outcomeClass = 'bad';
+        } else if (!passed && policy === 'alert') {
+          action = 'ALERT + CONTINUE';
+          reason = 'The host records a high-visibility alert and continues by explicit policy.';
+          outcomeClass = 'warn';
+        } else if (!passed && policy === 'log') {
+          action = 'LOG + CONTINUE';
+          reason = 'The host logs the failed verification and continues by explicit policy.';
+          outcomeClass = 'warn';
+        } else if (!passed && policy === 'repair') {
+          if (signature && trusted && !integrity) {
+            action = 'RESTORE + REPORT';
+            reason = 'The host can restore the signed original, preserve the rejected copy, and report the repair.';
+            outcomeClass = 'good';
+          } else {
+            action = 'STOP + REPORT';
+            reason = 'No current, locally trusted signed original is available for a safe repair.';
+            outcomeClass = 'bad';
+          }
+        }
+
+        byId('protectedAction').textContent = action;
+        byId('protectedReason').textContent = reason;
+        byId('protectedOutcome').className = `flow-node outcome ${outcomeClass}`;
+        byId('machineLog').textContent = JSON.stringify({ passed, action, signature, integrity, group_trust: trusted, reason: result.trust?.reason });
+        byId('logTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      } catch (error) {
+        byId('gateStatus').textContent = 'Verifier unavailable';
+        byId('protectedAction').textContent = 'ERROR';
+        byId('protectedReason').textContent = error.message;
+        byId('protectedOutcome').className = 'flow-node outcome bad';
+        byId('machineLog').textContent = JSON.stringify({ passed: false, error: error.message });
+        byId('logTime').textContent = 'error';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Run file';
+      }
+    }
+
+    all('[data-case]').forEach((item) => item.addEventListener('click', () => selectCase(item.dataset.case)));
+    byId('responsePolicy').addEventListener('change', () => { byId('policyName').textContent = byId('responsePolicy').selectedOptions[0].textContent; resetProtected(); });
+    byId('runFactory').addEventListener('click', runFactory);
+    byId('copyInstall').addEventListener('click', async () => {
+      await navigator.clipboard.writeText(installUrl);
+      byId('copyInstall').textContent = 'Copied';
+      setTimeout(() => { byId('copyInstall').textContent = 'Copy URL'; }, 1400);
     });
-  }
-
-  function show(el, cls, html) {
-    el.className = `result ${cls}`;
-    el.style.display = 'block';
-    el.textContent = html;
-  }
-
-  // ── Certificate management (shared) ───────────────────────────────────
-  let availableCerts = [];
-
-  async function fetchCerts() {
-    const resp = await fetch('/api/certs');
-    const data = await resp.json();
-    return data.certs ?? [];
-  }
-
-  function populateCertSelect(selectEl, detailEl, certs, selectId, { signingOnly = false } = {}) {
-    selectEl.innerHTML = '';
-    const pool = signingOnly ? certs.filter(c => c.hasKey) : certs;
-
-    if (pool.length === 0) {
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = signingOnly ? 'No certificates with keys found' : 'No certificates found';
-      selectEl.appendChild(opt);
-      detailEl.textContent = '';
-      return;
-    }
-
-    const placeholder = document.createElement('option');
-    placeholder.value = '';
-    placeholder.textContent = '— select a certificate —';
-    selectEl.appendChild(placeholder);
-
-    pool.forEach(c => {
-      const opt = document.createElement('option');
-      opt.value = c.id;
-      opt.textContent = c.id + (c.hasKey ? '' : ' (no key)');
-      selectEl.appendChild(opt);
-    });
-
-    const target = selectId
-      || (pool.find(c => c.id === 'signing') ? 'signing' : null)
-      || pool[0]?.id
-      || '';
-    selectEl.value = target;
-    updateDetail(selectEl, detailEl);
-  }
-
-  function updateDetail(selectEl, detailEl) {
-    const id   = selectEl.value;
-    const cert = availableCerts.find(c => c.id === id);
-    detailEl.textContent = cert
-      ? cert.subject + (cert.notAfter ? `  ·  expires ${cert.notAfter}` : '')
-      : '';
-  }
-
-  async function reloadCerts(signSelectId, verifySelectId) {
-    try {
-      availableCerts = await fetchCerts();
-    } catch {
-      availableCerts = [];
-    }
-    populateCertSelect(signCertSelect,   certDetail,       availableCerts, signSelectId,   { signingOnly: true });
-    populateCertSelect(verifyCertSelect, verifyCertDetail, availableCerts, verifySelectId, { signingOnly: false });
-  }
-
-  // Sign panel cert controls
-  const signCertSelect    = document.getElementById('signCertSelect');
-  const certDetail        = document.getElementById('certDetail');
-  const refreshCertsBtn   = document.getElementById('refreshCertsBtn');
-  const toggleGenCert     = document.getElementById('toggleGenCert');
-  const genCertForm       = document.getElementById('genCertForm');
-  const genCertBtn        = document.getElementById('genCertBtn');
-  const genCertResult     = document.getElementById('genCertResult');
-
-  // Verify panel cert controls
-  const verifyCertSelect      = document.getElementById('verifyCertSelect');
-  const verifyCertDetail      = document.getElementById('verifyCertDetail');
-  const refreshVerifyCertsBtn = document.getElementById('refreshVerifyCertsBtn');
-
-  signCertSelect.addEventListener('change',   () => updateDetail(signCertSelect,   certDetail));
-  verifyCertSelect.addEventListener('change', () => updateDetail(verifyCertSelect, verifyCertDetail));
-
-  refreshCertsBtn.addEventListener('click',        () => reloadCerts(signCertSelect.value,   verifyCertSelect.value));
-  refreshVerifyCertsBtn.addEventListener('click',  () => reloadCerts(signCertSelect.value,   verifyCertSelect.value));
-
-  toggleGenCert.addEventListener('click', () => {
-    const open = genCertForm.style.display !== 'none';
-    genCertForm.style.display = open ? 'none' : 'block';
-    toggleGenCert.textContent = open ? '+ Generate New Certificate' : '− Generate New Certificate';
-  });
-
-  genCertBtn.addEventListener('click', async () => {
-    const name = document.getElementById('genCertName').value.trim();
-    if (!name) {
-      show(genCertResult, 'error', 'Common Name is required.');
-      return;
-    }
-    genCertBtn.disabled = true;
-    genCertBtn.innerHTML = '<span class="spinner"></span>Generating…';
-    genCertResult.style.display = 'none';
-
-    try {
-      const resp = await fetch('/api/certs/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name,
-          org:          document.getElementById('genCertOrg').value.trim(),
-          validityDays: document.getElementById('genCertDays').value.trim() || '365',
-        }),
-      });
-      const data = await resp.json();
-      if (!data.success) {
-        show(genCertResult, 'error', `Error: ${data.error}`);
-        return;
-      }
-      show(genCertResult, 'success',
-        `Certificate ${data.cert.id} generated.\n${data.cert.subject}`);
-      await reloadCerts(data.cert.id, data.cert.id);
-    } catch (e) {
-      show(genCertResult, 'error', `Network error: ${e.message}`);
-    } finally {
-      genCertBtn.disabled = false;
-      genCertBtn.textContent = 'Generate Certificate';
-    }
-  });
-
-  // ── Cert export ────────────────────────────────────────────────────────
-  document.getElementById('exportCertBtn').addEventListener('click', () => {
-    const id = signCertSelect.value;
-    if (!id) return;
-    const a = document.createElement('a');
-    a.href     = `/api/certs/${id}/download`;
-    a.download = `${id}.crt`;
-    a.click();
-  });
-
-  // ── Cert import ────────────────────────────────────────────────────────
-  const toggleImportCert = document.getElementById('toggleImportCert');
-  const importCertForm   = document.getElementById('importCertForm');
-  const importCertFile   = document.getElementById('importCertFile');
-  const importCertBtn    = document.getElementById('importCertBtn');
-  const importCertResult = document.getElementById('importCertResult');
-
-  // Multi-file drop zone for cert import
-  (function setupImportDropZone() {
-    const zone = document.getElementById('importCertDrop');
-    const lbl  = document.getElementById('importCertFilenames');
-    function updateLabel() {
-      const files = Array.from(importCertFile.files);
-      lbl.textContent = files.length === 0 ? ''
-        : files.length === 1 ? files[0].name
-        : `${files.length} files selected`;
-    }
-    importCertFile.addEventListener('change', updateLabel);
-    zone.addEventListener('dragover',  e => { e.preventDefault(); zone.classList.add('drag-over'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault();
-      zone.classList.remove('drag-over');
-      const dt = new DataTransfer();
-      for (const f of e.dataTransfer.files) {
-        if (f.name.toLowerCase().endsWith('.crt')) dt.items.add(f);
-      }
-      if (dt.files.length) {
-        importCertFile.files = dt.files;
-        updateLabel();
-        importCertFile.dispatchEvent(new Event('change'));
-      }
-    });
-  })();
-
-  toggleImportCert.addEventListener('click', () => {
-    const open = importCertForm.style.display !== 'none';
-    importCertForm.style.display = open ? 'none' : 'block';
-    toggleImportCert.textContent = open ? '+ Import Certificate(s)' : '− Import Certificate(s)';
-  });
-
-  importCertBtn.addEventListener('click', async () => {
-    const files = importCertFile.files;
-    if (!files.length) {
-      show(importCertResult, 'error', 'Choose at least one .crt file.');
-      return;
-    }
-    importCertBtn.disabled = true;
-    importCertBtn.innerHTML = '<span class="spinner"></span>Importing…';
-    importCertResult.style.display = 'none';
-
-    try {
-      const fd = new FormData();
-      for (const f of files) fd.append('files', f);
-      const name = document.getElementById('importCertName').value.trim();
-      if (name) fd.append('name', name);
-
-      const resp = await fetch('/api/certs/import', { method: 'POST', body: fd });
-      const data = await resp.json();
-
-      const msgs = (data.results ?? []).map(r =>
-        r.success ? `✓ ${r.id}.crt — ${r.subject}` : `✗ ${r.file}: ${r.error}`
-      ).join('\n') || data.error;
-
-      show(importCertResult, data.success ? 'success' : 'error', msgs);
-
-      const first = (data.results ?? []).find(r => r.success)?.id;
-      if (first) await reloadCerts(first, first);
-    } catch (e) {
-      show(importCertResult, 'error', `Network error: ${e.message}`);
-    } finally {
-      importCertBtn.disabled = false;
-      importCertBtn.textContent = 'Import Certificate(s)';
-    }
-  });
-
-  // Kick off initial cert load
-  reloadCerts();
-
-  // ── Sign ───────────────────────────────────────────────────────────────
-  setupDropZone('signDrop', 'signFile', 'signFilename');
-
-  const signFileInput = document.getElementById('signFile');
-  const signBtn       = document.getElementById('signBtn');
-  const signResult    = document.getElementById('signResult');
-
-  function updateSignBtn() {
-    signBtn.disabled = deploymentReadOnly || !signFileInput.files.length;
-  }
-  signFileInput.addEventListener('change', () => {
-    updateSignBtn();
-    signResult.style.display = 'none';
-  });
-  signFileInput.addEventListener('input', updateSignBtn);
-  updateSignBtn(); // set correct initial state on page load
-
-  signBtn.addEventListener('click', async () => {
-    const file = signFileInput.files[0];
-    if (!file) return;
-
-    signBtn.disabled = true;
-    signBtn.innerHTML = '<span class="spinner"></span>Signing…';
-    signResult.style.display = 'none';
-
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      if (signCertSelect.value) fd.append('certId', signCertSelect.value);
-      fd.append('title',   document.getElementById('signTitle').value.trim());
-      fd.append('actor',   document.getElementById('signActor').value.trim());
-      fd.append('email',   document.getElementById('signEmail').value.trim());
-      fd.append('purpose', document.getElementById('signPurpose').value.trim());
-
-      const resp = await fetch('/api/sign', { method: 'POST', body: fd });
-
-      if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: `HTTP ${resp.status}` }));
-        show(signResult, 'error', `Error: ${err.error}`);
-        return;
-      }
-
-      const blob = await resp.blob();
-      const cd   = resp.headers.get('Content-Disposition') ?? '';
-      const m    = cd.match(/filename="([^"]+)"/);
-      const name = m ? m[1] : file.name + '.c2pa.json';
-
-      const url = URL.createObjectURL(blob);
-      const a   = document.createElement('a');
-      a.href = url; a.download = name; a.click();
-      setTimeout(() => URL.revokeObjectURL(url), 5000);
-
-      show(signResult, 'success', `Sidecar downloaded: ${name}\nKeep it next to your .md file for verification.`);
-    } catch (e) {
-      show(signResult, 'error', `Network error: ${e.message}`);
-    } finally {
-      signBtn.disabled = false;
-      signBtn.textContent = 'Sign & Download Sidecar';
-    }
-  });
-
-  // ── Verify ─────────────────────────────────────────────────────────────
-  setupDropZone('verifyDrop',   'verifyFile',   'verifyFilename');
-  setupDropZone('sidecarDrop',  'sidecarFile',  'sidecarFilename');
-
-  const verifyFileInput   = document.getElementById('verifyFile');
-  const sidecarFileInput  = document.getElementById('sidecarFile');
-  const verifyBtn         = document.getElementById('verifyBtn');
-  const verifyVerdicts    = document.getElementById('verifyVerdicts');
-  const verifyError       = document.getElementById('verifyError');
-
-  function updateVerifyBtn() {
-    verifyBtn.disabled = !(verifyFileInput.files.length && sidecarFileInput.files.length);
-  }
-  verifyFileInput.addEventListener('change',  updateVerifyBtn);
-  verifyFileInput.addEventListener('input',   updateVerifyBtn);
-  sidecarFileInput.addEventListener('change', updateVerifyBtn);
-  sidecarFileInput.addEventListener('input',  updateVerifyBtn);
-  updateVerifyBtn(); // set correct initial state on page load
-
-  verifyBtn.addEventListener('click', async () => {
-    verifyBtn.disabled = true;
-    verifyBtn.innerHTML = '<span class="spinner"></span>Verifying…';
-    verifyVerdicts.style.display = 'none';
-    verifyError.style.display = 'none';
-
-    try {
-      const fd = new FormData();
-      fd.append('file',         verifyFileInput.files[0]);
-      fd.append('sidecar',      sidecarFileInput.files[0]);
-      fd.append('trustProfile', document.getElementById('trustProfile').value);
-      if (verifyCertSelect.value) fd.append('certId', verifyCertSelect.value);
-
-      // Read current file text for diff (before fetch so both run in parallel is fine)
-      const currentContent = await verifyFileInput.files[0].text();
-
-      const resp = await fetch('/api/verify', { method: 'POST', body: fd });
-      const data = await resp.json();
-
-      if (!data.success) {
-        show(verifyError, 'error', `Error: ${data.error}`);
-        return;
-      }
-
-      renderVerdicts(data, currentContent);
-    } catch (e) {
-      show(verifyError, 'error', `Network error: ${e.message}`);
-    } finally {
-      verifyBtn.disabled = false;
-      verifyBtn.textContent = 'Verify';
-    }
-  });
-
-  // ── Diff helpers ───────────────────────────────────────────────────────
-
-  // Safely decode base64-encoded UTF-8 (handles non-ASCII characters)
-  function base64ToText(b64) {
-    const bytes = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
-    return new TextDecoder().decode(bytes);
-  }
-
-  // LCS-based line diff. Returns array of {type: 'same'|'add'|'remove', line}.
-  function computeDiff(originalText, currentText) {
-    const a = originalText.split('\n');
-    const b = currentText.split('\n');
-    const m = a.length, n = b.length;
-
-    // Build LCS table
-    const dp = Array.from({ length: m + 1 }, () => new Uint32Array(n + 1));
-    for (let i = 1; i <= m; i++) {
-      for (let j = 1; j <= n; j++) {
-        dp[i][j] = a[i - 1] === b[j - 1]
-          ? dp[i - 1][j - 1] + 1
-          : Math.max(dp[i - 1][j], dp[i][j - 1]);
-      }
-    }
-
-    // Backtrack to build diff
-    const result = [];
-    let i = m, j = n;
-    while (i > 0 || j > 0) {
-      if (i > 0 && j > 0 && a[i - 1] === b[j - 1]) {
-        result.unshift({ type: 'same',   line: a[i - 1] }); i--; j--;
-      } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
-        result.unshift({ type: 'add',    line: b[j - 1] }); j--;
-      } else {
-        result.unshift({ type: 'remove', line: a[i - 1] }); i--;
-      }
-    }
-    return result;
-  }
-
-  function renderDiff(containerEl, originalText, currentText) {
-    const chunks = computeDiff(originalText, currentText);
-    containerEl.innerHTML = '';
-
-    for (const chunk of chunks) {
-      const row     = document.createElement('div');
-      row.className = `diff-line ${chunk.type}`;
-
-      const gutter = document.createElement('span');
-      gutter.className   = 'diff-gutter';
-      gutter.textContent = chunk.type === 'add' ? '+' : chunk.type === 'remove' ? '−' : ' ';
-
-      const text = document.createElement('span');
-      text.textContent = chunk.line;
-
-      row.appendChild(gutter);
-      row.appendChild(text);
-      containerEl.appendChild(row);
-    }
-  }
-
-  // ── Verdicts ───────────────────────────────────────────────────────────
-
-  function renderVerdicts(data, currentContent) {
-    // 1. Signature
-    const sigOk = data.signatureValid;
-    setVerdict('vSig',
-      sigOk ? 'ok' : 'fail',
-      sigOk ? '✅' : '❌',
-      sigOk ? 'Signature valid' : 'Signature invalid',
-      sigOk
-        ? 'ECDSA P-256 signature over the claim verified successfully.'
-        : (data.signatureError || 'Signature did not verify against the cert in the sidecar.')
-    );
-
-    // 2. Hash / binding
-    const hashOk  = data.hashMatch;
-    const diffEl  = document.getElementById('vHashDiff');
-    setVerdict('vHash',
-      hashOk ? 'ok' : 'fail',
-      hashOk ? '✅' : '❌',
-      hashOk ? 'Bound to this file (hash match)' : 'File has been modified (hash mismatch)',
-      hashOk
-        ? 'SHA-256 of the uploaded file matches the hash recorded at signing time.'
-        : 'The file content has changed since it was signed. Differences are highlighted below.'
-    );
-
-    if (!hashOk) {
-      const encodedOriginal = data.claim?.asset?.content;
-      if (encodedOriginal && currentContent !== undefined) {
-        const originalText = base64ToText(encodedOriginal);
-        renderDiff(diffEl, originalText, currentContent);
-        diffEl.style.display = 'block';
-      } else {
-        // Sidecar was created before content embedding — can't diff
-        diffEl.innerHTML = '<div class="diff-no-content" style="padding:0.5rem 0.75rem;">Diff unavailable — this sidecar was signed before content embedding was introduced. Re-sign the file to enable diffing.</div>';
-        diffEl.style.display = 'block';
-      }
-    } else {
-      diffEl.style.display = 'none';
-      diffEl.innerHTML = '';
-    }
-
-    // 3. Trust profile
-    const t         = data.trust;
-    const trustOk   = t.trusted === true;
-    const trustWarn = t.trusted === null;
-    setVerdict('vTrust',
-      trustOk ? 'ok' : trustWarn ? 'warn' : 'fail',
-      trustOk ? '✅' : trustWarn ? '⚠️' : '❌',
-      `Trusted under profile: ${t.label}`,
-      t.detail
-    );
-
-    // Claim JSON (collapsed)
-    document.getElementById('verifyJson').textContent =
-      JSON.stringify(data.claim, null, 2);
-
-    verifyVerdicts.style.display = 'block';
-  }
-
-  function setVerdict(id, cls, icon, label, detail) {
-    document.getElementById(id).className         = `verdict ${cls}`;
-    document.getElementById(id + 'Icon').textContent  = icon;
-    document.getElementById(id + 'Label').textContent = label;
-    document.getElementById(id + 'Detail').textContent = detail;
-  }
-
-  // Audit
-  setupDropZone('auditDrop', 'auditFile', 'auditFilename');
-  const auditFileInput = document.getElementById('auditFile');
-  const auditBtn = document.getElementById('auditBtn');
-  const auditError = document.getElementById('auditError');
-  const auditResult = document.getElementById('auditResult');
-
-  auditFileInput.addEventListener('change', () => {
-    auditBtn.disabled = !auditFileInput.files.length;
-    auditError.style.display = 'none';
-    auditResult.style.display = 'none';
-  });
-
-  auditBtn.addEventListener('click', async () => {
-    const file = auditFileInput.files[0];
-    if (!file) return;
-    auditBtn.disabled = true;
-    auditBtn.innerHTML = '<span class="spinner"></span>Auditing...';
-    auditError.style.display = 'none';
-    auditResult.style.display = 'none';
-
-    try {
-      const form = new FormData();
-      form.append('file', file);
-      const response = await fetch('/api/audit', { method: 'POST', body: form });
-      const data = await response.json();
-      if (!data.success) {
-        auditError.className = 'result error';
-        auditError.textContent = data.error || `Audit failed with HTTP ${response.status}.`;
-        auditError.style.display = 'block';
-        return;
-      }
-      renderAudit(data.report);
-    } catch (error) {
-      auditError.className = 'result error';
-      auditError.textContent = `Network error: ${error.message}`;
-      auditError.style.display = 'block';
-    } finally {
-      auditBtn.disabled = false;
-      auditBtn.textContent = 'Run GPT-5.6 Audit';
-    }
-  });
-
-  function renderAudit(report) {
-    auditResult.replaceChildren();
-    const risk = document.createElement('div');
-    risk.className = `risk-label risk-${report.overall_risk}`;
-    risk.textContent = `${report.overall_risk} risk`;
-    const summary = document.createElement('p');
-    summary.textContent = report.summary;
-    auditResult.append(risk, summary);
-
-    for (const item of report.findings || []) {
-      const finding = document.createElement('div');
-      finding.className = 'finding';
-      const title = document.createElement('h3');
-      title.textContent = `${item.severity.toUpperCase()} / ${item.title}`;
-      const evidence = document.createElement('p');
-      evidence.textContent = `Evidence: ${item.evidence}`;
-      const impact = document.createElement('p');
-      impact.textContent = `Impact: ${item.impact}`;
-      const recommendation = document.createElement('p');
-      recommendation.textContent = `Fix: ${item.recommendation}`;
-      finding.append(title, evidence, impact, recommendation);
-      auditResult.appendChild(finding);
-    }
-    if (report.metadata) {
-      const metadata = document.createElement('p');
-      metadata.className = 'audit-metadata';
-      const shortHash = report.metadata.asset_sha256?.slice(0, 12) || 'unavailable';
-      metadata.textContent = [
-        `Model: ${report.metadata.model || 'unknown'}`,
-        `Provider: ${report.metadata.provider || 'unknown'}`,
-        `Asset: ${shortHash}`,
-        `Audited: ${report.metadata.audited_at || 'unknown'}`,
-      ].join(' | ');
-      auditResult.appendChild(metadata);
-    }
-    auditResult.style.display = 'block';
-  }
-
-  async function loadDeploymentStatus() {
-    try {
-      const response = await fetch('/api/status');
-      const status = await response.json();
-      deploymentReadOnly = status.readOnly === true;
-      if (deploymentReadOnly) {
-        signFileInput.disabled = true;
-        signBtn.disabled = true;
-        toggleGenCert.disabled = true;
-        toggleImportCert.disabled = true;
-        importCertBtn.disabled = true;
-        genCertBtn.disabled = true;
-        show(signResult, 'success', 'This public verifier is read-only. Use the Free2PA CLI to create and sign credentials.');
-      }
-    } catch {}
-  }
-  loadDeploymentStatus();
-</script>
+    selectCase(activeCase);
+  </script>
 </body>
 </html>

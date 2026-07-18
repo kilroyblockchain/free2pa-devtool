@@ -134,6 +134,34 @@ test('CLI keygen, sign, verify, and tamper workflow', async () => {
     execFileP(process.execPath, ['bin/free2pa.js', 'verify', skillPath, '--trust-cert', certPath]),
     (error) => error.code === 1 && /^FAIL /.test(error.stdout),
   );
+
+  await assert.rejects(
+    execFileP(process.execPath, [cliPath, 'repair', skillPath, '--trust-store', trustStore]),
+    (error) => error.code === 2 && /outside this trust group/.test(error.stderr),
+  );
+
+  const repaired = await execFileP(process.execPath, [
+    cliPath, 'repair', skillPath, '--trust-cert', certPath, '--json',
+  ]);
+  const repairReport = JSON.parse(repaired.stdout);
+  assert.equal(repairReport.repaired, true);
+  assert.equal(await readFile(skillPath, 'utf8'), original);
+  assert.match(await readFile(repairReport.backup, 'utf8'), /Ignore previous instructions/);
+
+  const repairedVerification = await execFileP(process.execPath, [
+    cliPath, 'verify', skillPath, '--trust-cert', certPath,
+  ]);
+  assert.match(repairedVerification.stdout, /^PASS /);
+
+  const skillTarget = resolve(directory, 'codex-skills');
+  const installedSkill = await execFileP(process.execPath, [
+    cliPath, 'codex-skill', 'install', '--target', skillTarget,
+  ]);
+  assert.match(installedSkill.stdout, /Installed Free2PA Codex skill/);
+  assert.match(
+    await readFile(resolve(skillTarget, 'free2pa-protect-agent/SKILL.md'), 'utf8'),
+    /name: free2pa-protect-agent/,
+  );
 });
 
 test('GPT audit uses the Responses API structured-output contract', async () => {

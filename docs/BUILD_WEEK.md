@@ -7,9 +7,15 @@ AI/ML Task Force, developed it in response to college students working on
 OpenClaw agentic nerve centers who needed temporary, ad-hoc publisher trust
 groups.
 
+In Free2PA, the Nerve Center means the skills and other critical control files,
+such as `SOUL.md`, that shape an agent's behavior. These files may be altered by
+an attacker, an untrusted collaborator, or the agent itself. Free2PA does not
+claim to prevent every modification; it binds provenance to exact bytes so the
+local verifier can detect the change and enforce the group's load policy.
+
 ## Build Week baseline
 
-The sanitized baseline is commit `cd5c2c3`, dated March 15, 2026. At that point the
+The baseline is commit `1c2d88d`, dated March 15, 2026. At that point the
 repository contained:
 
 - an Express demonstration server;
@@ -68,8 +74,10 @@ Delivered additions:
   with prompt-injection, secret-access, exfiltration, permission, and deception
   findings for the prepared malicious fixture.
 - Validated the managed-identity build on GitHub-hosted Ubuntu.
-- Scanned every commit in the public release history for private-key and API-key
-  patterns before publication; no matches remain.
+- Published a focused Apache-2.0 freeware repository and immutable `v0.2.0`
+  release after removing historical keys, research material, IDE metadata, and
+  dead prototype modules. Every public-history commit passed private-key and
+  API-key pattern scanning.
 
 ## July 18 progress
 

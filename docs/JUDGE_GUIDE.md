@@ -7,6 +7,8 @@ rebuild, API key, or payment.
 The deployment is a reference verifier. The submitted product is the toolkit:
 developers install it, provide the public certificates their group accepts,
 and integrate the CLI, CI action, HTTP API, or MCP tools into their own system.
+The surrounding application consumes the verification result at startup or
+file-load time and applies its own programmed response: block, alert, or log.
 
 ## Live test in two minutes
 
@@ -58,6 +60,6 @@ reports `UNTRUSTED_ISSUER`.
 
 Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.1>
+Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.0>
 
 Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29641212445>

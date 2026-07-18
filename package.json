@@ -1,6 +1,6 @@
 {
   "name": "free2pa",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Provenance, trust verification, and security auditing for AI agent skills",
   "main": "index.js",
   "type": "module",
@@ -40,6 +40,7 @@
     "!src/services/hardBoundVerifier.js",
     "!src/services/trustList.js",
     "public/",
+    "integrations/",
     "!public/free2pa.png",
     "!public/test.html",
     "index.js",

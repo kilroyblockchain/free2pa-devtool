@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 
-import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { cp, readdir, readFile, rename, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { basename, dirname, extname, resolve } from 'node:path';
 import process from 'node:process';
+import { fileURLToPath } from 'node:url';
 import { auditSkill, DEFAULT_AUDIT_MODEL } from '../src/services/auditor.js';
 import {
   addTrustedCertificate,
@@ -14,8 +16,9 @@ import { config } from '../src/config.js';
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 
-const VERSION = '0.2.1';
+const VERSION = '0.3.0';
 const SIDECAR_SUFFIX = '.c2pa.json';
+const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function usage() {
   return `Free2PA ${VERSION} - provenance and security for AI agent skills
@@ -24,8 +27,10 @@ Usage:
   free2pa keygen [--name NAME] [--org ORG] [--out-dir DIR] [--days N]
   free2pa sign <SKILL.md> [--cert FILE] [--key FILE] [--out FILE]
   free2pa verify <SKILL.md> [--sidecar FILE] [--trust-store DIR] [--json]
+  free2pa repair <FILE> [--sidecar FILE] [--trust-store DIR] [--backup FILE] [--no-backup]
   free2pa scan [DIR] [--trust-store DIR] [--json]
   free2pa audit <SKILL.md> [--model MODEL] [--out FILE] [--json]
+  free2pa codex-skill install [--target DIR] [--force]
   free2pa trust add <CERT.crt> [--store DIR] [--id ID]
   free2pa trust list [--store DIR] [--json]
   free2pa trust remove <ID> [--store DIR]
@@ -159,6 +164,102 @@ async function verify(assetArgument, options) {
   if (options.json) console.log(JSON.stringify({ asset: assetPath, passed: verdict(result), ...result }, null, 2));
   else printVerification(assetPath, result);
   return verdict(result);
+}
+
+async function repair(assetArgument, options) {
+  if (options['trust-store']) config.certsDir = resolve(options['trust-store']);
+  const assetPath = resolve(requireValue(assetArgument, 'repair requires a file path.'));
+  const sidecarPath = resolve(options.sidecar || `${assetPath}${SIDECAR_SUFFIX}`);
+  const trustCert = options['trust-cert'] || process.env.FREE2PA_CERT;
+  const [currentContent, sidecarText] = await Promise.all([
+    readFile(assetPath, 'utf8'),
+    readFile(sidecarPath, 'utf8'),
+  ]);
+  const current = await verifySkill({
+    content: currentContent,
+    sidecarText,
+    trustProfile: 'dev',
+    certPath: trustCert ? resolve(trustCert) : undefined,
+  });
+
+  if (!current.success) throw new Error(`Repair refused: ${current.error}`);
+  if (!current.signatureValid) throw new Error('Repair refused: the signed receipt is invalid.');
+  if (current.certificate?.valid !== true) throw new Error('Repair refused: the publisher certificate is not current.');
+  if (current.trust?.trusted !== true) throw new Error('Repair refused: the receipt publisher is outside this trust group.');
+  if (current.hashMatch) {
+    const report = { repaired: false, asset: assetPath, reason: 'ALREADY_VERIFIED', backup: null };
+    if (options.json) console.log(JSON.stringify(report, null, 2));
+    else console.log(`UNCHANGED ${assetPath}\n  File already matches its trusted signed receipt.`);
+    return true;
+  }
+
+  const embedded = current.claim?.asset?.content;
+  if (typeof embedded !== 'string' || !embedded.length) {
+    throw new Error('Repair refused: the trusted receipt does not contain restorable content.');
+  }
+  const normalizedEmbedded = embedded.replace(/\s+/g, '').replace(/=+$/, '');
+  const restoredBuffer = Buffer.from(embedded, 'base64');
+  if (restoredBuffer.toString('base64').replace(/=+$/, '') !== normalizedEmbedded) {
+    throw new Error('Repair refused: the receipt contains invalid restorable content.');
+  }
+  const restoredContent = restoredBuffer.toString('utf8');
+  const restored = await verifySkill({
+    content: restoredContent,
+    sidecarText,
+    trustProfile: 'dev',
+    certPath: trustCert ? resolve(trustCert) : undefined,
+  });
+  if (!verdict(restored)) {
+    throw new Error('Repair refused: embedded content does not pass the trusted signed receipt.');
+  }
+
+  let backupPath = null;
+  if (!options['no-backup']) {
+    backupPath = resolve(options.backup || `${assetPath}.rejected-${Date.now()}`);
+    await writeFile(backupPath, currentContent, { encoding: 'utf8', flag: 'wx' });
+  }
+  const temporaryPath = `${assetPath}.free2pa-repair-${process.pid}-${Date.now()}`;
+  await writeFile(temporaryPath, restoredContent, { encoding: 'utf8', flag: 'wx' });
+  await rename(temporaryPath, assetPath);
+
+  const report = {
+    repaired: true,
+    asset: assetPath,
+    backup: backupPath,
+    publisher: restored.certificate.subject,
+    trustReason: restored.trust.reason,
+  };
+  if (options.json) console.log(JSON.stringify(report, null, 2));
+  else {
+    console.log(`REPAIRED ${assetPath}`);
+    if (backupPath) console.log(`  rejected copy: ${backupPath}`);
+    console.log('  restored from a valid, current, locally trusted signed receipt');
+  }
+  return true;
+}
+
+async function codexSkill(arguments_, options) {
+  const [action] = arguments_;
+  if (action !== 'install') throw new Error('codex-skill requires: install.');
+  const source = resolve(PACKAGE_ROOT, 'integrations/codex/free2pa-protect-agent');
+  const codexHome = process.env.CODEX_HOME || resolve(homedir(), '.codex');
+  const skillsDirectory = resolve(options.target || resolve(codexHome, 'skills'));
+  const destination = resolve(skillsDirectory, 'free2pa-protect-agent');
+  try {
+    await cp(source, destination, {
+      recursive: true,
+      force: options.force === true,
+      errorOnExist: options.force !== true,
+    });
+  } catch (error) {
+    if (error.code === 'ERR_FS_CP_EEXIST' || error.code === 'EEXIST') {
+      throw new Error(`Codex skill already exists at ${destination}. Use --force to replace it.`);
+    }
+    throw error;
+  }
+  console.log(`Installed Free2PA Codex skill: ${destination}`);
+  console.log('Try: Make this agent application tamper-evident for our project trust group.');
+  return true;
 }
 
 async function audit(assetArgument, options) {
@@ -300,8 +401,10 @@ async function main() {
     case 'keygen': await keygen(options); return 0;
     case 'sign': await sign(positional[0], options); return 0;
     case 'verify': return (await verify(positional[0], options)) ? 0 : 1;
+    case 'repair': return (await repair(positional[0], options)) ? 0 : 1;
     case 'scan': return (await scan(positional[0], options)) ? 0 : 1;
     case 'audit': return (await audit(positional[0], options)) ? 0 : 1;
+    case 'codex-skill': return (await codexSkill(positional, options)) ? 0 : 1;
     case 'trust': return trust(positional, options);
     case 'serve': return serve(options);
     default: throw new Error(`Unknown command: ${command}`);

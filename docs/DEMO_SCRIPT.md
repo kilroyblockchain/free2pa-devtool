@@ -70,6 +70,8 @@ Narration:
 
 > Group membership does not excuse tampering. One changed instruction breaks
 > the asset binding, so the trusted publisher's modified file still fails.
+> The same gate can reveal an attack, an outside edit, or an agent rewriting a
+> critical Nerve Center file such as SOUL dot M D.
 
 ## 1:38-2:10 - GPT-5.6 behavioral review
 
@@ -101,7 +103,7 @@ Visual: Briefly show the README Build Week table and passing test output.
 Narration:
 
 > The research demo was created for a presentation to the University of
-> Arkansas AI Club, and predates Build Week. During Build Week, I directed
+> Arkansas AI Club, and predates Build Week. During Build Week, Karen Kilroy directed
 > the trust model and product decisions. Codex helped turn it into an installable
 > tool, CI action, tested Azure deployment, and secure GPT-5.6 audit. Free2PA is
 > Apache-licensed freeware. Your group, your verifier, your trust decisions.

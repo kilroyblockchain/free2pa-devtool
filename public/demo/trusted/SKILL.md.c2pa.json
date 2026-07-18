@@ -1,11 +1,11 @@
 {
   "spec_version": "free2pa/0.2.0",
   "claim": {
-    "claim_generator": "Free2PA v0.2.0",
+    "claim_generator": "Free2PA v0.3.0",
     "claim_generator_info": [
       {
         "name": "Free2PA",
-        "version": "0.2.0"
+        "version": "0.3.0"
       }
     ],
     "dc:title": "Study Group Notes",
@@ -22,12 +22,12 @@
           "actions": [
             {
               "action": "c2pa.created",
-              "when": "2026-07-18T02:48:34.759Z",
+              "when": "2026-07-18T12:06:29.611Z",
               "softwareAgent": {
                 "name": "Free2PA",
-                "version": "0.2.0"
+                "version": "0.3.0"
               },
-              "actor": "Harmony"
+              "actor": "Karen Kilroy"
             }
           ]
         }
@@ -39,11 +39,11 @@
         }
       }
     ],
-    "signed_at": "2026-07-18T02:48:34.759Z"
+    "signed_at": "2026-07-18T12:06:29.611Z"
   },
   "signature": {
     "alg": "ES256",
     "cert_pem": "-----BEGIN CERTIFICATE-----\nMIIBxDCCAWmgAwIBAgIUQUXyvcLqTnejaQD024zY6JsCI+AwCgYIKoZIzj0EAwIw\nQTEQMA4GA1UECgwHRnJlZTJQQTEtMCsGA1UEAwwkRnJlZTJQQSBCdWlsZCBXZWVr\nIFRydXN0ZWQgUHVibGlzaGVyMB4XDTI2MDcxODAyNDgxMVoXDTI2MDgxNzAyNDgx\nMVowQTEQMA4GA1UECgwHRnJlZTJQQTEtMCsGA1UEAwwkRnJlZTJQQSBCdWlsZCBX\nZWVrIFRydXN0ZWQgUHVibGlzaGVyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE\nlDAV9kCOtQvKjs1iwd5g/nDVL8pBsgQJHOYZY3bnGELfSTND7qs+Zk7/5zt4uGvp\nVPt4hUtjkn5bHOSYl2lu56M/MD0wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMC\nB4AwHQYDVR0OBBYEFLRrbFziWSnJ9LgtVThyFR2rYIn+MAoGCCqGSM49BAMCA0kA\nMEYCIQC+xzOZA1Iv3ZkWdgf8cn71GHCQrKg5o+KWZGr/0ccpHQIhAILrOU8FjjMs\n5flXqilaGSDqWNpq5ZHVxt+VaMoHRswh\n-----END CERTIFICATE-----",
-    "value": "MEUCIQCLcvm0giVEe8ynv4GR+SSTeRKJtCdPlkSwlpYPCwO+tAIgKwHFH/l8EOOrLiMErW7HNRK5HJyLqiExJmP/lr/sal8="
+    "value": "MEUCIDLwddZtktps9XVn85ddnDDZFLx9ddxS5D+LGAKf2WCtAiEAqQruIu83EM1lVT08tc4E7qg1FFdIyX6o5yIG7A331+w="
   }
 }

@@ -1,18 +1,39 @@
 # Free2PA
 
-**Launch a verifier. Choose the publishers your group trusts. Reject every
-agent skill that is unsigned, modified, expired, or outside the group.**
+**Agent frameworks put developers in the driver's seat. Free2PA is the seat
+belt for the files that steer the agent.**
 
-Free2PA is an Apache-2.0 developer tool for forming ad-hoc trust groups around
-AI agent skills. A class, project team, short-term collaboration, or agent
-operator can run its own verifier and make one explicit policy decision: which
-publisher certificates belong in this verifier's trust store?
+Free2PA puts a signed receipt beside the files that tell an AI agent who it is
+and what it can do. Before the agent uses one, Free2PA checks that the file has
+not changed and that it came from someone this group trusts.
+
+It is an Apache-2.0 developer tool for making an agent's critical control files
+tamper-evident inside an ad-hoc trust group. A class, project team, short-term
+collaboration, or agent operator runs its own verifier and chooses whose files
+that particular group will accept.
 
 Karen Kilroy, co-chair of the C2PA AI/ML Task Force, conceived the original research
 demo in response to a practical need: college students collaborating on
 OpenClaw agentic nerve centers needed temporary, ad-hoc publisher trust groups.
-Here, an agentic nerve center is the local coordination point that loads skills
-and decides what its agents may execute.
+Here, the **Nerve Center** is the agent's critical control surface: its skills,
+`SOUL.md`, and the other instructions and configuration that shape what the
+agent can do. Those files can change because of an external attack, an edit by
+someone outside the group, or an agent rewriting its own control files.
+Free2PA calls the signed receipt a sidecar. It is bound to the exact file,
+makes any later change visible, and lets the local verifier decide whether the
+Nerve Center may load that file.
+
+This happens programmatically. An agent runner, startup hook, CI job, or MCP
+client consumes Free2PA's exit code or structured result at load time. The host
+application can block or quarantine the file, alert and continue, or only log
+the event. For critical instructions, fail-closed blocking is the recommended
+default; Free2PA reports the facts and the developer chooses the response.
+
+For a changed file whose receipt is still valid, current, and locally trusted,
+`free2pa repair` can restore the signed original programmatically while keeping
+the rejected version as evidence. It refuses repair from an invalid, expired,
+or outside-group receipt. This supports a fourth policy: stop, repair, and
+report without silently trusting new content.
 
 Trust is local and opt-in. There is no global registry and no permanent trust
 relationship. Adding a public certificate admits that publisher. Removing it
@@ -43,6 +64,10 @@ fixtures, then use the Verify panel:
 3. `tampered/SKILL.md` with its original sidecar comes from a trusted publisher
    but fails content integrity and displays the changed instruction.
 4. `malicious/SKILL.md` is the prepared GPT-5.6 behavioral-audit case.
+
+The same integrity gate can protect other text-based Nerve Center controls,
+including `SOUL.md`; `SKILL.md` is the focused reference implementation used
+by this release and demo.
 
 No account, rebuild, or paid service is required for judge testing.
 
@@ -94,12 +119,23 @@ npm link
 free2pa --version
 ```
 
+Install the included Codex integration skill with one command:
+
+```bash
+free2pa codex-skill install
+```
+
+Then ask Codex: `Make this agent application tamper-evident for our project
+trust group.` Codex maps the application's Nerve Center, wires programmatic
+verification into its load boundary, and tests trusted, changed, and
+outside-group files. The developer still approves publishers and signing.
+
 Create a short-lived publisher identity:
 
 ```bash
 free2pa keygen \
   --name "Karen Kilroy - Build Week" \
-  --id harmony-build-week \
+  --id karen-build-week \
   --days 7 \
   --out-dir .free2pa
 ```
@@ -108,8 +144,8 @@ Sign a skill:
 
 ```bash
 free2pa sign ./skills/weather/SKILL.md \
-  --cert .free2pa/harmony-build-week.crt \
-  --key .free2pa/harmony-build-week.key \
+  --cert .free2pa/karen-build-week.crt \
+  --key .free2pa/karen-build-week.key \
   --purpose "Retrieve weather without accessing secrets"
 ```
 
@@ -119,9 +155,9 @@ Create a trust store and admit a publisher by adding only their public
 certificate:
 
 ```bash
-free2pa trust add .free2pa/harmony-build-week.crt \
+free2pa trust add .free2pa/karen-build-week.crt \
   --store ./study-group-certs \
-  --id harmony
+  --id karen
 
 free2pa trust list --store ./study-group-certs
 ```
@@ -131,6 +167,14 @@ Verify directly against the group's policy:
 ```bash
 free2pa verify ./skills/weather/SKILL.md \
   --trust-store ./study-group-certs
+```
+
+Restore the trusted signed version after a failed integrity check:
+
+```bash
+free2pa repair ./skills/weather/SKILL.md \
+  --trust-store ./study-group-certs \
+  --json
 ```
 
 Or launch a browser and MCP verifier backed by that same directory:
@@ -145,7 +189,7 @@ free2pa serve \
 Open `http://127.0.0.1:4001`. To revoke the publisher immediately:
 
 ```bash
-free2pa trust remove harmony --store ./study-group-certs
+free2pa trust remove karen --store ./study-group-certs
 ```
 
 The signature remains mathematically valid, but the next group verification
@@ -213,7 +257,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.2.1
+      - uses: kilroyblockchain/free2pa-devtool@v0.3.0
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -233,8 +277,10 @@ fails. The repository's own workflow runs the action against the judge fixture.
 | `verify_skill` | Return a hard PASS/FAIL from signature, integrity, certificate validity, and local trust. |
 | `audit_skill` | Ask GPT-5.6 for an independent structured behavioral security review. |
 
-The intended agent policy is simple: call `verify_skill` before loading an
-instruction package. Treat anything other than PASS as unavailable.
+The agent calls `verify_skill` before loading an instruction package and
+consumes the structured result directly. A high-risk Nerve Center can treat
+anything other than PASS as unavailable; other applications may alert and
+continue or log the event according to their explicit response policy.
 
 ## HTTP API
 
@@ -257,7 +303,7 @@ X.509 certificates belong in a verifier's trust store.
 C2PA has a formal conformance program. Conforming Content Credentials are
 verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.2.1` is **C2PA-inspired, not a conforming C2PA implementation**. It
+Free2PA `0.3.0` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
 conforming C2PA products. A signed publisher identity traces origin, while
@@ -268,8 +314,8 @@ group choose to trust? It is not a replacement for C2PA conformance.
 ## OpenAI Build Week
 
 Free2PA existed before OpenAI Build Week as a research demo created for a
-presentation to the University of Arkansas AI Club. The sanitized pre-hackathon
-baseline is commit `cd5c2c3` from March 15, 2026.
+presentation to the University of Arkansas AI Club. The pre-hackathon baseline
+is commit `1c2d88d` from March 15, 2026.
 
 Only work created after the submission period began is presented as Build Week
 work:

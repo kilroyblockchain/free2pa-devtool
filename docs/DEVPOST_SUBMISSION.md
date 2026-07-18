@@ -82,8 +82,10 @@ supply-chain behavior, and excessive permissions. Cryptographic verification
 remains the hard gate; the model cannot turn a failed credential into a pass.
 
 Developers can use Free2PA through an installable CLI, browser interface, HTTP
-API, or Streamable HTTP MCP server. JSON output and nonzero exit codes support
-CI and agent-policy enforcement.
+API, or Streamable HTTP MCP server. The generic MCP `verify_asset` tool accepts
+any Nerve Center file and sidecar, then returns structured `PASS`/`FAIL`,
+`LOAD`/`REJECT`, four independent gate results, and a stable reason code. JSON
+output and nonzero exit codes support CI and agent-policy enforcement.
 
 The repository also includes a Codex skill for retrofitting Free2PA into an
 existing OpenClaw project, ChatGPT app, MCP server, or other agentic system. A
@@ -177,6 +179,8 @@ Week extension separately.
 - Outside-group rejection, certificate admission, and immediate revocation.
 - Tamper detection with a human-readable diff.
 - GPT-5.6 structured audits through CLI, HTTP, browser, and MCP.
+- Generic MCP load gate for arbitrary Nerve Center files, not only bundled
+  server fixtures.
 - Reusable GitHub Action for pull-request trust enforcement and JSON evidence.
 - Automated tests covering signing, trust, tampering, CLI behavior, and API
   contracts.
@@ -203,7 +207,7 @@ review complement one another only when their responsibilities remain clear.
 ## C2PA disclosure
 
 C2PA has a formal conformance program in which conforming Content Credentials
-are verified by conforming verifiers. Free2PA `0.3.0` is C2PA-inspired but is
+are verified by conforming verifiers. Free2PA `0.3.1` is C2PA-inspired but is
 not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
 provenance credentials in a Free2PA format: a signed publisher identity traces
 origin and asset binding reveals edits. It then addresses an adjacent concern
@@ -215,9 +219,9 @@ does not claim C2PA endorsement.
 ## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.0
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.1
 - Live demo: https://free2pa-buildweek.azurewebsites.net
-- Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Build-Week-demo.mp4
+- Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4
 - YouTube demo: `TODO`
 - Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
 
@@ -264,8 +268,8 @@ normalized speech at approximately -16.8 LUFS.
 
 ## Gallery assets
 
-- Logo: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-logo.png
-- Cover: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Agentic-Factory.png
-- Programmatic result: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Agentic-Factory-Result.png
-- Mobile experience: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Agentic-Factory-Mobile.png
+- Logo: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-logo.png
+- Cover: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Agentic-Factory.png
+- Programmatic result: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Agentic-Factory-Result.png
+- Mobile experience: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Agentic-Factory-Mobile.png
 - GPT-5.6 audit proof: `artifacts/Free2PA-gpt-audit.png`

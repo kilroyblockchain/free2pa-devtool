@@ -87,6 +87,41 @@ await import('../src/start-agent.js');
 Point the application's start script at this wrapper. Do not catch and ignore
 verification failure.
 
+## MCP bootstrap gate
+
+Use the generic MCP tool when the trust policy lives in a shared Free2PA
+verifier. The bootstrap code reads the bytes for verification but does not put
+them into model context until the server returns `LOAD`:
+
+```js
+import { readFile } from 'node:fs/promises';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+
+const file = 'agent/SOUL.md';
+const [content, sidecar] = await Promise.all([
+  readFile(file, 'utf8'),
+  readFile(`${file}.c2pa.json`, 'utf8'),
+]);
+const client = new Client({ name: 'agent-bootstrap', version: '1.0.0' });
+await client.connect(new StreamableHTTPClientTransport(
+  new URL(process.env.FREE2PA_MCP_URL ?? 'http://127.0.0.1:4001/mcp'),
+));
+const result = await client.callTool({
+  name: 'verify_asset',
+  arguments: { asset_name: file, content, sidecar },
+});
+
+if (result.structuredContent?.decision !== 'LOAD') {
+  throw new Error(`Free2PA rejected ${file}: ${result.structuredContent?.reason_code ?? 'NO_VERDICT'}`);
+}
+
+startAgentWithPolicy(content);
+```
+
+Keep this call in deterministic host code. The model may explain a rejection,
+but it must not be able to convert `REJECT` into `LOAD`.
+
 ## Publisher setup
 
 Create a time-bounded project identity:

@@ -15,7 +15,62 @@ function isValidName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
-function buildMcpServer(clientId = 'mcp') {
+const verificationOutputSchema = {
+  asset: z.string(),
+  verdict: z.enum(['PASS', 'FAIL']),
+  decision: z.enum(['LOAD', 'REJECT']),
+  signature_valid: z.boolean(),
+  file_unchanged: z.boolean(),
+  certificate_current: z.boolean(),
+  publisher_trusted: z.boolean(),
+  reason_code: z.string(),
+  publisher: z.string(),
+  certificate_fingerprint: z.string(),
+};
+
+export function buildVerificationVerdict(result, asset = 'Nerve Center file') {
+  const signatureValid = result.signatureValid === true;
+  const fileUnchanged = result.hashMatch === true;
+  const certificateCurrent = result.certificate?.valid === true;
+  const publisherTrusted = result.trust?.trusted === true;
+  const pass = signatureValid && fileUnchanged && certificateCurrent && publisherTrusted;
+
+  let reasonCode = 'VERIFIED';
+  if (!signatureValid) reasonCode = 'INVALID_SIGNATURE';
+  else if (!fileUnchanged) reasonCode = 'CONTENT_CHANGED';
+  else if (!certificateCurrent) reasonCode = 'EXPIRED_CERT';
+  else if (!publisherTrusted) reasonCode = result.trust?.reason || 'UNTRUSTED_ISSUER';
+
+  return {
+    asset,
+    verdict: pass ? 'PASS' : 'FAIL',
+    decision: pass ? 'LOAD' : 'REJECT',
+    signature_valid: signatureValid,
+    file_unchanged: fileUnchanged,
+    certificate_current: certificateCurrent,
+    publisher_trusted: publisherTrusted,
+    reason_code: reasonCode,
+    publisher: result.certificate?.subject || '',
+    certificate_fingerprint: result.certificate?.fingerprint256 || '',
+  };
+}
+
+function verificationResponse(result, asset) {
+  if (result.success !== true) {
+    return {
+      content: [{ type: 'text', text: `Free2PA verification error: ${result.error}` }],
+      isError: true,
+    };
+  }
+
+  const verdict = buildVerificationVerdict(result, asset);
+  return {
+    structuredContent: verdict,
+    content: [{ type: 'text', text: JSON.stringify(verdict, null, 2) }],
+  };
+}
+
+export function buildMcpServer(clientId = 'mcp') {
   const server = new McpServer({
     name:    'Free2PA',
     version: config.appVersion,
@@ -51,6 +106,30 @@ function buildMcpServer(clientId = 'mcp') {
     },
   );
 
+  server.registerTool(
+    'verify_asset',
+    {
+      title: 'Verify a Nerve Center file',
+      description: 'Verify an arbitrary agent control file and its Free2PA sidecar against this server\'s local trust group. Call this programmatically before the host loads the file into agent or model context. PASS permits LOAD; every failure returns REJECT with separate signature, file, certificate, and publisher-trust facts.',
+      inputSchema: {
+        asset_name: z.string().min(1).max(255).default('Nerve Center file'),
+        content: z.string().max(1024 * 1024).describe('Exact UTF-8 contents of the current control file (maximum 1 MiB)'),
+        sidecar: z.string().max(512 * 1024).describe('Exact JSON text from the neighboring .c2pa.json sidecar (maximum 512 KiB)'),
+      },
+      outputSchema: verificationOutputSchema,
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
+    },
+    async ({ asset_name: assetName, content, sidecar }) => {
+      const result = await verifySkill({ content, sidecarText: sidecar, trustProfile: 'dev' });
+      return verificationResponse(result, assetName);
+    },
+  );
+
   // ── Tool: verify_skill ───────────────────────────────────────────────────
   server.tool(
     'verify_skill',
@@ -70,23 +149,7 @@ function buildMcpServer(clientId = 'mcp') {
           readFile(sidecarPath, 'utf-8'),
         ]);
 
-        const result = await verifySkill({ content, sidecarText, trustProfile: 'dev' });
-        const pass   = result.signatureValid && result.hashMatch &&
-          result.certificate?.valid !== false && result.trust?.trusted === true;
-
-        return {
-          content: [{
-            type: 'text',
-            text: JSON.stringify({
-              skill:          name,
-              verdict:        pass ? 'PASS' : 'FAIL',
-              signatureValid: result.signatureValid,
-              hashMatch:      result.hashMatch,
-              certificate:    result.certificate,
-              trust:          result.trust,
-            }, null, 2),
-          }],
-        };
+        return verificationResponse(result, `${name}/SKILL.md`);
       } catch (err) {
         if (err.code === 'ENOENT') {
           const missing = String(err.path).endsWith('.c2pa.json') ? 'sidecar' : 'SKILL.md';
@@ -143,7 +206,7 @@ router.get('/mcp', (_req, res) => {
     version:   config.appVersion,
     transport: 'streamable-http',
     endpoint:  'POST /mcp',
-    tools:     ['list_skills', 'verify_skill', 'audit_skill'],
+    tools:     ['verify_asset', 'verify_skill', 'list_skills', 'audit_skill'],
   });
 });
 

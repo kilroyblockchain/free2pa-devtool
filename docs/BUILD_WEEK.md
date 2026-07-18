@@ -22,7 +22,7 @@ repository contained:
 - a browser interface for signing and verifying individual skill files;
 - ECDSA P-256 signatures and SHA-256 content binding;
 - a local certificate directory used as a development trust store; and
-- two MCP tools for listing and verifying bundled example skills.
+- MCP tools for listing and verifying bundled example skills.
 
 ## Work created during Build Week
 
@@ -47,6 +47,9 @@ Delivered additions:
 - Added explicit algorithm, certificate-validity, integrity, and trust gates.
 - Added GPT-5.6 structured behavioral auditing through the Responses API.
 - Exposed behavioral auditing through the CLI, HTTP API, browser, and MCP.
+- Added a generic `verify_asset` MCP load gate for arbitrary Nerve Center
+  files, with structured `PASS`/`FAIL`, `LOAD`/`REJECT`, per-gate facts, and
+  stable reason codes.
 - Deployed GPT-5.6 Sol on Azure OpenAI and granted the demo a scoped managed
   identity, avoiding any stored model API key.
 - Added shared per-client and global audit limits across HTTP and MCP, locked
@@ -106,6 +109,12 @@ Delivered additions:
   [run 29644256018](https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29644256018),
   then clean-installed the 48 KB release archive and installed its bundled
   Codex skill from the packaged executable.
+- Prepared `v0.3.1` after product review identified MCP as the primary
+  agent-native integration. The new generic `verify_asset` tool accepts any
+  Nerve Center file and sidecar, publishes declared input and output schemas,
+  and returns structured `LOAD` or `REJECT` decisions with stable reason codes.
+  Its in-memory and real Streamable HTTP tests cover trusted, changed, and
+  outside-group publishers.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

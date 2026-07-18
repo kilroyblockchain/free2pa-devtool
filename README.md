@@ -264,7 +264,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.3.0
+      - uses: kilroyblockchain/free2pa-devtool@v0.3.1
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -280,14 +280,20 @@ fails. The repository's own workflow runs the action against the judge fixture.
 
 | Tool | Purpose |
 |---|---|
+| `verify_asset` | Verify any Nerve Center file plus sidecar and return structured `PASS`/`FAIL` and `LOAD`/`REJECT`. |
 | `list_skills` | List skills visible to this verifier and whether each has a sidecar. |
-| `verify_skill` | Return a hard PASS/FAIL from signature, integrity, certificate validity, and local trust. |
+| `verify_skill` | Verify one of the server's bundled demo skills by folder name. |
 | `audit_skill` | Ask GPT-5.6 for an independent structured behavioral security review. |
 
-The agent calls `verify_skill` before loading an instruction package and
-consumes the structured result directly. A high-risk Nerve Center can treat
-anything other than PASS as unavailable; other applications may alert and
-continue or log the event according to their explicit response policy.
+The host calls `verify_asset` with the exact file bytes and neighboring
+sidecar before placing the file into agent or model context. It consumes the
+structured `decision` directly: `LOAD` means every deterministic gate passed;
+`REJECT` includes separate signature, file-integrity, certificate-currentness,
+and publisher-trust facts plus a stable reason code. A high-risk Nerve Center
+can treat anything other than `LOAD` as unavailable; other applications may
+repair, alert and continue, or log according to their explicit response
+policy. `verify_skill` and `list_skills` remain convenient for the bundled
+research fixtures.
 
 ## HTTP API
 
@@ -310,7 +316,7 @@ X.509 certificates belong in a verifier's trust store.
 C2PA has a formal conformance program. Conforming Content Credentials are
 verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.3.0` is **C2PA-inspired, not a conforming C2PA implementation**. It
+Free2PA `0.3.1` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
 conforming C2PA products. A signed publisher identity traces origin, while

@@ -32,7 +32,7 @@ export async function createServer() {
   const app = express();
   app.disable('x-powered-by');
   app.use(applySecurityHeaders);
-  app.use(express.json());
+  app.use(express.json({ limit: '2mb' }));
   app.get('/test.html', rejectLegacyTestClient);
   app.use(express.static(resolve(__dirname, '..', 'public')));
   app.use(['/api', '/mcp', '/health'], (_req, res, next) => {

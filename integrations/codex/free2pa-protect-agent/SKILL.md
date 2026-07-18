@@ -37,7 +37,7 @@ For a Node project, install the freeware release as a development dependency:
 
 ```bash
 npm install --save-dev \
-  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/free2pa-0.3.0.tgz
+  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/free2pa-0.3.1.tgz
 ```
 
 Verify the archive against the `SHA256SUMS` asset on the same GitHub release
@@ -84,6 +84,10 @@ Add automated tests for all three cases:
 Consume nonzero CLI exit codes or structured HTTP/MCP results in code, without
 requiring a human to watch a dashboard. GPT behavioral review may explain
 risky instructions, but it must never change the cryptographic result.
+
+For a remote or shared verifier, call the MCP `verify_asset` tool with the
+exact file contents and neighboring sidecar. Continue only when its structured
+`decision` is `LOAD`; treat a missing or malformed response as failure.
 
 ### 7. Report in plain language
 

@@ -66,8 +66,15 @@ reports `UNTRUSTED_ISSUER`.
 - MCP: Streamable HTTP at `POST /mcp`
 - CI: reusable action in `action.yml`
 
+The MCP server's primary integration tool is `verify_asset`. A host sends the
+exact control-file text and its sidecar before loading the file into model
+context. The structured response includes `verdict`, `decision`, four separate
+gate booleans, and a stable `reason_code`. `decision: "LOAD"` is returned only
+when signature, file integrity, certificate validity, and local publisher
+trust all pass.
+
 Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.0>
+Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.1>
 
 Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29644256018>

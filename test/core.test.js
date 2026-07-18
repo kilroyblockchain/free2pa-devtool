@@ -26,6 +26,12 @@ import { config } from '../src/config.js';
 
 const execFileP = promisify(execFile);
 
+test('CLI version matches package metadata', async () => {
+  const packageMetadata = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
+  const { stdout } = await execFileP(process.execPath, [resolve('bin/free2pa.js'), '--version']);
+  assert.equal(stdout.trim(), packageMetadata.version);
+});
+
 test('canonicalJson sorts nested object keys deterministically', () => {
   assert.equal(
     canonicalJson({ z: 1, a: { d: 4, b: 2 }, list: [{ y: 2, x: 1 }] }),

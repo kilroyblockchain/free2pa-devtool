@@ -78,6 +78,10 @@ Delivered additions:
 - Added a no-account judge guide with exact live-demo and clean-install steps.
 - Re-verified the public repository workflow on GitHub-hosted Ubuntu in
   [run 29641212445](https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29641212445).
+- Prepared the final `v0.2.1` patch release and added a regression test that
+  keeps CLI and package versions synchronized. The 35 KB tarball installed in
+  an empty directory and passed key generation, signing, trust admission, and
+  verification through its installed executable.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

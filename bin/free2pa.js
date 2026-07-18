@@ -14,7 +14,7 @@ import { config } from '../src/config.js';
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 
-const VERSION = '0.2.0';
+const VERSION = '0.2.1';
 const SIDECAR_SUFFIX = '.c2pa.json';
 
 function usage() {

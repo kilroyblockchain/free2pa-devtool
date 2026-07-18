@@ -123,13 +123,13 @@ review complement one another only when their responsibilities remain clear.
 ## C2PA disclosure
 
 Free2PA applies C2PA-inspired Content Credentials concepts to agent instruction
-files, but Free2PA `0.2.0` is not a conforming C2PA implementation and does not
+files, but Free2PA `0.2.1` is not a conforming C2PA implementation and does not
 claim C2PA consumer interoperability. Its JSON sidecar is a Free2PA format.
 
 ## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.0
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.1
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - YouTube demo: `TODO`
 - Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`

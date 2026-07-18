@@ -54,6 +54,6 @@ reports `UNTRUSTED_ISSUER`.
 
 Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.0>
+Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.1>
 
 Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29641212445>

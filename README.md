@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.2.0
+      - uses: kilroyblockchain/free2pa-devtool@v0.2.1
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -246,7 +246,7 @@ Free2PA applies Content Credentials ideas to agent instruction files: signed
 claims, asset binding, action assertions, local trust decisions, and
 human-readable verification reasons.
 
-Free2PA `0.2.0` is **C2PA-inspired, not a conforming C2PA implementation**. Its
+Free2PA `0.2.1` is **C2PA-inspired, not a conforming C2PA implementation**. Its
 portable JSON sidecar is a Free2PA format, not a C2PA Manifest Store. Free2PA
 does not claim interoperability with conforming C2PA consumers. This narrow
 format is deliberate: ad-hoc groups need a free, inspectable trust gate for

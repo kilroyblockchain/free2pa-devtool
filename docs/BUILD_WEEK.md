@@ -37,6 +37,10 @@ Delivered additions:
 - Added explicit algorithm, certificate-validity, integrity, and trust gates.
 - Added GPT-5.6 structured behavioral auditing through the Responses API.
 - Exposed behavioral auditing through the CLI, HTTP API, browser, and MCP.
+- Deployed GPT-5.6 Sol on Azure OpenAI and granted the demo a scoped managed
+  identity, avoiding any stored model API key.
+- Added shared per-client and global audit limits across HTTP and MCP, locked
+  the hosted model selection, and bounded input and output sizes.
 - Added end-to-end cryptographic, tamper, trust, CLI, and API-contract tests.
 - Updated vulnerable dependencies to a zero-advisory npm audit result.
 - Reduced the npm package to judge-relevant runtime files with no private keys.

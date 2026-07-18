@@ -9,6 +9,7 @@ import certsRouter  from './routes/certs.js';
 import skillsRouter from './routes/skills.js';
 import mcpRouter    from './routes/mcp.js';
 import auditRouter  from './routes/audit.js';
+import { getAuditConfiguration } from './services/auditor.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -34,13 +35,18 @@ export async function createServer() {
     next();
   });
 
-  app.get('/api/status', (_req, res) => res.json({
-    success: true,
-    version: config.appVersion,
-    readOnly: config.readOnly,
-    auditConfigured: Boolean(process.env.OPENAI_API_KEY),
-    trustStore: basename(config.certsDir),
-  }));
+  app.get('/api/status', (_req, res) => {
+    const audit = getAuditConfiguration();
+    res.json({
+      success: true,
+      version: config.appVersion,
+      readOnly: config.readOnly,
+      auditConfigured: audit.configured,
+      auditProvider: audit.provider,
+      auditModel: audit.model,
+      trustStore: basename(config.certsDir),
+    });
+  });
 
   app.use('/api', signRouter);
   app.use('/api', verifyRouter);

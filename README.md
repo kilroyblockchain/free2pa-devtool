@@ -141,12 +141,18 @@ fails with `UNTRUSTED_ISSUER`.
 
 ## GPT-5.6 security audit
 
-Set a server-side OpenAI API key, then audit a skill:
+For direct OpenAI API use, set a server-side API key and audit a skill:
 
 ```bash
 export OPENAI_API_KEY="..."
 free2pa audit ./skills/weather/SKILL.md --model gpt-5.6
 ```
+
+The server also supports Azure OpenAI v1 through `AZURE_OPENAI_ENDPOINT` and
+`AZURE_OPENAI_DEPLOYMENT`. Local operators may provide
+`AZURE_OPENAI_API_KEY`; Azure App Service can instead use a system-assigned
+managed identity with the `Cognitive Services OpenAI User` role. The hosted
+judge demo uses managed identity and stores no model credential.
 
 The audit returns strict structured findings covering:
 
@@ -160,7 +166,8 @@ The audit returns strict structured findings covering:
 
 The skill content is delimited and presented to GPT-5.6 as untrusted data. The
 report records the model, audit time, filename, and SHA-256 of the reviewed
-content. `critical` and `high` reports produce a nonzero CLI exit code.
+content. Requests cap model output and reject skill files larger than 64 KiB.
+`critical` and `high` reports produce a nonzero CLI exit code.
 
 ## Repository scanning and CI
 

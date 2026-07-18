@@ -7,6 +7,7 @@ import { resolve } from 'node:path';
 import { config } from '../config.js';
 import { verifySkill } from '../services/verifier.js';
 import { auditSkill } from '../services/auditor.js';
+import { consumeAuditAllowance } from '../services/auditLimit.js';
 
 const router = Router();
 
@@ -14,7 +15,7 @@ function isValidName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
-function buildMcpServer() {
+function buildMcpServer(clientId = 'mcp') {
   const server = new McpServer({
     name:    'Free2PA',
     version: config.appVersion,
@@ -107,9 +108,14 @@ function buildMcpServer() {
       if (!isValidName(name)) {
         return { content: [{ type: 'text', text: 'Error: Invalid skill name.' }], isError: true };
       }
-
       try {
         const content = await readFile(resolve(config.skillsDir, name, 'SKILL.md'), 'utf8');
+        if (!consumeAuditAllowance(clientId)) {
+          return {
+            content: [{ type: 'text', text: 'Error: Hourly GPT audit limit reached.' }],
+            isError: true,
+          };
+        }
         const report = await auditSkill({ content, filename: `${name}/SKILL.md` });
         return { content: [{ type: 'text', text: JSON.stringify(report, null, 2) }] };
       } catch (error) {
@@ -124,7 +130,7 @@ function buildMcpServer() {
 // POST /mcp — Streamable HTTP MCP endpoint (stateless per-request)
 router.post('/mcp', async (req, res) => {
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined });
-  const mcpServer = buildMcpServer();
+  const mcpServer = buildMcpServer(req.ip);
   await mcpServer.connect(transport);
   await transport.handleRequest(req, res, req.body);
   res.on('finish', () => mcpServer.close().catch(() => {}));

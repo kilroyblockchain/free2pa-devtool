@@ -5,7 +5,11 @@ import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
 import test from 'node:test';
-import { auditSkill } from '../src/services/auditor.js';
+import {
+  auditSkill,
+  getAuditConfiguration,
+  getManagedIdentityAccessToken,
+} from '../src/services/auditor.js';
 import {
   addTrustedCertificate,
   generateSigningCertificate,
@@ -17,6 +21,8 @@ import { verifySkill } from '../src/services/verifier.js';
 import { canonicalJson } from '../src/utils/canonical.js';
 import { cleanupUploads } from '../src/routes/verify.js';
 import { applySecurityHeaders } from '../src/server.js';
+import { consumeAuditAllowance } from '../src/services/auditLimit.js';
+import { config } from '../src/config.js';
 
 const execFileP = promisify(execFile);
 
@@ -161,9 +167,91 @@ test('GPT audit uses the Responses API structured-output contract', async () => 
   assert.equal(request.options.headers.Authorization, 'Bearer test-key');
   assert.equal(request.body.model, 'gpt-5.6');
   assert.equal(request.body.text.format.type, 'json_schema');
+  assert.equal(request.body.max_output_tokens, 2000);
   assert.match(request.body.input[0].content[0].text, /<UNTRUSTED_SKILL>/);
   assert.equal(result.overall_risk, 'high');
   assert.equal(result.metadata.asset_sha256.length, 64);
+});
+
+test('GPT audit supports Azure OpenAI with managed identity and no stored key', async () => {
+  let request;
+  const report = {
+    overall_risk: 'low',
+    summary: 'No concrete behavioral risks found.',
+    findings: [],
+    recommendations: [],
+  };
+  const result = await auditSkill({
+    content: '# Notes\n\nSummarize text supplied by the user.',
+    azureEndpoint: 'https://example.openai.azure.com/',
+    model: 'free2pa-gpt-5-6',
+    tokenProvider: async () => 'managed-identity-token',
+    fetchImpl: async (url, options) => {
+      request = { url, options, body: JSON.parse(options.body) };
+      return {
+        ok: true,
+        json: async () => ({ output_text: JSON.stringify(report) }),
+      };
+    },
+  });
+
+  assert.equal(request.url, 'https://example.openai.azure.com/openai/v1/responses');
+  assert.equal(request.options.headers.Authorization, 'Bearer managed-identity-token');
+  assert.equal(request.options.headers['api-key'], undefined);
+  assert.equal(request.body.model, 'free2pa-gpt-5-6');
+  assert.equal(result.overall_risk, 'low');
+
+  assert.deepEqual(getAuditConfiguration({
+    AZURE_OPENAI_ENDPOINT: 'https://example.openai.azure.com',
+    AZURE_OPENAI_DEPLOYMENT: 'free2pa-gpt-5-6',
+    IDENTITY_ENDPOINT: 'http://localhost/identity',
+    IDENTITY_HEADER: 'opaque',
+  }), {
+    configured: true,
+    provider: 'azure-openai-managed-identity',
+    model: 'free2pa-gpt-5-6',
+  });
+});
+
+test('managed identity requests the Cognitive Services token resource', async () => {
+  let tokenRequest;
+  const token = await getManagedIdentityAccessToken({
+    endpoint: 'http://localhost/identity',
+    identityHeader: 'opaque-header',
+    now: 1_700_000_000_000,
+    fetchImpl: async (url, options) => {
+      tokenRequest = { url: new URL(url), options };
+      return {
+        ok: true,
+        json: async () => ({
+          access_token: 'azure-token',
+          expires_on: '2000000000',
+        }),
+      };
+    },
+  });
+  assert.equal(token, 'azure-token');
+  assert.equal(tokenRequest.url.searchParams.get('api-version'), '2019-08-01');
+  assert.equal(tokenRequest.url.searchParams.get('resource'), 'https://cognitiveservices.azure.com/');
+  assert.equal(tokenRequest.options.headers['X-IDENTITY-HEADER'], 'opaque-header');
+});
+
+test('hosted GPT audit allowance enforces client and global limits', () => {
+  const previousClientLimit = config.auditRequestsPerHour;
+  const previousGlobalLimit = config.auditGlobalRequestsPerHour;
+  config.auditRequestsPerHour = 2;
+  config.auditGlobalRequestsPerHour = 3;
+  const now = 1_700_000_000_000;
+  try {
+    assert.equal(consumeAuditAllowance('client-a', now), true);
+    assert.equal(consumeAuditAllowance('client-a', now), true);
+    assert.equal(consumeAuditAllowance('client-a', now), false);
+    assert.equal(consumeAuditAllowance('client-b', now), true);
+    assert.equal(consumeAuditAllowance('client-c', now), false);
+  } finally {
+    config.auditRequestsPerHour = previousClientLimit;
+    config.auditGlobalRequestsPerHour = previousGlobalLimit;
+  }
 });
 
 test('an ad-hoc verifier can add, inspect, and revoke group trust', async () => {

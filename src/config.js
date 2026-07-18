@@ -14,6 +14,7 @@ export const config = {
   skillsDir: resolve(root, process.env.SKILLS_DIR ?? 'radio_intern'),
   readOnly:  process.env.FREE2PA_READ_ONLY === 'true',
   auditRequestsPerHour: Math.max(Number.parseInt(process.env.FREE2PA_AUDIT_LIMIT ?? '20', 10), 1),
+  auditGlobalRequestsPerHour: Math.max(Number.parseInt(process.env.FREE2PA_AUDIT_GLOBAL_LIMIT ?? '60', 10), 1),
 
   claimGenerator: 'Free2PA v0.2.0',
   appName:        'Free2PA',

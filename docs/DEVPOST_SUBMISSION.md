@@ -55,7 +55,8 @@ CI and agent-policy enforcement.
 
 The implementation uses Node.js 20, Express, the Model Context Protocol SDK,
 OpenSSL, Node's native cryptography and X.509 APIs, and the OpenAI Responses API
-with a strict JSON schema for GPT-5.6 audits.
+with a strict JSON schema for GPT-5.6 audits. The public Azure deployment calls
+GPT-5.6 Sol through a scoped managed identity, so no model API key is stored.
 
 The signing envelope contains a canonical JSON claim, SHA-256 content binding,
 an embedded X.509 public certificate, and an ES256 signature. Verifiers enforce

@@ -8,3 +8,4 @@ certs/tmp_*.conf
 .free2pa/
 .DS_Store
 coverage/
+artifacts/

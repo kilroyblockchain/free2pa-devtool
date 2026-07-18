@@ -21,7 +21,7 @@ Build Week work is tracked in commits after the baseline and in the Codex
 session submitted with the project. This document will be updated as each
 judge-visible capability is completed.
 
-Planned additions:
+Delivered additions:
 
 - a distributable `free2pa` command-line interface;
 - recursive repository scanning and CI-friendly exit codes;
@@ -44,6 +44,8 @@ Planned additions:
 - Deployed a read-only verifier to Azure Linux App Service.
 - Isolated the hosted policy from all legacy certificates with a clean,
   short-lived Build Week trust store.
+- Verified a clean archive install and full test run on July 17.
+- Deployed HTTP security headers and disabled framework-identifying responses.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

@@ -13,7 +13,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 
 - [x] Category selected: Developer Tools.
 - [x] Pre-hackathon baseline identified as commit `1c2d88d`.
-- [ ] All submitted new work is committed after July 13, 2026.
+- [x] All submitted new work is committed after July 13, 2026.
 - [x] Codex collaboration is documented in `docs/BUILD_WEEK.md`.
 - [x] GPT-5.6 is materially integrated as the behavioral security auditor.
 - [ ] A live GPT-5.6 audit succeeds with the deployment credential.
@@ -23,7 +23,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 ## Judge access
 
 - [ ] Clean install succeeds on every listed supported platform.
-- [ ] Automated test suite passes from a clean checkout.
+- [x] Automated test suite passes from a clean checkout.
 - [x] Public demo is deployed and remains available through August 5, 2026.
 - [ ] Demo audit endpoint has a controlled server-side OpenAI API credential.
 - [x] Testing instructions require no rebuild and no paid account.

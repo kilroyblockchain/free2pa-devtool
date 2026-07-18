@@ -89,7 +89,7 @@ make the system difficult to reason about. Free2PA instead uses deterministic
 cryptographic gates and presents GPT-5.6 analysis as a distinct assessment.
 
 Another challenge was making a research prototype judge-ready without claiming
-old work as new. The repository identifies commit `1c2d88d` as the pre-event
+old work as new. The repository identifies commit `cd5c2c3` as the pre-event
 baseline and documents every submitted Build Week extension separately.
 
 ## Accomplishments
@@ -128,7 +128,7 @@ claim C2PA consumer interoperability. Its JSON sidecar is a Free2PA format.
 
 ## Links to complete
 
-- Repository: https://github.com/kilroyblockchain/free2pa
+- Repository: https://github.com/kilroyblockchain/free2pa-devtool
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - YouTube demo: `TODO`
 - Primary Codex `/feedback` Session ID: `TODO`

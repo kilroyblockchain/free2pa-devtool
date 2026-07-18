@@ -12,7 +12,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 ## Project requirements
 
 - [x] Category selected: Developer Tools.
-- [x] Pre-hackathon baseline identified as commit `1c2d88d`.
+- [x] Sanitized pre-hackathon baseline identified as commit `cd5c2c3`.
 - [x] All submitted new work is committed after July 13, 2026.
 - [x] Codex collaboration is documented in `docs/BUILD_WEEK.md`.
 - [x] GPT-5.6 is materially integrated as the behavioral security auditor.

@@ -75,7 +75,7 @@ Prerequisites:
 - macOS, Linux, or Windows through WSL
 
 ```bash
-git clone https://github.com/kilroyblockchain/free2pa.git
+git clone https://github.com/kilroyblockchain/free2pa-devtool.git
 cd free2pa
 npm ci
 npm link
@@ -201,7 +201,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa@v0.2.0
+      - uses: kilroyblockchain/free2pa-devtool@v0.2.0
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -255,7 +255,7 @@ Markdown agent instructions, not permanent public-media PKI.
 ## OpenAI Build Week
 
 Free2PA existed before OpenAI Build Week as a research and teaching prototype.
-The pre-hackathon baseline is commit `1c2d88d` from March 15, 2026.
+The sanitized pre-hackathon baseline is commit `cd5c2c3` from March 15, 2026.
 
 Only work created after the submission period began is presented as Build Week
 work:

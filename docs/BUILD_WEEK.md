@@ -5,7 +5,7 @@ AI agent skill files. The prototype predates OpenAI Build Week.
 
 ## Build Week baseline
 
-The baseline is commit `1c2d88d`, dated March 15, 2026. At that point the
+The sanitized baseline is commit `cd5c2c3`, dated March 15, 2026. At that point the
 repository contained:
 
 - an Express demonstration server;
@@ -47,8 +47,8 @@ Delivered additions:
 - Added trusted, outside-group, tampered, and malicious judge fixtures.
 - Added a reusable GitHub Action that enforces the verifier's local trust policy
   in pull requests and emits a JSON evidence artifact.
-- Verified the reusable action on GitHub-hosted Ubuntu with Node.js 20 in
-  [workflow run 29629028220](https://github.com/kilroyblockchain/free2pa/actions/runs/29629028220).
+- Verified the reusable action on GitHub-hosted Ubuntu with Node.js 20. The
+  public repository workflow reproduces this check on every push and pull request.
 - Deployed a read-only verifier to Azure Linux App Service.
 - Isolated the hosted policy from all legacy certificates with a clean,
   short-lived Build Week trust store.
@@ -63,8 +63,7 @@ Delivered additions:
   `free2pa-gpt-5-6` deployment. GPT-5.6 returned a strict `critical` report
   with prompt-injection, secret-access, exfiltration, permission, and deception
   findings for the prepared malicious fixture.
-- Validated the managed-identity build on GitHub-hosted Ubuntu in
-  [workflow run 29629352669](https://github.com/kilroyblockchain/free2pa/actions/runs/29629352669).
+- Validated the managed-identity build on GitHub-hosted Ubuntu.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

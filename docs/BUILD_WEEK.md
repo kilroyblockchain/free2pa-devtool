@@ -56,8 +56,15 @@ Delivered additions:
 - Deployed HTTP security headers and disabled framework-identifying responses.
 - Audited 129 installed dependency packages: every package declared an MIT,
   BSD, or ISC-family license and none lacked license metadata.
-- Re-ran trusted, outside-group, tampered, partial-upload, read-only, and HTTP
-  security checks against the deployed Azure build at commit `6e2e166`.
+- Re-ran trusted, outside-group, tampered, partial-upload, read-only, HTTP
+  security, and configured-auditor checks against the deployed Azure build at
+  commit `911ad09`.
+- Completed a live public audit at `2026-07-18T03:47:49.504Z` through the
+  `free2pa-gpt-5-6` deployment. GPT-5.6 returned a strict `critical` report
+  with prompt-injection, secret-access, exfiltration, permission, and deception
+  findings for the prepared malicious fixture.
+- Validated the managed-identity build on GitHub-hosted Ubuntu in
+  [workflow run 29629352669](https://github.com/kilroyblockchain/free2pa/actions/runs/29629352669).
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

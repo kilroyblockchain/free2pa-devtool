@@ -16,7 +16,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] All submitted new work is committed after July 13, 2026.
 - [x] Codex collaboration is documented in `docs/BUILD_WEEK.md`.
 - [x] GPT-5.6 is materially integrated as the behavioral security auditor.
-- [ ] A live GPT-5.6 audit succeeds with the deployment credential.
+- [x] A live GPT-5.6 audit succeeds through the deployment's managed identity.
 - [x] Third-party licenses and integration terms are reviewed.
 - [ ] Private signing keys are absent from the submitted repository and package.
 
@@ -25,7 +25,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [ ] Clean install succeeds on every listed supported platform.
 - [x] Automated test suite passes from a clean checkout.
 - [x] Public demo is deployed and remains available through August 5, 2026.
-- [ ] Demo audit endpoint has a controlled server-side OpenAI API credential.
+- [x] Demo audit endpoint uses a scoped server-side Azure managed identity.
 - [x] Testing instructions require no rebuild and no paid account.
 - [ ] Repository is public with a license, or shared with both judging addresses.
 

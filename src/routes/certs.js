@@ -57,6 +57,9 @@ router.get('/certs', async (_req, res) => {
 // Body (JSON): { name, org, validityDays }
 // Generates a new ECDSA P-256 self-signed cert saved as certs/{slug}.crt/key.
 router.post('/certs/generate', async (req, res) => {
+  if (config.readOnly) {
+    return res.status(403).json({ success: false, error: 'Certificate generation is disabled on this read-only verifier.' });
+  }
   const { name, org, validityDays } = req.body ?? {};
 
   if (!name?.trim()) {
@@ -134,6 +137,10 @@ router.get('/certs/:id/download', async (req, res) => {
 // Each file is validated as a real X.509 cert before being written to certs/.
 router.post('/certs/import', upload.array('files', 50), async (req, res) => {
   const files = req.files ?? [];
+  if (config.readOnly) {
+    await Promise.all(files.map(file => unlink(file.path).catch(() => {})));
+    return res.status(403).json({ success: false, error: 'Trust-store changes are disabled on this read-only verifier.' });
+  }
   if (!files.length) {
     return res.status(400).json({ success: false, error: 'No files uploaded.' });
   }

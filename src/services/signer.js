@@ -1,4 +1,4 @@
-import { createHash, createSign } from 'node:crypto';
+import { createHash, createSign, createVerify } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { config } from '../config.js';
 import { canonicalJson } from '../utils/canonical.js';
@@ -52,7 +52,7 @@ export async function signSkill({ content, title, actor, email, purpose, certPat
         },
       },
       {
-        label: 'org.friends-of-justin.skill',
+        label: 'org.free2pa.skill',
         data: {
           ...(purpose ? { purpose } : {}),
         },
@@ -68,8 +68,14 @@ export async function signSkill({ content, title, actor, email, purpose, certPat
   signer.update(claimBytes, 'utf-8');
   const signatureB64 = signer.sign(keyPem, 'base64');
 
+  const keyCheck = createVerify('SHA256');
+  keyCheck.update(claimBytes, 'utf-8');
+  if (!keyCheck.verify(certPem, signatureB64, 'base64')) {
+    throw new Error('Signing key does not match the selected certificate.');
+  }
+
   return {
-    spec_version: 'free2pa/0.1.0',
+    spec_version: 'free2pa/0.2.0',
     claim,
     signature: {
       alg:      'ES256',

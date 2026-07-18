@@ -1,4 +1,4 @@
-import { createHash, createVerify } from 'node:crypto';
+import { createHash, createVerify, X509Certificate } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import { resolve, basename } from 'node:path';
 import { config } from '../config.js';
@@ -29,6 +29,30 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev', 
   const { claim, signature } = sidecar;
   if (!claim)     return { success: false, error: 'Sidecar is missing "claim".' };
   if (!signature) return { success: false, error: 'Sidecar is missing "signature".' };
+  if (signature.alg !== 'ES256') {
+    return { success: false, error: `Unsupported signature algorithm: ${signature.alg ?? '(missing)'}.` };
+  }
+  if (claim.asset?.hash_alg !== 'sha256' || typeof claim.asset?.hash !== 'string') {
+    return { success: false, error: 'Sidecar has an invalid or unsupported asset hash.' };
+  }
+
+  let certificate;
+  try {
+    const parsed = new X509Certificate(signature.cert_pem);
+    const now = Date.now();
+    const validFrom = new Date(parsed.validFrom);
+    const validTo = new Date(parsed.validTo);
+    certificate = {
+      subject: parsed.subject,
+      issuer: parsed.issuer,
+      fingerprint256: parsed.fingerprint256,
+      validFrom: validFrom.toISOString(),
+      validTo: validTo.toISOString(),
+      valid: now >= validFrom.getTime() && now <= validTo.getTime(),
+    };
+  } catch (error) {
+    return { success: false, error: `Sidecar contains an invalid signing certificate: ${error.message}` };
+  }
 
   // ── 1. Hash binding ──────────────────────────────────────────────────────
   const currentHash = createHash('sha256').update(content, 'utf-8').digest('hex');
@@ -47,7 +71,16 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev', 
   }
 
   // ── 3. Trust profile ─────────────────────────────────────────────────────
-  const trust = await checkTrust(signature.cert_pem, trustProfile, certPath);
+  let trust = await checkTrust(signature.cert_pem, trustProfile, certPath);
+  if (!certificate.valid) {
+    trust = {
+      profile: trustProfile,
+      trusted: false,
+      reason: 'EXPIRED_CERT',
+      label: 'Signing certificate is not current',
+      detail: `Certificate validity window: ${certificate.validFrom} through ${certificate.validTo}.`,
+    };
+  }
 
   return {
     success:        true,
@@ -55,6 +88,7 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev', 
     signatureError,
     hashMatch,
     trust,
+    certificate,
     claim,
     spec_version:   sidecar.spec_version,
   };
@@ -71,13 +105,14 @@ async function checkTrust(certPem, profile, certPathOverride) {
         return {
           profile: 'dev',
           trusted,
+          reason:  trusted ? 'EXPLICIT_MATCH' : 'UNTRUSTED_ISSUER',
           label:   trusted ? 'Server/Dev' : 'Not trusted under Server/Dev',
           detail:  trusted
             ? `Cert matches selected certificate: ${certId}`
             : `Cert does not match selected certificate: ${certId}`,
         };
       } catch {
-        return { profile: 'dev', trusted: false, label: 'Server/Dev', detail: 'Selected cert file could not be read.' };
+        return { profile: 'dev', trusted: false, reason: 'TRUST_STORE_UNAVAILABLE', label: 'Server/Dev', detail: 'Selected cert file could not be read.' };
       }
     }
 
@@ -95,6 +130,7 @@ async function checkTrust(certPem, profile, certPathOverride) {
             return {
               profile: 'dev',
               trusted: true,
+              reason:  'LOCAL_TRUST',
               label:   'Server/Dev',
               detail:  `Cert is in this server's trust store (matched: ${certId})`,
             };
@@ -105,11 +141,12 @@ async function checkTrust(certPem, profile, certPathOverride) {
       return {
         profile: 'dev',
         trusted: false,
+        reason:  'UNTRUSTED_ISSUER',
         label:   'Not trusted under Server/Dev',
         detail:  'Cert does not match any certificate in this server\'s trust store.',
       };
     } catch {
-      return { profile: 'dev', trusted: false, label: 'Server/Dev', detail: 'Trust store unavailable.' };
+      return { profile: 'dev', trusted: false, reason: 'TRUST_STORE_UNAVAILABLE', label: 'Server/Dev', detail: 'Trust store unavailable.' };
     }
   }
 
@@ -117,6 +154,7 @@ async function checkTrust(certPem, profile, certPathOverride) {
     return {
       profile: 'org',
       trusted: null,
+      reason:  'PROFILE_NOT_CONFIGURED',
       label:   'Org — not yet configured',
       detail:  'Configure a shared CA bundle to enable org-wide trust verification.',
     };
@@ -126,10 +164,11 @@ async function checkTrust(certPem, profile, certPathOverride) {
     return {
       profile: 'public',
       trusted: false,
+      reason:  'UNTRUSTED_ISSUER',
       label:   'Not trusted under Public',
       detail:  'Self-signed cert is not on a public trust list. Public trust requires a commercially-issued certificate.',
     };
   }
 
-  return { profile, trusted: false, label: 'Unknown profile', detail: '' };
+  return { profile, trusted: false, reason: 'UNKNOWN_PROFILE', label: 'Unknown profile', detail: '' };
 }

@@ -6,6 +6,7 @@ import { readdir, readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { config } from '../config.js';
 import { verifySkill } from '../services/verifier.js';
+import { auditSkill } from '../services/auditor.js';
 
 const router = Router();
 
@@ -69,7 +70,8 @@ function buildMcpServer() {
         ]);
 
         const result = await verifySkill({ content, sidecarText, trustProfile: 'dev' });
-        const pass   = result.signatureValid && result.hashMatch && result.trust?.trusted === true;
+        const pass   = result.signatureValid && result.hashMatch &&
+          result.certificate?.valid !== false && result.trust?.trusted === true;
 
         return {
           content: [{
@@ -79,6 +81,7 @@ function buildMcpServer() {
               verdict:        pass ? 'PASS' : 'FAIL',
               signatureValid: result.signatureValid,
               hashMatch:      result.hashMatch,
+              certificate:    result.certificate,
               trust:          result.trust,
             }, null, 2),
           }],
@@ -92,6 +95,25 @@ function buildMcpServer() {
           };
         }
         return { content: [{ type: 'text', text: `Error: ${err.message}` }], isError: true };
+      }
+    },
+  );
+
+  server.tool(
+    'audit_skill',
+    'Use GPT-5.6 to review a bundled skill for prompt injection, secret access, data exfiltration, destructive actions, and excessive permissions. This behavioral assessment is independent of cryptographic verification.',
+    { name: z.string().describe('Skill folder name in the configured skills directory') },
+    async ({ name }) => {
+      if (!isValidName(name)) {
+        return { content: [{ type: 'text', text: 'Error: Invalid skill name.' }], isError: true };
+      }
+
+      try {
+        const content = await readFile(resolve(config.skillsDir, name, 'SKILL.md'), 'utf8');
+        const report = await auditSkill({ content, filename: `${name}/SKILL.md` });
+        return { content: [{ type: 'text', text: JSON.stringify(report, null, 2) }] };
+      } catch (error) {
+        return { content: [{ type: 'text', text: `Error: ${error.message}` }], isError: true };
       }
     },
   );
@@ -115,7 +137,7 @@ router.get('/mcp', (_req, res) => {
     version:   config.appVersion,
     transport: 'streamable-http',
     endpoint:  'POST /mcp',
-    tools:     ['list_skills', 'verify_skill'],
+    tools:     ['list_skills', 'verify_skill', 'audit_skill'],
   });
 });
 

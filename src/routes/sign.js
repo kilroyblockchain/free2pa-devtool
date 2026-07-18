@@ -18,6 +18,10 @@ const upload = multer({ dest: config.uploadDir, limits: { fileSize: 10 * 1024 * 
 //
 // Response: application/json — the sidecar, downloaded as <filename>.c2pa.json
 router.post('/sign', upload.single('file'), async (req, res) => {
+  if (config.readOnly) {
+    if (req.file) await unlink(req.file.path).catch(() => {});
+    return res.status(403).json({ success: false, error: 'Signing is disabled on this read-only verifier.' });
+  }
   if (!req.file) {
     return res.status(400).json({ success: false, error: 'No file uploaded (field: file).' });
   }

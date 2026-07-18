@@ -1,640 +1,285 @@
-# Free2PA — AI Agent Skill Credentials
+# Free2PA
 
-Free2PA is a content-credential system for AI agent skill files. It lets you **sign** a skill file and produce a portable sidecar that proves the file has not been tampered with and was issued by a trusted party. A verifier — or an MCP server acting as a gatekeeper — can check that sidecar before allowing the skill to be loaded by an agent.
+**Launch a verifier. Choose the publishers your group trusts. Reject every
+agent skill that is unsigned, modified, expired, or outside the group.**
 
----
+Free2PA is an Apache-2.0 developer tool for forming ad-hoc trust groups around
+AI agent skills. A class, project team, short-term collaboration, or agent
+operator can run its own verifier and make one explicit policy decision: which
+publisher certificates belong in this verifier's trust store?
 
-## Why This Exists
+Trust is local and opt-in. There is no global registry and no permanent trust
+relationship. Adding a public certificate admits that publisher. Removing it
+revokes trust on the next verification.
 
-Agentic AI systems are only as trustworthy as the skills they execute. A skill file (`.md`, `.txt`, or any text format) tells an agent what it can do, how to call tools, and what rules to follow. This is a weak link: a bad actor who can insert or modify a skill file can redirect an agent's behavior — silently, at scale.
+Free2PA also uses GPT-5.6 to review what a skill asks an agent to do. The model
+can identify behavioral risks, but it cannot override a failed cryptographic
+check.
 
-Free2PA closes that gap by treating skill files the same way software supply chains treat build artifacts: **sign what you publish, verify before you run.**
+## The three checks
 
-```
-Author / Publisher
-    │
-    │  signs skill.md
-    ▼
-skill.md.c2pa.json  ← sidecar manifest (signature + provenance claims)
-    │
-    │  travels with skill.md
-    ▼
-MCP Server / Verifier
-    │
-    ├─ Is the signature cryptographically valid?
-    ├─ Does the file hash still match what was signed?
-    └─ Is the signing cert in my trust store?
-         │
-         ├─ YES to all → skill is loaded
-         └─ NO to any  → skill is rejected
-```
+Every verification answers three separate questions:
 
----
-
-## How It Works
-
-### The Sidecar Manifest
-
-Signing a skill file does **not** modify the file itself. Instead, a companion file is created alongside it:
-
-```
-skill.md               ← your skill file, unchanged
-skill.md.c2pa.json     ← Free2PA sidecar manifest
-```
-
-The sidecar is a JSON document with three top-level fields:
-
-```jsonc
-{
-  "spec_version": "free2pa/0.1.0",
-
-  "claim": {
-    "claim_generator": "Friends of Justin / Free2PA v0.1.0",
-    "dc:title": "My Skill",
-    "asset": {
-      "format":   "text/markdown",
-      "hash_alg": "sha256",
-      "hash":     "<sha256 of skill.md at signing time>"
-    },
-    "assertions": [
-      {
-        "label": "c2pa.actions",
-        "data": {
-          "actions": [{
-            "action": "c2pa.created",
-            "when":   "<ISO timestamp>",
-            "actor":  "publisher-handle"
-          }]
-        }
-      },
-      {
-        "label": "org.friends-of-justin.skill",
-        "data": {
-          "purpose": "what this skill does"
-        }
-      }
-    ],
-    "signed_at": "<ISO timestamp>"
-  },
-
-  "signature": {
-    "alg":      "ES256",
-    "cert_pem": "<PEM of the signing certificate>",
-    "value":    "<base64 ECDSA P-256 signature over canonicalJson(claim)>"
-  }
-}
-```
-
-The claim is serialized using **canonical JSON** (keys sorted recursively, no whitespace) before signing, so the signature is stable regardless of how the JSON was originally formatted.
-
-### The Three Checks
-
-Every verification produces three independent verdicts:
-
-| Check | What it proves |
+| Check | Question |
 |---|---|
-| **Signature valid** | The ECDSA P-256 signature in the sidecar was made by the private key corresponding to the cert embedded in the sidecar. The claim has not been altered. |
-| **Hash match** | The SHA-256 of the skill file you uploaded today matches the hash that was recorded at signing time. The file has not been modified. |
-| **Trust** | The signing certificate is recognized under the selected trust profile. The issuer is someone your system trusts. |
+| Signature | Was this claim signed by the private key for the embedded certificate? |
+| Integrity | Does the current file still match the signed SHA-256 asset hash? |
+| Group trust | Is that publisher's certificate in this verifier's trust store and currently valid? |
 
-Checks 1 and 2 are purely cryptographic and require no server state. Check 3 depends on the trust profile configured on the verifying side.
+All three must pass. A valid signature proves authorship, not trust. A trusted
+publisher cannot make a modified file pass. A behaviorally safe GPT audit
+cannot make an unsigned file pass.
 
----
+## Why ad-hoc trust
 
-## Certificates and the Trust Store
+The idea came from college classes: people form a group, trust one another for
+a particular assignment or semester, and then let that relationship end.
+Free2PA expresses that social decision as a verifier configuration.
 
-### How Certificates Work
+Examples include:
 
-Free2PA uses **self-signed ECDSA P-256 certificates** (the same curve used by C2PA/W3C Verifiable Credentials). Each certificate represents a signing identity — a person, a team, an automated publisher, or a deployment.
+- a two-person collaboration that exchanges public certificates;
+- a project team whose verifier trusts every team member;
+- a class verifier populated from an instructor-curated certificate bundle;
+- one-way trust where a consuming team accepts a producing team's skills; and
+- a temporary collaboration using a short-lived certificate.
 
-- The private key signs the sidecar at publish time.
-- The certificate (public key + metadata) travels inside the sidecar, so verifiers have everything they need.
-- The server's `certs/` directory acts as the **trust store**: any certificate stored there is trusted under the `Server/Dev` profile.
+Anyone outside the configured group fails the trust check. The same signed
+skill may pass one group's verifier and fail another's. That is intentional:
+the verifier, not a universal authority, defines the trust boundary.
 
-### Generating a Certificate
+## Quick start
 
-From the UI: open the **Sign** panel, expand **Generate New Certificate**, fill in a Common Name and Organization, and click **Generate Certificate**. The cert and key are written to `certs/<slug>.crt` and `certs/<slug>.key` on the server.
+Prerequisites:
 
-From the command line:
+- Node.js 20 or newer
+- OpenSSL on `PATH`
+- macOS, Linux, or Windows through WSL
 
 ```bash
-npm run generate-cert
-# or with overrides:
-ORG_NAME="Acme AI" COMMON_NAME="agent-publisher-v1" VALIDITY_DAYS=365 \
-  bash certs/generate-cert.sh
+git clone https://github.com/kilroyblockchain/free2pa.git
+cd free2pa
+npm ci
+npm link
+free2pa --version
 ```
 
-The script uses `openssl` to produce a cert with:
-- `keyUsage = critical, digitalSignature` — the cert is scoped to signing only
-- `CA:FALSE` — it cannot be used to issue other certificates
-
-### The Trust Store
-
-The `certs/` directory on the server **is** the trust store. To trust a cert, put it there. To revoke trust, remove it. No config file or database is involved.
-
-```
-certs/
-  signing.crt       ← default cert generated by npm run generate-cert
-  signing.key
-  jkilroy.crt       ← additional cert for a specific publisher
-  jkilroy.key
-  agent-v2.crt      ← cert-only import (no key required for verification)
-```
-
----
-
-## Trust Profiles
-
-### Server / Dev
-
-**Default profile.** Trusted if the sidecar cert matches any certificate in `certs/`.
-
-- **No cert selected in UI** → scans all `.crt` files; passes if any match; the verdict detail names which cert matched.
-- **Specific cert selected** → strict match against that cert only. Use this to confirm a skill was signed by a particular identity.
-
-This is the profile an MCP server would use for local or organizational deployments: populate `certs/` with the certs you approve, and every skill signed by any of them passes automatically.
-
-### Org
-
-Placeholder. Intended for a shared CA bundle — an organization issues a root CA, signs publisher certificates from it, and verifiers check the chain. This enables a larger trust domain without requiring every verifier to know every individual cert.
-
-### Public
-
-Placeholder. Intended for a public trust list (analogous to the C2PA Trust List or a WebPKI root store). Requires commercially-issued certificates. Appropriate for public skill marketplaces.
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js ≥ 20
-- `openssl` on your PATH
-
-### Install and run
+Create a short-lived publisher identity:
 
 ```bash
-npm install
-npm run generate-cert   # creates certs/signing.crt and certs/signing.key
-npm start               # http://localhost:4001
+free2pa keygen \
+  --name "Harmony - Build Week" \
+  --id harmony-build-week \
+  --days 7 \
+  --out-dir .free2pa
 ```
 
-Or for development with auto-reload:
+Sign a skill:
 
 ```bash
-npm run dev
+free2pa sign ./skills/weather/SKILL.md \
+  --cert .free2pa/harmony-build-week.crt \
+  --key .free2pa/harmony-build-week.key \
+  --purpose "Retrieve weather without accessing secrets"
 ```
 
-### Environment variables
+## Launch an ad-hoc verifier
 
-| Variable | Default | Description |
-|---|---|---|
-| `PORT` | `4001` | HTTP port |
-| `CERT_PATH` | `certs/signing.crt` | Default signing cert path |
-| `KEY_PATH` | `certs/signing.key` | Default signing key path |
-| `CERTS_DIR` | `certs` | Trust store directory |
-| `UPLOAD_DIR` | `uploads` | Temp dir for multipart uploads |
-| `SKILLS_DIR` | `radio_intern` | Skill folder scanned by the test client and MCP server |
+Create a trust store and admit a publisher by adding only their public
+certificate:
 
-Copy `.env.example` to `.env` to override defaults.
+```bash
+free2pa trust add .free2pa/harmony-build-week.crt \
+  --store ./study-group-certs \
+  --id harmony
 
----
+free2pa trust list --store ./study-group-certs
+```
 
-## Using the Web UI
+Verify directly against the group's policy:
 
-Open `http://localhost:4001/` in your browser. The page has two panels side by side: **Sign a Skill** on the left and **Verify a Skill** on the right.
+```bash
+free2pa verify ./skills/weather/SKILL.md \
+  --trust-store ./study-group-certs
+```
 
----
+Or launch a browser and MCP verifier backed by that same directory:
 
-### Sign a Skill
+```bash
+free2pa serve \
+  --trust-store ./study-group-certs \
+  --skills ./skills \
+  --port 4001
+```
 
-**1. Drop your skill file**
+Open `http://127.0.0.1:4001`. To revoke the publisher immediately:
 
-Drag a `.md` file onto the 📄 drop zone, or click it to open a file picker. The filename appears below the zone when a file is selected. The **Sign & Download Sidecar** button activates once a file is chosen.
+```bash
+free2pa trust remove harmony --store ./study-group-certs
+```
 
-**2. Fill in the Provenance fields**
+The signature remains mathematically valid, but the next group verification
+fails with `UNTRUSTED_ISSUER`.
 
-| Field | What it stores | Example |
-|---|---|---|
-| Skill name | `dc:title` in the claim | `weather` |
-| Your name / handle | `actor` in the action record | `jkilroy` |
-| Your email | author email address | `kilroy@uark.edu` |
+## GPT-5.6 security audit
 
-All fields are optional — the sidecar is valid without them — but they make the provenance record meaningful.
+Set a server-side OpenAI API key, then audit a skill:
 
-**3. Fill in the Purpose field**
+```bash
+export OPENAI_API_KEY="..."
+free2pa audit ./skills/weather/SKILL.md --model gpt-5.6
+```
 
-The **Purpose** field is stored in the `org.friends-of-justin.skill` assertion. Write a one-sentence description of what the skill does.
+The audit returns strict structured findings covering:
 
-**4. Select a signing certificate**
+- prompt injection;
+- secret or credential access;
+- data exfiltration;
+- destructive actions;
+- excessive permissions;
+- unsafe downloads and supply-chain behavior; and
+- obfuscated instructions.
 
-The **Active certificate** dropdown lists every certificate in the `certs/` trust store that has a corresponding private key (signing-capable certs). The subject and expiry date are shown below the dropdown.
+The skill content is delimited and presented to GPT-5.6 as untrusted data. The
+report records the model, audit time, filename, and SHA-256 of the reviewed
+content. `critical` and `high` reports produce a nonzero CLI exit code.
 
-Two icon buttons sit next to the dropdown:
+## Repository scanning and CI
 
-| Button | Action |
+`scan` recursively finds `SKILL.md` files. Missing sidecars, modified files,
+invalid signatures, expired certificates, and publishers outside the supplied
+trust store fail the command:
+
+```bash
+free2pa scan ./skills --trust-store ./study-group-certs
+free2pa scan ./skills --trust-store ./study-group-certs --json
+```
+
+Human-readable output is designed for terminals. `--json` and process exit
+codes are designed for CI, policy engines, and agent runtimes.
+
+## MCP tools
+
+`POST /mcp` uses Streamable HTTP and exposes:
+
+| Tool | Purpose |
 |---|---|
-| **↺** | Refreshes the certificate list from the server |
-| **⬇** | Downloads the selected `.crt` file to your computer — use this to share your cert with peers |
+| `list_skills` | List skills visible to this verifier and whether each has a sidecar. |
+| `verify_skill` | Return a hard PASS/FAIL from signature, integrity, certificate validity, and local trust. |
+| `audit_skill` | Ask GPT-5.6 for an independent structured behavioral security review. |
 
-**5. Generate a new certificate (optional)**
+The intended agent policy is simple: call `verify_skill` before loading an
+instruction package. Treat anything other than PASS as unavailable.
 
-Click **+ Generate New Certificate** to expand the form. Fill in:
+## HTTP API
 
-- **Common Name** — your name, handle, or role (e.g., `jkilroy — CSCE 4193`). This is also used to derive the filename (`jkilroy-csce-4193.crt`).
-- **Organization** — defaults to `Friends of Justin`.
-- **Validity (days)** — how long the cert is valid. Defaults to 365. Max is 3650.
-
-Click **Generate Certificate**. The cert and key are written to `certs/` on the server and the dropdown updates automatically.
-
-**6. Import a peer certificate (optional)**
-
-Click **+ Import Certificate(s)** to expand the import form. Use this to add a peer's `.crt` to your trust store so their skills pass the Trust check on your server.
-
-- **Single cert:** Drop one `.crt` file onto the 🔑 drop zone. Optionally type a name in **Save as** (e.g., `jkilroy-team-a`) — this becomes the filename. Click **Import Certificate(s)**. The file is validated as a real X.509 certificate before being saved.
-- **Team bundle:** Drop multiple `.crt` files at once (or Ctrl/Cmd+click in the file picker). Each file is validated and saved individually under its own filename. The results list shows which imported successfully and which failed.
-
-After a successful import the dropdown refreshes automatically.
-
-**7. Sign**
-
-Click **Sign & Download Sidecar**. The server signs the file with the selected certificate and the browser downloads a `<filename>.c2pa.json` sidecar file automatically.
-
-Keep the sidecar file alongside your skill file — they are a matched pair. The sidecar is useless without the skill file it was signed against, and the skill file is unverifiable without the sidecar.
-
-A green success message confirms the download and names the sidecar file. If something goes wrong, a red error message explains what failed.
-
----
-
-### Verify a Skill
-
-**1. Drop the skill file**
-
-Drag the `.md` skill file onto the 📄 drop zone, or click to choose it.
-
-**2. Drop the sidecar**
-
-Drag the `.c2pa.json` sidecar onto the 🔏 drop zone, or click to choose it. The **Verify** button activates once both files are selected.
-
-**3. Select a trust profile**
-
-| Profile | What it checks |
+| Endpoint | Purpose |
 |---|---|
-| **Server / Dev** | The signing cert matches any `.crt` in this server's `certs/` directory. Default. |
-| **Org** | Shared CA bundle — not yet configured. |
-| **Public** | Public trust list — not yet configured. |
+| `POST /api/sign` | Sign a skill and return its sidecar. |
+| `POST /api/verify` | Verify a skill and sidecar against this server's trust store. |
+| `POST /api/audit` | Run the GPT-5.6 behavioral audit. |
+| `GET /api/certs` | List the verifier's current trusted certificates. |
+| `POST /api/certs/import` | Validate and admit one or more public certificates. |
+| `POST /api/certs/generate` | Generate a signing identity for local development. |
+| `GET /api/skills` | List skills available to the MCP verifier. |
+| `GET /health` | Return application health and version. |
 
-**4. Match against a specific cert (optional)**
+Private keys are never accepted by the trust-import endpoint. Only public
+X.509 certificates belong in a verifier's trust store.
 
-The **Match against specific cert** dropdown lists every certificate in the trust store. Leave it blank to accept any trusted cert. Select a cert to require that the skill was signed by that exact issuer — useful for identity confirmation ("was this signed by jkilroy specifically?").
+## C2PA relationship
 
-Click **↺** to refresh the list if you recently imported a cert.
+Free2PA applies Content Credentials ideas to agent instruction files: signed
+claims, asset binding, action assertions, local trust decisions, and
+human-readable verification reasons.
 
-**5. Verify**
+Free2PA `0.2.0` is **C2PA-inspired, not a conforming C2PA implementation**. Its
+portable JSON sidecar is a Free2PA format, not a C2PA Manifest Store. Free2PA
+does not claim interoperability with conforming C2PA consumers. This narrow
+format is deliberate: ad-hoc groups need a free, inspectable trust gate for
+Markdown agent instructions, not permanent public-media PKI.
 
-Click **Verify**. Three verdict cards appear:
+## OpenAI Build Week
 
-| Card | Green ✅ means | Red ❌ means |
-|---|---|---|
-| **Signature valid** | The ECDSA P-256 signature in the sidecar verifies against the embedded cert. The claim record is intact. | The signature is invalid — the sidecar has been altered, or the wrong cert is embedded. |
-| **Bound to this file (hash match)** | The SHA-256 of the uploaded file matches the hash recorded at signing time. | The file content has changed since signing. A line-by-line diff appears showing what changed. |
-| **Trusted under profile** | The signing cert is recognized under the selected trust profile. | The signing cert is not in the trust store, or did not match the specific cert selected. |
+Free2PA existed before OpenAI Build Week as a research and teaching prototype.
+The pre-hackathon baseline is commit `1c2d88d` from March 15, 2026.
 
-Below the verdict cards, the full claim JSON is shown in a collapsible code block — this is the raw sidecar content, useful for debugging or extracting a peer's cert PEM.
+Only work created after the submission period began is presented as Build Week
+work:
 
----
-
-## API Reference
-
-All endpoints are under `/api`.
-
-### `GET /api/certs`
-
-Lists all certificates in the trust store.
-
-**Response:**
-```json
-{
-  "success": true,
-  "certs": [
-    {
-      "id":       "signing",
-      "subject":  "O = Friends of Justin, CN = Free2PA Dev Signing",
-      "notAfter": "Feb 18 20:14:33 2029 GMT",
-      "hasKey":   true
-    }
-  ]
-}
-```
-
-`hasKey: true` means the matching `.key` file exists — this cert can be used for signing. A cert without a key can still be used for trust verification.
-
----
-
-### `POST /api/certs/generate`
-
-Generates a new ECDSA P-256 self-signed certificate and adds it to the trust store.
-
-**Request body (JSON):**
-```json
-{
-  "name":         "jkilroy — CSCE 4193",
-  "org":          "Friends of Justin",
-  "validityDays": 365
-}
-```
-
-| Field | Required | Description |
-|---|---|---|
-| `name` | yes | Certificate Common Name. Also used to derive the file slug (`jkilroy-csce-4193.crt`). |
-| `org` | no | Organization field. Defaults to `Friends of Justin`. |
-| `validityDays` | no | Certificate lifetime. Clamped to 1–3650. Defaults to 365. |
-
-**Response:**
-```json
-{
-  "success": true,
-  "cert": {
-    "id":       "jkilroy-csce-4193",
-    "subject":  "O = Friends of Justin, CN = jkilroy — CSCE 4193",
-    "notAfter": "Feb 20 18:30:00 2027 GMT",
-    "hasKey":   true
-  }
-}
-```
-
----
-
-### `GET /api/certs/:id/download`
-
-Downloads the named certificate as a `.crt` file.
-
-| Parameter | Description |
+| Before Build Week | Added during Build Week |
 |---|---|
-| `:id` | Certificate ID (e.g., `signing`, `jkilroy-team-a`) — must match `[a-z0-9-]+` |
+| Express signing and verification demo | Installable `free2pa` CLI |
+| Browser sign/verify panels | `keygen`, `trust`, `sign`, `verify`, `scan`, `audit`, and `serve` commands |
+| Local `certs/` trust directory | Complete ad-hoc verifier operator workflow |
+| Two MCP tools | GPT-5.6 audit through CLI, HTTP, browser, and MCP |
+| Manual happy-path testing | Automated crypto, tamper, trust, CLI, and API-contract tests |
+| Prototype package metadata | Apache-2.0 release packaging and zero-advisory dependency tree |
+| Boolean trust output | Certificate validity enforcement and structured trust reason codes |
 
-**Response:** `application/x-pem-file` with `Content-Disposition: attachment; filename="<id>.crt"`
+The dated development record is in
+[`docs/BUILD_WEEK.md`](docs/BUILD_WEEK.md). The submission checklist is in
+[`docs/SUBMISSION_CHECKLIST.md`](docs/SUBMISSION_CHECKLIST.md).
 
-Returns 404 if the cert does not exist.
+## How we collaborated with Codex
 
----
+Harmony supplied the central product insight, trust semantics, intended
+audience, and scope: the verifier's local certificate set represents a small
+group's deliberate and revocable trust decisions. She also chose the
+Developer Tools direction and required that the existing research remain
+clearly distinguished from new work.
 
-### `POST /api/certs/import`
+Codex accelerated the Build Week implementation by:
 
-Imports one or more `.crt` files into the trust store. Each file is validated as a real X.509 certificate before being saved.
+- auditing three related Free2PA repositories and their commit history;
+- translating the existing trust model into a distributable CLI workflow;
+- implementing certificate lifecycle, signing, verification, scanning, and
+  server commands;
+- adding GPT-5.6 structured security auditing across four interfaces;
+- tightening algorithm, key-pair, certificate-expiration, and trust checks;
+- writing end-to-end tests for tampering, outside-group failure, admission,
+  and revocation;
+- finding and updating vulnerable dependencies; and
+- restructuring the product documentation around reproducible judge testing.
 
-**Request:** `multipart/form-data`
+Codex was especially useful for rapid implementation and adversarial review.
+Harmony made the consequential product and trust-policy decisions, corrected
+an early proposal that would have added an unnecessary signed group-policy
+format, and kept the implementation aligned with Free2PA's simpler principle:
+**the verifier is where trust lives.**
 
-| Field | Required | Description |
-|---|---|---|
-| `files` | yes | One or more `.crt` files (field name `files`, up to 50 files) |
-| `name` | no | Override save filename for single-file imports (e.g., `jkilroy-team-a`). Ignored for multi-file uploads. |
+GPT-5.6 contributes directly to the shipped product as the behavioral skill
+auditor. Its findings supplement cryptographic verification; they never
+replace it.
 
-**Response:**
-```json
-{
-  "success": true,
-  "results": [
-    {
-      "file":     "jkilroy.crt",
-      "success":  true,
-      "id":       "jkilroy",
-      "subject":  "O = Friends of Justin, CN = jkilroy",
-      "notAfter": "Feb 20 18:30:00 2027 GMT"
-    }
-  ]
-}
+## Test and release checks
+
+```bash
+npm test
+npm run check
+npm audit
+npm pack --dry-run
 ```
 
-For bundle imports, `results` contains one entry per uploaded file. HTTP 207 is returned if some files succeeded and some failed. Each failed entry includes an `error` field explaining why (`"Not a valid X.509 certificate."` is the most common).
+The tests use temporary identities and trust stores. No committed private key
+is required.
 
----
+## Security boundaries
 
-### `POST /api/sign`
+- A public certificate is safe to share; its private key is not.
+- Private keys previously committed to any public repository must be treated
+  as compromised and rotated.
+- Self-signed certificates identify keys, not real-world people. Exchange and
+  identity validation remain social or institutional decisions.
+- Local trust is intentionally non-transitive. Trusting Team A does not cause
+  Team A's trusted publishers to become trusted.
+- Removing a certificate affects future verification. It cannot undo an
+  action already taken by a running agent.
+- TLS, authentication, rate limits, and deployment access controls remain the
+  responsibility of a public verifier operator.
+- A GPT audit is probabilistic security analysis, not proof of safety.
 
-Signs a skill file and returns the sidecar manifest as a downloadable JSON file.
+## License
 
-**Request:** `multipart/form-data`
-
-| Field | Required | Description |
-|---|---|---|
-| `file` | yes | The skill file to sign (`.md`, `.txt`, etc.) |
-| `certId` | no | ID of the signing cert to use (e.g., `jkilroy`). Defaults to `signing`. |
-| `title` | no | Skill name (`dc:title` in the claim) |
-| `actor` | no | Author name or handle |
-| `email` | no | Author email address |
-| `purpose` | no | What the skill does (stored in `org.friends-of-justin.skill` assertion) |
-
-**Response:** `application/json` with `Content-Disposition: attachment; filename="<name>.c2pa.json"`
-
-The response body is the complete sidecar manifest.
-
----
-
-### `POST /api/verify`
-
-Verifies a skill file against its sidecar. Returns three independent verdicts.
-
-**Request:** `multipart/form-data`
-
-| Field | Required | Description |
-|---|---|---|
-| `file` | yes | The skill file |
-| `sidecar` | yes | The `.c2pa.json` sidecar |
-| `trustProfile` | no | `dev` (default), `org`, or `public` |
-| `certId` | no | If provided, trust check is a strict match against this cert only |
-
-**Response:**
-```json
-{
-  "success":        true,
-  "signatureValid": true,
-  "signatureError": null,
-  "hashMatch":      true,
-  "trust": {
-    "profile": "dev",
-    "trusted": true,
-    "label":   "Server/Dev",
-    "detail":  "Cert is in this server's trust store (matched: signing)"
-  },
-  "claim":        { "..." : "..." },
-  "spec_version": "free2pa/0.1.0"
-}
-```
-
----
-
-### `GET /api/skills`
-
-Lists all skill folders in `radio_intern` (or `SKILLS_DIR`) that contain a `SKILL.md`.
-
-**Response:**
-```json
-{
-  "success": true,
-  "skills": [
-    { "name": "transcription", "hasSidecar": true },
-    { "name": "weather",       "hasSidecar": false }
-  ]
-}
-```
-
-`hasSidecar: true` means a `SKILL.md.c2pa.json` sidecar exists alongside the skill file and verification is possible.
-
----
-
-### `POST /api/skills/:name/verify`
-
-Reads `radio_intern/<name>/SKILL.md` and `radio_intern/<name>/SKILL.md.c2pa.json` from disk and runs the full three-check verification. No file upload needed.
-
-**Response:** same shape as `POST /api/verify`.
-
----
-
-### `POST /mcp`
-
-MCP server endpoint (Streamable HTTP transport). Exposes two tools:
-
-| Tool | Description |
-|---|---|
-| `list_skills` | Returns the same list as `GET /api/skills` |
-| `verify_skill` | Takes `{ name }`, verifies the named skill, returns `PASS`/`FAIL` with all three check results |
-
-Example tool call result:
-```json
-{
-  "skill":          "transcription",
-  "verdict":        "PASS",
-  "signatureValid": true,
-  "hashMatch":      true,
-  "trust": {
-    "profile": "dev",
-    "trusted": true,
-    "label":   "Server/Dev",
-    "detail":  "Cert is in this server's trust store (matched: signing)"
-  }
-}
-```
-
-`GET /mcp` returns endpoint metadata for discoverability.
-
----
-
-### `GET /health`
-
-```json
-{ "status": "ok", "app": "Free2PA", "version": "0.1.0" }
-```
-
----
-
-## Project Structure
-
-```
-free2pa/
-├── index.js                    Entry point
-├── public/
-│   ├── index.html              Web UI — Sign & Verify panels
-│   └── test.html               Skill Test Client — PASS/FAIL with robot face
-├── radio_intern/               Skill folder (default SKILLS_DIR)
-│   └── <skill-name>/
-│       ├── SKILL.md            The skill file
-│       └── SKILL.md.c2pa.json  Sidecar (created by signing)
-├── src/
-│   ├── server.js               Express app factory
-│   ├── config.js               Environment-aware config
-│   ├── routes/
-│   │   ├── sign.js             POST /api/sign
-│   │   ├── verify.js           POST /api/verify
-│   │   ├── certs.js            GET /api/certs, GET /api/certs/:id/download, POST /api/certs/generate, POST /api/certs/import
-│   │   ├── skills.js           GET /api/skills, POST /api/skills/:name/verify
-│   │   └── mcp.js              POST /mcp  (MCP server — Streamable HTTP)
-│   ├── services/
-│   │   ├── signer.js           Claim construction + ECDSA signing
-│   │   └── verifier.js         Hash check + signature verify + trust check
-│   └── utils/
-│       └── canonical.js        Deterministic JSON for stable signing
-└── certs/
-    ├── generate-cert.sh        CLI cert generator (openssl wrapper)
-    ├── signing.crt             Default cert (created by generate-cert)
-    └── signing.key             Default private key (never commit this)
-```
-
----
-
-## Security Notes
-
-**Private keys** (`*.key`) must never be committed to version control. Add `certs/*.key` to `.gitignore`. Only the `.crt` files need to be shared with verifiers.
-
-**`certId` validation** — the sign and verify endpoints validate that `certId` contains only `[a-z0-9-]` characters before constructing file paths, preventing path traversal attacks.
-
-**Self-signed certs** are sufficient for `Server/Dev` trust within a controlled deployment. For broader trust (org, public), replace them with certs issued by a shared CA or commercial PKI.
-
-**The signature covers the claim only**, not the cert itself. The cert travels unsigned in the sidecar. In a full C2PA implementation, the cert chain would itself be verified against a root of trust. That is what the `Org` and `Public` profiles will implement.
-
----
-
-## MCP Server
-
-Free2PA includes an MCP (Model Context Protocol) server at `POST /mcp`. It uses the Streamable HTTP transport and exposes two tools that let an AI agent verify skills before loading them.
-
-```
-Agent Runtime
-    │
-    │  verify_skill("transcription")
-    ▼
-Free2PA MCP Server  (POST /mcp)
-    │
-    ├─ reads radio_intern/transcription/SKILL.md
-    ├─ reads radio_intern/transcription/SKILL.md.c2pa.json
-    ├─ runs three checks: signature · hash · trust
-    │
-    ├─ all pass  →  { verdict: "PASS", ... }
-    └─ any fail  →  { verdict: "FAIL", ... }
-```
-
-**Connecting a Claude Code agent:**
-
-Add to your `claude_desktop_config.json` (or MCP client config):
-
-```json
-{
-  "mcpServers": {
-    "free2pa": {
-      "type": "http",
-      "url":  "http://localhost:4001/mcp"
-    }
-  }
-}
-```
-
-The agent can then call `list_skills` to see what is available and `verify_skill` to check any skill by name before using it.
-
-**Trust store management** stays filesystem-based — add/remove `.crt` files in `certs/` to control which publishers are trusted. Removing a cert immediately revokes trust for any skill signed with it, without requiring sidecar updates.
-
-**Roadmap:**
-- `Org` profile — shared CA bundle so teams can issue per-agent signing identities without coordinating individual certs across every MCP instance
-- Audit log — verification events (skill, verdict, matched cert, timestamp) for traceability
-- `Public` profile — commercially-issued certs for open skill marketplaces
-
-The threat model: an attacker who gains write access to a skill folder can inject a modified skill file. Without credential checking, the agent loads it. With Free2PA gating, the injected file either has no sidecar (rejected), a sidecar signed with an untrusted cert (rejected), or a valid sidecar whose hash no longer matches the tampered file (rejected).
-
----
-
-## Skill Test Client
-
-Open `http://localhost:4001/test.html` to interactively test skills in `radio_intern`.
-
-1. The page lists every skill folder that contains a `SKILL.md`
-2. Skills with a sidecar show a green **sidecar ✓** badge; others show **no sidecar**
-3. Select a skill and click **Test Selected Skill**
-4. The result shows a robot face — happy green for PASS, distressed red for FAIL — with individual check details
-
-To add a skill to the test client:
-
-```
-radio_intern/
-  my-skill/
-    SKILL.md               ← your skill file
-    SKILL.md.c2pa.json     ← sign it via http://localhost:4001/ then drop the sidecar here
-```
+Apache License 2.0. Free to use, inspect, modify, and redistribute under the
+terms in [`LICENSE`](LICENSE).

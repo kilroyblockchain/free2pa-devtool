@@ -4,6 +4,10 @@ Free2PA is a Developer Tools submission for OpenAI Build Week. The fastest
 evaluation path uses the public, read-only deployment and requires no account,
 rebuild, API key, or payment.
 
+The deployment is a reference verifier. The submitted product is the toolkit:
+developers install it, provide the public certificates their group accepts,
+and integrate the CLI, CI action, HTTP API, or MCP tools into their own system.
+
 ## Live test in two minutes
 
 Open <https://free2pa-buildweek.azurewebsites.net> and select **Demo files**.

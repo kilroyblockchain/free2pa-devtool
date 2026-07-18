@@ -51,12 +51,22 @@ Developers can use Free2PA through an installable CLI, browser interface, HTTP
 API, or Streamable HTTP MCP server. JSON output and nonzero exit codes support
 CI and agent-policy enforcement.
 
+The Azure page is a reference verifier and judge sandbox, not a centralized
+Free2PA service. The repository is the product: each developer decides where
+the verifier runs, which public certificates define that deployment's trust
+group, and which interface fits the surrounding agent system.
+
 ## How we built it
 
 The implementation uses Node.js 20, Express, the Model Context Protocol SDK,
 OpenSSL, Node's native cryptography and X.509 APIs, and the OpenAI Responses API
 with a strict JSON schema for GPT-5.6 audits. The public Azure deployment calls
 GPT-5.6 Sol through a scoped managed identity, so no model API key is stored.
+
+The same verification core is composed into several developer-facing surfaces
+rather than being tied to the demo UI: terminal commands for local workflows,
+structured output for automation, a reusable CI action, HTTP endpoints for
+applications, and MCP tools for agents.
 
 The signing envelope contains a canonical JSON claim, SHA-256 content binding,
 an embedded X.509 public certificate, and an ES256 signature. Verifiers enforce

@@ -20,6 +20,12 @@ check.
 
 **https://free2pa-buildweek.azurewebsites.net**
 
+This deployment is a reference implementation and judge sandbox, not a hosted
+trust authority. The product is the toolkit in this repository. Developers run
+Free2PA in their own environment, supply their own publisher certificate set,
+and connect its CLI, CI action, HTTP API, or MCP tools to the agent workflow
+they want to protect.
+
 The hosted verifier is read-only so visitors cannot change its trust policy or
 use its signing identity. Its deployment trust store contains only the scoped
 Build Week demo publisher and expires after judging. Open **Demo files** in the header to download prepared

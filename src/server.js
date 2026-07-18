@@ -21,6 +21,10 @@ export function applySecurityHeaders(_req, res, next) {
   next();
 }
 
+export function rejectLegacyTestClient(_req, res) {
+  return res.status(404).json({ error: 'Not found' });
+}
+
 export async function createServer() {
   await mkdir(config.uploadDir, { recursive: true });
   await mkdir(config.skillsDir, { recursive: true });
@@ -29,6 +33,7 @@ export async function createServer() {
   app.disable('x-powered-by');
   app.use(applySecurityHeaders);
   app.use(express.json());
+  app.get('/test.html', rejectLegacyTestClient);
   app.use(express.static(resolve(__dirname, '..', 'public')));
   app.use(['/api', '/mcp', '/health'], (_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');

@@ -20,7 +20,7 @@ import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 import { canonicalJson } from '../src/utils/canonical.js';
 import { cleanupUploads } from '../src/routes/verify.js';
-import { applySecurityHeaders } from '../src/server.js';
+import { applySecurityHeaders, rejectLegacyTestClient } from '../src/server.js';
 import { consumeAuditAllowance } from '../src/services/auditLimit.js';
 import { config } from '../src/config.js';
 
@@ -363,4 +363,21 @@ test('HTTP security headers and partial-upload cleanup are deterministic', async
     sidecar: [{ path: sidecarPath }],
   });
   assert.deepEqual(await readdir(directory), []);
+});
+
+test('the removed legacy test client is not exposed', () => {
+  let statusCode;
+  let body;
+  rejectLegacyTestClient({}, {
+    status(code) {
+      statusCode = code;
+      return this;
+    },
+    json(value) {
+      body = value;
+      return this;
+    },
+  });
+  assert.equal(statusCode, 404);
+  assert.deepEqual(body, { error: 'Not found' });
 });

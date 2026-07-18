@@ -1,7 +1,11 @@
 # OpenAI Build Week Development Record
 
-Free2PA began as a research prototype for attaching C2PA-inspired sidecars to
-AI agent skill files. The prototype predates OpenAI Build Week.
+Free2PA began as a research demo for attaching C2PA-inspired sidecars to AI
+agent skill files. It was created for a presentation to the University of
+Arkansas AI Club and predates OpenAI Build Week. Karen Kilroy, co-chair of the C2PA
+AI/ML Task Force, developed it in response to college students working on
+OpenClaw agentic nerve centers who needed temporary, ad-hoc publisher trust
+groups.
 
 ## Build Week baseline
 
@@ -69,7 +73,7 @@ Delivered additions:
 
 ## July 18 progress
 
-- Rendered a 2 minute 41 second English explainer with real deployed verdicts,
+- Rendered a 2 minute 45.5 second English explainer with real deployed verdicts,
   GPT-5.6 audit evidence, and CI output. Azure Neural HD supplies the narration.
   The normalized 1080p H.264/AAC file passes a full FFmpeg decode check and
   stays below the three-minute submission limit.
@@ -88,7 +92,7 @@ implement and test the new tool, review security-sensitive code, and prepare
 the release and submission materials. Product scope, security policy, trust
 semantics, and final design decisions remain human-directed.
 
-Harmony defined the central product model from her experience in college
+Karen Kilroy defined the central product model from her experience in college
 classes: people form a group and trust one another for a limited purpose and
 period. In Free2PA, the verifier's certificate directory is that group's trust
 policy. A group can launch its own verifier, add only the publishers it accepts,

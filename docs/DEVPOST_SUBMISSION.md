@@ -15,6 +15,12 @@ Developer Tools
 
 ## Inspiration
 
+Karen Kilroy co-chairs the C2PA AI/ML Task Force. She developed the original Free2PA
+research demo in response to a practical need she observed among college
+students collaborating through OpenClaw agentic nerve centers: they needed
+publisher trust groups that could form quickly around a project and end when
+the collaboration ended.
+
 People form temporary trust groups constantly. A college class trusts its
 members for a semester. Two teams trust each other for one assignment. A
 project accepts a contractor's work for the length of an engagement.
@@ -77,14 +83,14 @@ machine-readable reason codes such as `LOCAL_TRUST`, `EXPLICIT_MATCH`,
 
 ## How we used Codex and GPT-5.6
 
-Harmony supplied the central product concept and made the key trust-policy and
+Karen Kilroy supplied the central product concept and made the key trust-policy and
 scope decisions. Codex audited three related research repositories, helped
 select the focused agent-skill baseline, implemented the distributable CLI and
 verifier workflow, added tests and security hardening, reviewed dependency and
 browser risks, and prepared reproducible release and judging materials.
 
 Codex accelerated implementation but did not define the trust model. During
-development, Harmony rejected an unnecessary signed group-policy layer and
+development, Karen rejected an unnecessary signed group-policy layer and
 restated the simpler invariant that now anchors the product: the verifier is
 where trust lives.
 
@@ -132,9 +138,15 @@ review complement one another only when their responsibilities remain clear.
 
 ## C2PA disclosure
 
-Free2PA applies C2PA-inspired Content Credentials concepts to agent instruction
-files, but Free2PA `0.2.1` is not a conforming C2PA implementation and does not
-claim C2PA consumer interoperability. Its JSON sidecar is a Free2PA format.
+C2PA has a formal conformance program in which conforming Content Credentials
+are verified by conforming verifiers. Free2PA `0.2.1` is C2PA-inspired but is
+not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
+provenance credentials in a Free2PA format: a signed publisher identity traces
+origin and asset binding reveals edits. It then addresses an adjacent concern
+at an agentic nerve center: which publishers a local, temporary group chooses
+to trust. Free2PA does not replace or claim interoperability with C2PA
+conformance. Karen's task-force role provided domain context; this submission
+does not claim C2PA endorsement.
 
 ## Submission links
 

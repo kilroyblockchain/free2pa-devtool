@@ -1,6 +1,6 @@
 # Free2PA Demo Script
 
-Rendered final duration: 2 minutes 41 seconds. Hard limit: 3 minutes.
+Rendered final duration: 2 minutes 45.5 seconds. Hard limit: 3 minutes.
 
 Record in English with voice narration. Use no background music. Keep the
 terminal font and browser zoom large enough to read at 1080p.
@@ -19,10 +19,13 @@ Visual: Free2PA verifier with the trusted publisher list visible.
 
 Narration:
 
-> AI agents execute instruction files written by other people. A signature can
-> prove who signed one, but it cannot decide whether my team trusts that
-> publisher. Free2PA lets any small group launch its own verifier and choose
-> that boundary for itself.
+> I'm Karen Kilroy, co-chair of the C2PA AI/ML Task Force. C2PA has a formal
+> conformance program, with Content Credentials verified by conforming verifiers.
+> I developed the original Free2PA research demo for a different need: college
+> students working on OpenClaw agentic nerve centers needed ad-hoc trust groups.
+> Free2PA uses sidecar files to carry C2PA-style provenance credentials that
+> trace a skill's origin and edits, then lets the local nerve center decide
+> which publishers its group trusts.
 
 ## 0:20-0:48 - Outside the group
 
@@ -97,10 +100,11 @@ Visual: Briefly show the README Build Week table and passing test output.
 
 Narration:
 
-> The research prototype predates Build Week. During Build Week, Codex helped
-> us turn it into this installable developer tool, add the complete verifier
-> operator workflow, GitHub Action, tests, Azure deployment, security hardening,
-> and GPT-5.6 auditing. Free2PA: your group, your verifier, your trust decisions.
+> The research demo was created for a presentation to the University of
+> Arkansas AI Club, and predates Build Week. During Build Week, I directed
+> the trust model and product decisions. Codex helped turn it into an installable
+> tool, CI action, tested Azure deployment, and secure GPT-5.6 audit. Free2PA is
+> Apache-licensed freeware. Your group, your verifier, your trust decisions.
 
 ## Recording checklist
 

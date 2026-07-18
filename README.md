@@ -8,6 +8,12 @@ AI agent skills. A class, project team, short-term collaboration, or agent
 operator can run its own verifier and make one explicit policy decision: which
 publisher certificates belong in this verifier's trust store?
 
+Karen Kilroy, co-chair of the C2PA AI/ML Task Force, conceived the original research
+demo in response to a practical need: college students collaborating on
+OpenClaw agentic nerve centers needed temporary, ad-hoc publisher trust groups.
+Here, an agentic nerve center is the local coordination point that loads skills
+and decides what its agents may execute.
+
 Trust is local and opt-in. There is no global registry and no permanent trust
 relationship. Adding a public certificate admits that publisher. Removing it
 revokes trust on the next verification.
@@ -92,7 +98,7 @@ Create a short-lived publisher identity:
 
 ```bash
 free2pa keygen \
-  --name "Harmony - Build Week" \
+  --name "Karen Kilroy - Build Week" \
   --id harmony-build-week \
   --days 7 \
   --out-dir .free2pa
@@ -248,20 +254,22 @@ X.509 certificates belong in a verifier's trust store.
 
 ## C2PA relationship
 
-Free2PA applies Content Credentials ideas to agent instruction files: signed
-claims, asset binding, action assertions, local trust decisions, and
-human-readable verification reasons.
+C2PA has a formal conformance program. Conforming Content Credentials are
+verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.2.1` is **C2PA-inspired, not a conforming C2PA implementation**. Its
-portable JSON sidecar is a Free2PA format, not a C2PA Manifest Store. Free2PA
-does not claim interoperability with conforming C2PA consumers. This narrow
-format is deliberate: ad-hoc groups need a free, inspectable trust gate for
-Markdown agent instructions, not permanent public-media PKI.
+Free2PA `0.2.1` is **C2PA-inspired, not a conforming C2PA implementation**. It
+uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
+format, not a C2PA Manifest Store, and does not claim interoperability with
+conforming C2PA products. A signed publisher identity traces origin, while
+asset binding reveals edits. Free2PA then addresses an adjacent local-policy
+question for an agentic nerve center: which publishers does this temporary
+group choose to trust? It is not a replacement for C2PA conformance.
 
 ## OpenAI Build Week
 
-Free2PA existed before OpenAI Build Week as a research and teaching prototype.
-The sanitized pre-hackathon baseline is commit `cd5c2c3` from March 15, 2026.
+Free2PA existed before OpenAI Build Week as a research demo created for a
+presentation to the University of Arkansas AI Club. The sanitized pre-hackathon
+baseline is commit `cd5c2c3` from March 15, 2026.
 
 Only work created after the submission period began is presented as Build Week
 work:
@@ -285,7 +293,7 @@ For a two-minute, no-install evaluation path, see
 
 ## How we collaborated with Codex
 
-Harmony supplied the central product insight, trust semantics, intended
+Karen Kilroy supplied the central product insight, trust semantics, intended
 audience, and scope: the verifier's local certificate set represents a small
 group's deliberate and revocable trust decisions. She also chose the
 Developer Tools direction and required that the existing research remain
@@ -305,7 +313,7 @@ Codex accelerated the Build Week implementation by:
 - restructuring the product documentation around reproducible judge testing.
 
 Codex was especially useful for rapid implementation and adversarial review.
-Harmony made the consequential product and trust-policy decisions, corrected
+Karen made the consequential product and trust-policy decisions, corrected
 an early proposal that would have added an unnecessary signed group-policy
 format, and kept the implementation aligned with Free2PA's simpler principle:
 **the verifier is where trust lives.**

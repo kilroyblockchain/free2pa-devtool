@@ -5,6 +5,7 @@ import { resolve, basename }                         from 'node:path';
 import { execFile }                                  from 'node:child_process';
 import { promisify }                                 from 'node:util';
 import { config }                                    from '../config.js';
+import { generateSigningCertificate }                 from '../services/certificates.js';
 
 const execFileP = promisify(execFile);
 const router    = Router();
@@ -66,50 +67,18 @@ router.post('/certs/generate', async (req, res) => {
     return res.status(400).json({ success: false, error: '"name" is required.' });
   }
 
-  const slug = name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-  if (!slug) {
-    return res.status(400).json({ success: false, error: 'Name produces an empty ID.' });
-  }
-
-  const days     = Math.min(Math.max(parseInt(validityDays) || 365, 1), 3650);
-  const orgName  = (org?.trim()) || 'Friends of Justin';
-  const keyPath  = resolve(config.certsDir, `${slug}.key`);
-  const crtPath  = resolve(config.certsDir, `${slug}.crt`);
-  const tmpConf  = resolve(config.certsDir, `tmp_${slug}_${Date.now()}.conf`);
-
-  const confContent = [
-    '[req]',
-    'distinguished_name = dn',
-    'x509_extensions    = v3',
-    'prompt             = no',
-    '',
-    '[dn]',
-    `O  = ${orgName}`,
-    `CN = ${name.trim()}`,
-    '',
-    '[v3]',
-    'basicConstraints     = critical, CA:FALSE',
-    'keyUsage             = critical, digitalSignature',
-    'subjectKeyIdentifier = hash',
-  ].join('\n');
-
   try {
-    await writeFile(tmpConf, confContent);
-    await execFileP('openssl', [
-      'genpkey', '-algorithm', 'EC', '-pkeyopt', 'ec_paramgen_curve:P-256', '-out', keyPath,
-    ]);
-    await execFileP('openssl', [
-      'req', '-new', '-x509',
-      '-key', keyPath, '-out', crtPath,
-      '-days', String(days), '-config', tmpConf,
-    ]);
-
-    const info = await certInfo(crtPath);
-    res.json({ success: true, cert: { id: slug, hasKey: true, ...info } });
+    const generated = await generateSigningCertificate({
+      name,
+      org,
+      validityDays,
+      outputDir: config.certsDir,
+    });
+    const info = await certInfo(generated.certPath);
+    res.json({ success: true, cert: { id: generated.id, hasKey: true, ...info } });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  } finally {
-    await unlink(tmpConf).catch(() => {});
+    const status = err.message.startsWith('Refusing to overwrite') ? 409 : 500;
+    res.status(status).json({ success: false, error: err.message });
   }
 });
 

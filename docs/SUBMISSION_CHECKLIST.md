@@ -24,9 +24,9 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 
 - [ ] Clean install succeeds on every listed supported platform.
 - [ ] Automated test suite passes from a clean checkout.
-- [ ] Public demo is deployed and remains available through August 5, 2026.
+- [x] Public demo is deployed and remains available through August 5, 2026.
 - [ ] Demo audit endpoint has a controlled server-side OpenAI API credential.
-- [ ] Testing instructions require no rebuild and no paid account.
+- [x] Testing instructions require no rebuild and no paid account.
 - [ ] Repository is public with a license, or shared with both judging addresses.
 
 ## Devpost materials

@@ -16,6 +16,23 @@ Free2PA also uses GPT-5.6 to review what a skill asks an agent to do. The model
 can identify behavioral risks, but it cannot override a failed cryptographic
 check.
 
+## Live judge demo
+
+**https://free2pa-buildweek.azurewebsites.net**
+
+The hosted verifier is read-only so visitors cannot change its trust policy or
+use its signing identity. Open **Demo files** in the header to download prepared
+fixtures, then use the Verify panel:
+
+1. `trusted/SKILL.md` with its sidecar passes every check.
+2. `outside/SKILL.md` with its sidecar has a valid signature and unchanged
+   content but fails group trust.
+3. `tampered/SKILL.md` with its original sidecar comes from a trusted publisher
+   but fails content integrity and displays the changed instruction.
+4. `malicious/SKILL.md` is the prepared GPT-5.6 behavioral-audit case.
+
+No account, rebuild, or paid service is required for judge testing.
+
 ## The three checks
 
 Every verification answers three separate questions:

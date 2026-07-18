@@ -190,3 +190,41 @@ test('an ad-hoc verifier can add, inspect, and revoke group trust', async () => 
   await removeTrustedCertificate({ trustStore, id: 'study-group' });
   assert.deepEqual(await listTrustedCertificates(trustStore), []);
 });
+
+test('judge fixtures demonstrate trusted, outside-group, and tampered verdicts', async () => {
+  const trustedCert = resolve('certs/build-week-demo.crt');
+  const fixture = async (directory) => Promise.all([
+    readFile(resolve('public/demo', directory, 'SKILL.md'), 'utf8'),
+    readFile(resolve('public/demo', directory, 'SKILL.md.c2pa.json'), 'utf8'),
+  ]);
+
+  const [trustedContent, trustedSidecar] = await fixture('trusted');
+  const trusted = await verifySkill({
+    content: trustedContent,
+    sidecarText: trustedSidecar,
+    certPath: trustedCert,
+  });
+  assert.equal(trusted.signatureValid, true);
+  assert.equal(trusted.hashMatch, true);
+  assert.equal(trusted.trust.trusted, true);
+
+  const [outsideContent, outsideSidecar] = await fixture('outside');
+  const outside = await verifySkill({
+    content: outsideContent,
+    sidecarText: outsideSidecar,
+    certPath: trustedCert,
+  });
+  assert.equal(outside.signatureValid, true);
+  assert.equal(outside.hashMatch, true);
+  assert.equal(outside.trust.trusted, false);
+
+  const [tamperedContent, originalSidecar] = await fixture('tampered');
+  const tampered = await verifySkill({
+    content: tamperedContent,
+    sidecarText: originalSidecar,
+    certPath: trustedCert,
+  });
+  assert.equal(tampered.signatureValid, true);
+  assert.equal(tampered.hashMatch, false);
+  assert.equal(tampered.trust.trusted, true);
+});

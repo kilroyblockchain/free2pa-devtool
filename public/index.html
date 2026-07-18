@@ -34,6 +34,46 @@
       margin-left: auto;
       margin-right: auto;
     }
+    .utility-row {
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      gap: 1rem;
+      min-height: 2.5rem;
+      margin-top: -1.5rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.78rem;
+    }
+    .utility-row > a, .utility-row summary {
+      color: #35b878;
+      text-decoration: none;
+      cursor: pointer;
+      border-bottom: 1px solid #343836;
+      padding-bottom: 1px;
+    }
+    .demo-menu { position: relative; }
+    .demo-menu summary { list-style: none; }
+    .demo-menu summary::-webkit-details-marker { display: none; }
+    .demo-links {
+      position: absolute;
+      z-index: 10;
+      top: 1.7rem;
+      right: 0;
+      width: 15rem;
+      padding: 0.45rem;
+      border: 1px solid #343836;
+      border-radius: 6px;
+      background: #1b1d1c;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+    .demo-links a {
+      display: block;
+      color: #d1d6d2;
+      text-decoration: none;
+      padding: 0.5rem 0.6rem;
+      border-radius: 4px;
+    }
+    .demo-links a:hover { background: #17241d; color: #f6f7f5; }
 
     .panels {
       display: grid;
@@ -350,9 +390,22 @@
 
 <h1>Free2PA</h1>
 <p class="subtitle">Provenance, trust verification, and GPT-5.6 security auditing for AI agent skills</p>
-<p style="text-align:center; margin-top:-1.5rem; margin-bottom:2rem;">
-  <a href="/test.html" style="font-size:0.78rem; color:#35b878; text-decoration:none; border-bottom:1px solid #343836; padding-bottom:1px;">Skill Test Client →</a>
-</p>
+<nav class="utility-row" aria-label="Utilities">
+  <a href="/test.html">Skill Test Client</a>
+  <details class="demo-menu">
+    <summary>Demo files</summary>
+    <div class="demo-links">
+      <a href="/demo/trusted/SKILL.md" download>Trusted skill</a>
+      <a href="/demo/trusted/SKILL.md.c2pa.json" download>Trusted sidecar</a>
+      <a href="/demo/outside/SKILL.md" download>Outside-group skill</a>
+      <a href="/demo/outside/SKILL.md.c2pa.json" download>Outside-group sidecar</a>
+      <a href="/demo/outside/outside-publisher.crt" download>Outside publisher cert</a>
+      <a href="/demo/tampered/SKILL.md" download>Tampered skill</a>
+      <a href="/demo/tampered/SKILL.md.c2pa.json" download>Original sidecar</a>
+      <a href="/demo/malicious/SKILL.md" download>Behavioral-risk skill</a>
+    </div>
+  </details>
+</nav>
 
 <div class="panels">
 

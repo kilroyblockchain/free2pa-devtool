@@ -40,6 +40,8 @@ Planned additions:
 - Added end-to-end cryptographic, tamper, trust, CLI, and API-contract tests.
 - Updated vulnerable dependencies to a zero-advisory npm audit result.
 - Reduced the npm package to judge-relevant runtime files with no private keys.
+- Added trusted, outside-group, tampered, and malicious judge fixtures.
+- Deployed a read-only verifier to Azure Linux App Service.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

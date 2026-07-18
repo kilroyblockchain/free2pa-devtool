@@ -5,5 +5,6 @@ certs/*.csr
 certs/*.srl
 certs/tmp_*.conf
 .env
+.free2pa/
 .DS_Store
 coverage/

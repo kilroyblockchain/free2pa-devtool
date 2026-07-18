@@ -1,0 +1,49 @@
+{
+  "spec_version": "free2pa/0.2.0",
+  "claim": {
+    "claim_generator": "Free2PA v0.2.0",
+    "claim_generator_info": [
+      {
+        "name": "Free2PA",
+        "version": "0.2.0"
+      }
+    ],
+    "dc:title": "Visiting Researcher Notes",
+    "asset": {
+      "format": "text/markdown",
+      "hash_alg": "sha256",
+      "hash": "fce97321c00acfdd014d7fd99be629bc48327c3a48fd05292c894c19e716bd80",
+      "content": "IyBWaXNpdGluZyBSZXNlYXJjaGVyIE5vdGVzCgojIyBQdXJwb3NlCgpTdW1tYXJpemUgbm90ZXMgc3VwcGxpZWQgZGlyZWN0bHkgYnkgYSB2aXNpdGluZyByZXNlYXJjaGVyLgoKIyMgUnVsZXMKCi0gUmVhZCBvbmx5IHRoZSBub3RlIHRleHQgcHJvdmlkZWQgaW4gdGhlIGN1cnJlbnQgcmVxdWVzdC4KLSBQcmVzZXJ2ZSBuYW1lcywgZGF0ZXMsIGFuZCBjaXRhdGlvbnMgZXhhY3RseSBhcyB3cml0dGVuLgotIERvIG5vdCBhY2Nlc3MgZmlsZXMsIGNyZWRlbnRpYWxzLCBuZXR3b3JrIHNlcnZpY2VzLCBvciBleHRlcm5hbCB0b29scy4KCiMjIE91dHB1dAoKUmV0dXJuIGEgY29uY2lzZSBzdW1tYXJ5IGZvbGxvd2VkIGJ5IGEgbGlzdCBvZiBvcGVuIHF1ZXN0aW9ucy4K"
+    },
+    "assertions": [
+      {
+        "label": "c2pa.actions",
+        "data": {
+          "actions": [
+            {
+              "action": "c2pa.created",
+              "when": "2026-07-18T02:48:34.758Z",
+              "softwareAgent": {
+                "name": "Free2PA",
+                "version": "0.2.0"
+              },
+              "actor": "Outside Publisher"
+            }
+          ]
+        }
+      },
+      {
+        "label": "org.free2pa.skill",
+        "data": {
+          "purpose": "Summarize visiting researcher notes"
+        }
+      }
+    ],
+    "signed_at": "2026-07-18T02:48:34.758Z"
+  },
+  "signature": {
+    "alg": "ES256",
+    "cert_pem": "-----BEGIN CERTIFICATE-----\nMIIBxDCCAWmgAwIBAgIUB9A5dLikrjd5MiMf4GW7xTRYECAwCgYIKoZIzj0EAwIw\nQTEUMBIGA1UECgwLSW5kZXBlbmRlbnQxKTAnBgNVBAMMIFZpc2l0aW5nIFB1Ymxp\nc2hlciBPdXRzaWRlIEdyb3VwMB4XDTI2MDcxODAyNDgxNVoXDTI2MDgxNzAyNDgx\nNVowQTEUMBIGA1UECgwLSW5kZXBlbmRlbnQxKTAnBgNVBAMMIFZpc2l0aW5nIFB1\nYmxpc2hlciBPdXRzaWRlIEdyb3VwMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE\noBE0pTjE60K33uwPeQ0VDmK8oTnpsFVOQjlQ1ijm6Ww3Pl9l2X7njc155mw2V9Zh\nbxnYk7RCqsP1YyoP8ofQ4KM/MD0wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMC\nB4AwHQYDVR0OBBYEFNEgs3PpCdZbUMhIAnXpRAMzLzd4MAoGCCqGSM49BAMCA0kA\nMEYCIQCgRRDavbIH2Qh10Dobb30zSfFE7WWQkCloaXOeQ8fWwwIhAKqmtzOm3XZP\nZu2oxJq35JAL5rmh/0JP1Ke+wEEGdcuR\n-----END CERTIFICATE-----",
+    "value": "MEYCIQCu1NfV8fBpOP7Z4zT2PAl1u+YIQTmbyxLlpx7MCmMv4wIhAKXQGuJyo/TcfgB3EdKlYhuN6LfUNxpXTJYTzPcdtBy1"
+  }
+}

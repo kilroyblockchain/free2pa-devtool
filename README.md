@@ -21,7 +21,8 @@ check.
 **https://free2pa-buildweek.azurewebsites.net**
 
 The hosted verifier is read-only so visitors cannot change its trust policy or
-use its signing identity. Open **Demo files** in the header to download prepared
+use its signing identity. Its deployment trust store contains only the scoped
+Build Week demo publisher and expires after judging. Open **Demo files** in the header to download prepared
 fixtures, then use the Verify panel:
 
 1. `trusted/SKILL.md` with its sidecar passes every check.

@@ -42,6 +42,8 @@ Planned additions:
 - Reduced the npm package to judge-relevant runtime files with no private keys.
 - Added trusted, outside-group, tampered, and malicious judge fixtures.
 - Deployed a read-only verifier to Azure Linux App Service.
+- Isolated the hosted policy from all legacy certificates with a clean,
+  short-lived Build Week trust store.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

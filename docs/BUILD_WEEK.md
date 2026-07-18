@@ -41,6 +41,8 @@ Delivered additions:
 - Updated vulnerable dependencies to a zero-advisory npm audit result.
 - Reduced the npm package to judge-relevant runtime files with no private keys.
 - Added trusted, outside-group, tampered, and malicious judge fixtures.
+- Added a reusable GitHub Action that enforces the verifier's local trust policy
+  in pull requests and emits a JSON evidence artifact.
 - Deployed a read-only verifier to Azure Linux App Service.
 - Isolated the hosted policy from all legacy certificates with a clean,
   short-lived Build Week trust store.

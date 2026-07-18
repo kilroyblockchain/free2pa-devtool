@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -15,6 +15,8 @@ import {
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 import { canonicalJson } from '../src/utils/canonical.js';
+import { cleanupUploads } from '../src/routes/verify.js';
+import { applySecurityHeaders } from '../src/server.js';
 
 const execFileP = promisify(execFile);
 
@@ -227,4 +229,49 @@ test('judge fixtures demonstrate trusted, outside-group, and tampered verdicts',
   assert.equal(tampered.signatureValid, true);
   assert.equal(tampered.hashMatch, false);
   assert.equal(tampered.trust.trusted, true);
+});
+
+test('scan emits CI evidence and fails for an outside-group publisher', async () => {
+  const cliPath = resolve('bin/free2pa.js');
+  const trusted = await execFileP(process.execPath, [
+    cliPath, 'scan', 'public/demo/trusted', '--trust-store', 'demo_certs', '--json',
+  ]);
+  const trustedReport = JSON.parse(trusted.stdout);
+  assert.equal(trustedReport.passed, true);
+  assert.equal(trustedReport.count, 1);
+  assert.equal(trustedReport.results[0].trust.reason, 'LOCAL_TRUST');
+
+  await assert.rejects(
+    execFileP(process.execPath, [
+      cliPath, 'scan', 'public/demo/outside', '--trust-store', 'demo_certs', '--json',
+    ]),
+    (error) => {
+      const report = JSON.parse(error.stdout);
+      return error.code === 1 && report.passed === false &&
+        report.results[0].trust.reason === 'UNTRUSTED_ISSUER';
+    },
+  );
+});
+
+test('HTTP security headers and partial-upload cleanup are deterministic', async () => {
+  const headers = new Map();
+  let continued = false;
+  applySecurityHeaders({}, { setHeader: (name, value) => headers.set(name, value) }, () => {
+    continued = true;
+  });
+  assert.equal(continued, true);
+  assert.equal(headers.get('X-Content-Type-Options'), 'nosniff');
+  assert.equal(headers.get('X-Frame-Options'), 'DENY');
+  assert.equal(headers.get('Referrer-Policy'), 'no-referrer');
+
+  const directory = await mkdtemp(resolve(tmpdir(), 'free2pa-uploads-'));
+  const assetPath = resolve(directory, 'asset-upload');
+  const sidecarPath = resolve(directory, 'sidecar-upload');
+  await writeFile(assetPath, 'asset');
+  await writeFile(sidecarPath, 'sidecar');
+  await cleanupUploads({
+    file: [{ path: assetPath }],
+    sidecar: [{ path: sidecarPath }],
+  });
+  assert.deepEqual(await readdir(directory), []);
 });

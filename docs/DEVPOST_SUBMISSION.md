@@ -97,6 +97,7 @@ baseline and documents every submitted Build Week extension separately.
 - Outside-group rejection, certificate admission, and immediate revocation.
 - Tamper detection with a human-readable diff.
 - GPT-5.6 structured audits through CLI, HTTP, browser, and MCP.
+- Reusable GitHub Action for pull-request trust enforcement and JSON evidence.
 - Automated tests covering signing, trust, tampering, CLI behavior, and API
   contracts.
 - Read-only and rate-limited public-demo mode.

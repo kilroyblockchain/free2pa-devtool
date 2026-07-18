@@ -176,6 +176,34 @@ free2pa scan ./skills --trust-store ./study-group-certs --json
 Human-readable output is designed for terminals. `--json` and process exit
 codes are designed for CI, policy engines, and agent runtimes.
 
+## GitHub Action
+
+Free2PA can reject a pull request when any discovered `SKILL.md` is unsigned,
+modified, expired, or published outside the repository's chosen trust group.
+Store only public certificates in the trust directory:
+
+```yaml
+name: Verify agent skills
+on: [pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  free2pa:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: kilroyblockchain/free2pa@v0.2.0
+        with:
+          path: skills
+          trust-store: .free2pa/trusted-publishers
+```
+
+The action writes `free2pa-report.json`, prints the structured report in the
+job log, and fails closed when no skills are found or any verification gate
+fails. The repository's own workflow runs the action against the judge fixture.
+
 ## MCP tools
 
 `POST /mcp` uses Streamable HTTP and exposes:

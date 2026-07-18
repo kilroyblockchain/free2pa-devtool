@@ -8,6 +8,11 @@ import { verifySkill } from '../services/verifier.js';
 const router = Router();
 const upload = multer({ dest: config.uploadDir, limits: { fileSize: 10 * 1024 * 1024 } });
 
+export async function cleanupUploads(files) {
+  const uploaded = Object.values(files ?? {}).flat();
+  await Promise.all(uploaded.map((file) => unlink(file.path).catch(() => {})));
+}
+
 // POST /api/verify
 // Multipart fields:
 //   file         (required) — the .md file
@@ -20,14 +25,20 @@ router.post('/verify', upload.fields([
   const assetFile   = req.files?.file?.[0];
   const sidecarFile = req.files?.sidecar?.[0];
 
-  if (!assetFile)   return res.status(400).json({ success: false, error: 'No file uploaded (field: file).' });
-  if (!sidecarFile) return res.status(400).json({ success: false, error: 'No sidecar uploaded (field: sidecar).' });
+  if (!assetFile || !sidecarFile) {
+    await cleanupUploads(req.files);
+    const error = !assetFile
+      ? 'No file uploaded (field: file).'
+      : 'No sidecar uploaded (field: sidecar).';
+    return res.status(400).json({ success: false, error });
+  }
 
   const trustProfile = req.body.trustProfile || 'dev';
   const { certId }   = req.body;
 
   // Validate certId to prevent path traversal
   if (certId && !/^[a-z0-9-]+$/.test(certId)) {
+    await cleanupUploads(req.files);
     return res.status(400).json({ success: false, error: 'Invalid certId.' });
   }
 
@@ -44,8 +55,7 @@ router.post('/verify', upload.fields([
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally {
-    await unlink(assetFile.path).catch(() => {});
-    await unlink(sidecarFile.path).catch(() => {});
+    await cleanupUploads(req.files);
   }
 });
 

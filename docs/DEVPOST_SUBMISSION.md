@@ -126,9 +126,27 @@ Free2PA applies C2PA-inspired Content Credentials concepts to agent instruction
 files, but Free2PA `0.2.0` is not a conforming C2PA implementation and does not
 claim C2PA consumer interoperability. Its JSON sidecar is a Free2PA format.
 
-## Links to complete
+## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.2.0
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - YouTube demo: `TODO`
 - Primary Codex `/feedback` Session ID: `TODO`
+
+## Judge testing instructions
+
+No account, rebuild, API key, or payment is required.
+
+1. Open the live demo and select **Demo files**.
+2. Verify the trusted fixture and observe that all cryptographic and local-trust
+   gates pass.
+3. Verify the outside-group fixture and observe `UNTRUSTED_ISSUER` even though
+   its signature and content binding pass.
+4. Verify the tampered fixture and observe the integrity failure and displayed
+   content difference even though its publisher is trusted.
+5. Audit the malicious fixture and inspect GPT-5.6's structured behavioral
+   findings and recorded model, provider, timestamp, and asset hash.
+
+Supported installation platforms are macOS and Linux with Node.js 20 or newer
+and OpenSSL. Full install and CLI instructions are in `docs/JUDGE_GUIDE.md`.

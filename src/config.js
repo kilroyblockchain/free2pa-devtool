@@ -9,7 +9,7 @@ export const config = {
   port:      parseInt(process.env.PORT ?? '4001', 10),
   certPath:  resolve(root, process.env.CERT_PATH  ?? 'certs/signing.crt'),
   keyPath:   resolve(root, process.env.KEY_PATH   ?? 'certs/signing.key'),
-  certsDir:  resolve(root, process.env.CERTS_DIR  ?? 'certs'),
+  certsDir:  resolve(root, process.env.FREE2PA_CERTS_DIR ?? process.env.CERTS_DIR ?? 'certs'),
   uploadDir: resolve(root, process.env.UPLOAD_DIR ?? 'uploads'),
   skillsDir: resolve(root, process.env.SKILLS_DIR ?? 'radio_intern'),
   readOnly:  process.env.FREE2PA_READ_ONLY === 'true',

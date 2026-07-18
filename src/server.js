@@ -1,7 +1,7 @@
 import express from 'express';
 import { mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import { config } from './config.js';
 import signRouter   from './routes/sign.js';
 import verifyRouter from './routes/verify.js';
@@ -25,6 +25,7 @@ export async function createServer() {
     version: config.appVersion,
     readOnly: config.readOnly,
     auditConfigured: Boolean(process.env.OPENAI_API_KEY),
+    trustStore: basename(config.certsDir),
   }));
 
   app.use('/api', signRouter);

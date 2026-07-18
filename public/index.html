@@ -377,6 +377,15 @@
     .risk-medium { color: #f6ad55; background: #2b1a0d; border: 1px solid #7b4a00; }
     .risk-low { color: #68d391; background: #0d2b1e; border: 1px solid #22543d; }
     .audit-summary p { font-size: 0.8rem; color: #d1d6d2; line-height: 1.5; }
+    .audit-summary .audit-metadata {
+      margin-top: 0.8rem;
+      padding-top: 0.65rem;
+      border-top: 1px solid #333a36;
+      color: #8f9993;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.68rem;
+      overflow-wrap: anywhere;
+    }
     .finding {
       margin-top: 0.75rem;
       padding: 0.8rem 0;
@@ -1114,6 +1123,18 @@
       recommendation.textContent = `Fix: ${item.recommendation}`;
       finding.append(title, evidence, impact, recommendation);
       auditResult.appendChild(finding);
+    }
+    if (report.metadata) {
+      const metadata = document.createElement('p');
+      metadata.className = 'audit-metadata';
+      const shortHash = report.metadata.asset_sha256?.slice(0, 12) || 'unavailable';
+      metadata.textContent = [
+        `Model: ${report.metadata.model || 'unknown'}`,
+        `Provider: ${report.metadata.provider || 'unknown'}`,
+        `Asset: ${shortHash}`,
+        `Audited: ${report.metadata.audited_at || 'unknown'}`,
+      ].join(' | ');
+      auditResult.appendChild(metadata);
     }
     auditResult.style.display = 'block';
   }

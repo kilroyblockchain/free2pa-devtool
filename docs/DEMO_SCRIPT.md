@@ -1,11 +1,19 @@
 # Free2PA Demo Script
 
-Target duration: 2 minutes 40 seconds. Hard limit: 3 minutes.
+Target duration: 2 minutes 45 seconds. Hard limit: 3 minutes.
 
 Record in English with voice narration. Use no background music. Keep the
 terminal font and browser zoom large enough to read at 1080p.
 
-## 0:00-0:18 - The problem
+Before recording, open the logged-out live demo, the public GitHub Actions run,
+and a terminal in a clean checkout. Prepare the temporary trust store:
+
+```bash
+rm -rf /tmp/free2pa-class-certs
+mkdir -p /tmp/free2pa-class-certs
+```
+
+## 0:00-0:20 - The problem
 
 Visual: Free2PA verifier with the trusted publisher list visible.
 
@@ -16,7 +24,7 @@ Narration:
 > publisher. Free2PA lets any small group launch its own verifier and choose
 > that boundary for itself.
 
-## 0:18-0:48 - Outside the group
+## 0:20-0:48 - Outside the group
 
 Visual: Verify a correctly signed outside publisher's `SKILL.md` and sidecar.
 Show the three verdicts.
@@ -29,12 +37,17 @@ Narration:
 
 Pause briefly on `UNTRUSTED_ISSUER`.
 
-## 0:48-1:13 - Form the ad-hoc group
+## 0:48-1:15 - Form the ad-hoc group
 
-Visual: Import the publisher's public `.crt`, or run:
+Visual: In the terminal, run:
 
 ```bash
-free2pa trust add outside-publisher.crt --store ./class-certs --id teammate
+free2pa trust add public/demo/outside/outside-publisher.crt \
+  --store /tmp/free2pa-class-certs \
+  --id visiting-researcher
+
+free2pa verify public/demo/outside/SKILL.md \
+  --trust-store /tmp/free2pa-class-certs
 ```
 
 Re-run verification and show PASS.
@@ -45,7 +58,7 @@ Narration:
 > private key never leaves its owner. The same credential now passes this
 > verifier because the publisher is inside this group's explicit policy.
 
-## 1:13-1:38 - Tampering still fails
+## 1:15-1:38 - Tampering still fails
 
 Visual: Add a suspicious instruction to the skill and verify against the same
 sidecar. Show the hash failure and rendered diff.
@@ -55,29 +68,30 @@ Narration:
 > Group membership does not excuse tampering. One changed instruction breaks
 > the asset binding, so the trusted publisher's modified file still fails.
 
-## 1:38-2:03 - GPT-5.6 behavioral review
+## 1:38-2:10 - GPT-5.6 behavioral review
 
-Visual: Audit a prepared malicious skill that requests environment secrets and
-an external upload. Show the structured high-risk result.
+Visual: In the live demo, audit `public/demo/malicious/SKILL.md`. Show the
+structured `critical` result and the Azure managed-identity model status.
 
 Narration:
 
 > Cryptography proves provenance, not intent. GPT-5.6 independently reviews the
 > skill as untrusted data and identifies prompt injection, secret access, data
-> exfiltration, destructive behavior, and excessive permissions. The model can
+> exfiltration, deceptive behavior, and excessive permissions. The model can
 > explain risk, but it can never override a failed cryptographic check.
 
-## 2:03-2:23 - Agent enforcement
+## 2:10-2:30 - Pull-request enforcement
 
-Visual: Show the MCP discovery response or an agent calling `verify_skill`.
+Visual: Show the green public GitHub Actions run and its `Verify trusted demo
+skill` step. Briefly show the reusable action snippet in the README.
 
 Narration:
 
-> The same policy is available through the CLI, HTTP, browser, and MCP. An agent
-> can call `verify_skill` before loading an instruction package and treat
-> anything other than PASS as unavailable.
+> The same fail-closed policy is available through the CLI, browser, HTTP, MCP,
+> and this reusable GitHub Action. A pull request fails if a skill is unsigned,
+> modified, expired, or published outside the repository's trust group.
 
-## 2:23-2:40 - Build Week and close
+## 2:30-2:45 - Build Week and close
 
 Visual: Briefly show the README Build Week table and passing test output.
 
@@ -85,8 +99,8 @@ Narration:
 
 > The research prototype predates Build Week. During Build Week, Codex helped
 > us turn it into this installable developer tool, add the complete verifier
-> operator workflow, tests, security hardening, and GPT-5.6 auditing. Free2PA:
-> your group, your verifier, your trust decisions.
+> operator workflow, GitHub Action, tests, Azure deployment, security hardening,
+> and GPT-5.6 auditing. Free2PA: your group, your verifier, your trust decisions.
 
 ## Recording checklist
 

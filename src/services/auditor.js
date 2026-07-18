@@ -191,6 +191,9 @@ export async function auditSkill({
     ...report,
     metadata: {
       model,
+      provider: azureEndpoint
+        ? azureApiKey ? 'azure-openai-api-key' : 'azure-openai-managed-identity'
+        : 'openai-api-key',
       audited_at: new Date().toISOString(),
       asset_sha256: createHash('sha256').update(content, 'utf8').digest('hex'),
       filename,

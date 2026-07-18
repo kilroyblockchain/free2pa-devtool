@@ -200,6 +200,7 @@ test('GPT audit supports Azure OpenAI with managed identity and no stored key', 
   assert.equal(request.options.headers['api-key'], undefined);
   assert.equal(request.body.model, 'free2pa-gpt-5-6');
   assert.equal(result.overall_risk, 'low');
+  assert.equal(result.metadata.provider, 'azure-openai-managed-identity');
 
   assert.deepEqual(getAuditConfiguration({
     AZURE_OPENAI_ENDPOINT: 'https://example.openai.azure.com',

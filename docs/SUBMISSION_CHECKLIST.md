@@ -17,7 +17,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Codex collaboration is documented in `docs/BUILD_WEEK.md`.
 - [x] GPT-5.6 is materially integrated as the behavioral security auditor.
 - [ ] A live GPT-5.6 audit succeeds with the deployment credential.
-- [ ] Third-party licenses and integration terms are reviewed.
+- [x] Third-party licenses and integration terms are reviewed.
 - [ ] Private signing keys are absent from the submitted repository and package.
 
 ## Judge access

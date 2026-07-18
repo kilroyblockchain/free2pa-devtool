@@ -43,11 +43,17 @@ Delivered additions:
 - Added trusted, outside-group, tampered, and malicious judge fixtures.
 - Added a reusable GitHub Action that enforces the verifier's local trust policy
   in pull requests and emits a JSON evidence artifact.
+- Verified the reusable action on GitHub-hosted Ubuntu with Node.js 20 in
+  [workflow run 29629028220](https://github.com/kilroyblockchain/free2pa/actions/runs/29629028220).
 - Deployed a read-only verifier to Azure Linux App Service.
 - Isolated the hosted policy from all legacy certificates with a clean,
   short-lived Build Week trust store.
 - Verified a clean archive install and full test run on July 17.
 - Deployed HTTP security headers and disabled framework-identifying responses.
+- Audited 129 installed dependency packages: every package declared an MIT,
+  BSD, or ISC-family license and none lacked license metadata.
+- Re-ran trusted, outside-group, tampered, partial-upload, read-only, and HTTP
+  security checks against the deployed Azure build at commit `6e2e166`.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

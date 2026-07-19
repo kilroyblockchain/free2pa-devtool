@@ -1,6 +1,6 @@
 {
   "name": "free2pa",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Provenance, trust verification, and security auditing for AI agent skills",
   "main": "index.js",
   "type": "module",
@@ -15,6 +15,7 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node --watch index.js",
+    "demo:hello": "node examples/hello-world-agent/agent.mjs",
     "generate-cert": "node bin/free2pa.js keygen --name \"Free2PA Dev Signing\" --id signing --out-dir certs",
     "test": "node --test",
     "check": "node --check bin/free2pa.js && node --test"

@@ -71,7 +71,7 @@ For a Node project, install the freeware release as a development dependency:
 
 ```bash
 npm install --save-dev \
-  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.3/free2pa-0.3.3.tgz
+  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/free2pa-0.4.0.tgz
 ```
 
 Verify the archive against the `SHA256SUMS` asset on the same GitHub release

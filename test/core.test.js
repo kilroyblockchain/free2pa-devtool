@@ -31,6 +31,7 @@ import {
   loadVerifiedFile,
   verifyFileForLoad,
 } from '../src/loadGate.js';
+import { greetWithModel, runHelloWorldAgent } from '../src/helloAgent.js';
 
 const execFileP = promisify(execFile);
 
@@ -91,6 +92,94 @@ test('load gate returns only trusted content and throws on changed content', asy
   assert.equal(missing.decision, 'REJECT');
   assert.equal(missing.reasonCode, 'SIDECAR_MISSING');
   assert.equal(missing.content, undefined);
+});
+
+test('Hello World agent blocks a bitter soul and repairs from the signed optimistic soul', async () => {
+  const demoRoot = resolve('public/demo/hello-agent');
+  const calls = [];
+  const runModel = async ({ soul, input }) => {
+    calls.push({ soul, input });
+    const bitter = /bitter or pessimistic/i.test(soul);
+    return {
+      output: bitter ? 'Hello, miserable world!' : 'Hello, beautiful world!',
+      provider: 'test-model',
+      model: 'test-greeter',
+    };
+  };
+  const options = {
+    trustStore: resolve(demoRoot, 'trusted-publishers'),
+    runModel,
+  };
+
+  const trusted = await runHelloWorldAgent({
+    ...options,
+    assetPath: resolve(demoRoot, 'trusted/SOUL.md'),
+  });
+  assert.equal(trusted.action, 'LOAD');
+  assert.equal(trusted.agent.started, true);
+  assert.equal(trusted.agent.output, 'Hello, beautiful world!');
+
+  const changed = await runHelloWorldAgent({
+    ...options,
+    assetPath: resolve(demoRoot, 'changed/SOUL.md'),
+  });
+  assert.equal(changed.action, 'QUARANTINE');
+  assert.equal(changed.reasonCode, 'CONTENT_CHANGED');
+  assert.equal(changed.agent.started, false);
+  assert.equal(calls.length, 1, 'blocked content must not reach the model');
+
+  const alerted = await runHelloWorldAgent({
+    ...options,
+    assetPath: resolve(demoRoot, 'changed/SOUL.md'),
+    policy: 'alert',
+  });
+  assert.equal(alerted.action, 'ALERT + CONTINUE');
+  assert.equal(alerted.agent.output, 'Hello, miserable world!');
+
+  const repaired = await runHelloWorldAgent({
+    ...options,
+    assetPath: resolve(demoRoot, 'changed/SOUL.md'),
+    policy: 'repair',
+  });
+  assert.equal(repaired.action, 'RESTORE + RUN + REPORT');
+  assert.equal(repaired.agent.output, 'Hello, beautiful world!');
+  assert.match(calls.at(-1).soul, /optimistic adjective/i);
+  assert.doesNotMatch(calls.at(-1).soul, /bitter or pessimistic/i);
+
+  const outside = await runHelloWorldAgent({
+    ...options,
+    assetPath: resolve(demoRoot, 'outside/SOUL.md'),
+  });
+  assert.equal(outside.action, 'REJECT');
+  assert.equal(outside.reasonCode, 'UNTRUSTED_ISSUER');
+  assert.equal(outside.agent.started, false);
+});
+
+test('Hello World agent calls Azure OpenAI with the verified soul and a narrow schema', async () => {
+  let request;
+  const result = await greetWithModel({
+    soul: '# Soul\n\nUse an optimistic adjective.',
+    azureEndpoint: 'https://hello.openai.azure.com',
+    model: 'hello-gpt',
+    tokenProvider: async () => 'managed-token',
+    fetchImpl: async (url, options) => {
+      request = { url, options, body: JSON.parse(options.body) };
+      return {
+        ok: true,
+        json: async () => ({
+          output: [{ content: [{ type: 'output_text', text: '{"greeting":"Hello, hopeful world!"}' }] }],
+        }),
+      };
+    },
+  });
+
+  assert.equal(result.output, 'Hello, hopeful world!');
+  assert.equal(result.provider, 'azure-openai-managed-identity');
+  assert.equal(request.url, 'https://hello.openai.azure.com/openai/v1/responses');
+  assert.equal(request.options.headers.Authorization, 'Bearer managed-token');
+  assert.match(request.body.instructions, /optimistic adjective/);
+  assert.equal(request.body.input, 'hello');
+  assert.equal(request.body.text.format.strict, true);
 });
 
 test('canonicalJson sorts nested object keys deterministically', () => {

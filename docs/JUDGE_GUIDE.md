@@ -17,16 +17,19 @@ Open <https://free2pa-buildweek.azurewebsites.net>. No files are required for
 the primary test; each button calls the submitted verifier with a prepared
 public fixture.
 
-1. Leave **Changed** and **Block** selected, then choose **Run file**. The
-   unprotected lane loads the changed control file. The protected lane returns
-   `SIGN PASS`, `FILE FAIL`, `GROUP PASS`, and `QUARANTINE`.
-2. Set the protected policy to **Repair + report** and run again. The protected
-   lane returns `RESTORE + REPORT`; the CLI implementation preserves the
-   rejected copy and restores only a current, locally trusted signed original.
-3. Select **Outside group** and run. Signature and file integrity pass, local
-   trust fails with `UNTRUSTED_ISSUER`, and the protected lane rejects it.
-4. Select **Trusted** and run. All three gates pass and the protected lane
-   returns `LOAD`.
+1. Leave **Changed** and **Block** selected, then choose **Say hello**. The live
+   Azure model in the unchecked lane follows the altered `SOUL.md` and returns
+   a bitter greeting. The protected lane returns `SIGN PASS`, `FILE FAIL`, and
+   `GROUP PASS`, then `QUARANTINE`; its model call is skipped.
+2. Set the protected policy to **Repair + report** and say hello again. The
+   unchecked lane remains bitter. The protected lane returns
+   `RESTORE + RUN + REPORT`, recovers only the hash-verified signed optimistic
+   soul, and asks the same model for a new optimistic greeting.
+3. Select **Outside group** and say hello. Signature and file integrity pass,
+   local trust fails with `UNTRUSTED_ISSUER`, and the protected agent does not
+   start.
+4. Select **Trusted** and say hello. All three gates pass and both Azure-hosted
+   agents return optimistic greetings.
 5. Open **Research workbench**, download the behavioral-risk fixture from
    **Demo files**, and run **GPT-5.6 Audit**. The structured result records the
    model, Azure managed-identity provider, audit time, and asset hash.
@@ -59,6 +62,15 @@ free2pa scan public/demo/outside --trust-store demo_certs
 The first command passes. The second intentionally exits with status 1 and
 reports `UNTRUSTED_ISSUER`.
 
+The repository's Hello World agent uses the operator's configured OpenAI or
+Azure OpenAI account:
+
+```bash
+npm run demo:hello -- trusted
+npm run demo:hello -- changed
+npm run demo:hello -- changed repair
+```
+
 ## Interfaces
 
 - CLI: `free2pa --help`
@@ -75,6 +87,6 @@ trust all pass.
 
 Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.3>
+Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0>
 
 Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29644256018>

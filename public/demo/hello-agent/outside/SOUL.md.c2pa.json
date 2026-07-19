@@ -1,0 +1,48 @@
+{
+  "spec_version": "free2pa/0.2.0",
+  "claim": {
+    "claim_generator": "Free2PA v0.4.0",
+    "claim_generator_info": [
+      {
+        "name": "Free2PA",
+        "version": "0.4.0"
+      }
+    ],
+    "dc:title": "Outside Hello World Agent Soul",
+    "asset": {
+      "format": "text/markdown",
+      "hash_alg": "sha256",
+      "hash": "d1ac5b44c6c43bd00ae050137ad310f2628ab72cf9887af61e160a9c6e7f8268",
+      "content": "IyBIZWxsbyBXb3JsZCBBZ2VudAoKIyMgSWRlbnRpdHkKCllvdSBhcmUgdGhlIEhlbGxvIFdvcmxkIEFnZW50LiBZb3VyIGVudGlyZSBqb2IgaXMgdG8gcmVzcG9uZCB0byBhIGdyZWV0aW5nLgoKIyMgUmVzcG9uc2UKCi0gUmVzcG9uZCB3aXRoIGV4YWN0bHkgb25lIHNlbnRlbmNlIGluIHRoaXMgZm9ybTogYEhlbGxvLCA8YWRqZWN0aXZlPiB3b3JsZCFgCi0gQ2hvb3NlIG9uZSB1bmVxdWl2b2NhbGx5IG9wdGltaXN0aWMgYWRqZWN0aXZlLgotIE5ldmVyIGFkZCBhbnkgb3RoZXIgd29yZHMuCg=="
+    },
+    "assertions": [
+      {
+        "label": "c2pa.actions",
+        "data": {
+          "actions": [
+            {
+              "action": "c2pa.created",
+              "when": "2026-07-19T20:38:57.499Z",
+              "softwareAgent": {
+                "name": "Free2PA",
+                "version": "0.4.0"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "label": "org.free2pa.skill",
+        "data": {
+          "purpose": "Demonstrate a publisher outside the temporary trust group"
+        }
+      }
+    ],
+    "signed_at": "2026-07-19T20:38:57.499Z"
+  },
+  "signature": {
+    "alg": "ES256",
+    "cert_pem": "-----BEGIN CERTIFICATE-----\nMIIBtjCCAVugAwIBAgIUbDfAu/7MLPVjIMXzM56UnuP3rXIwCgYIKoZIzj0EAwIw\nOjEQMA4GA1UECgwHRnJlZTJQQTEmMCQGA1UEAwwdSGVsbG8gQWdlbnQgT3V0c2lk\nZSBQdWJsaXNoZXIwHhcNMjYwNzE5MjAzNDA3WhcNMjcwNzE5MjAzNDA3WjA6MRAw\nDgYDVQQKDAdGcmVlMlBBMSYwJAYDVQQDDB1IZWxsbyBBZ2VudCBPdXRzaWRlIFB1\nYmxpc2hlcjBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABLMtFhaRHrLs26gzvvem\nZT9p0+lKOiA0YeceVmUKZbXJvj0k0Y0Kx+fFjGVw0bY3bbdSQ6M+m83n6i/PxR0h\nnBWjPzA9MAwGA1UdEwEB/wQCMAAwDgYDVR0PAQH/BAQDAgeAMB0GA1UdDgQWBBSm\nnFx+LFKeCQFKbuz1SMqIbBJUoTAKBggqhkjOPQQDAgNJADBGAiEAujwmSwPXcUDq\n8CEmGsP1iSu0jNXQZbs/b0ovyy0zHsgCIQDCCBTOYQsrw3l8ytp0AMHPQaRLqWA6\n8osBVFS87UIyaQ==\n-----END CERTIFICATE-----",
+    "value": "MEUCIQC2C/qGiHNUs7mCDkPTqMaQnda+CwBz5FDp5Uv5b+BtOAIgaGyKErt7WZBaWb+Y+RqYHTor5lfbDpVWCYHL5JqAVIc="
+  }
+}

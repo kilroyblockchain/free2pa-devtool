@@ -131,6 +131,12 @@ Delivered additions:
   their own OpenAI, Azure OpenAI, or OpenAI-compatible account, or install a
   provider module for another hosted or local LLM. Provider output remains an
   optional behavioral report and cannot change a deterministic load decision.
+- Built a minimal Azure-hosted Hello World agent whose signed `SOUL.md` permits
+  only optimistic greetings. The live comparison shows an unchecked bitter
+  edit reaching the model, the same edit being blocked before protected
+  inference, and guarded repair restoring the signed optimistic soul before a
+  fresh model call. Tests prove blocked content produces no protected model
+  call and that repair passes only the signed original.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

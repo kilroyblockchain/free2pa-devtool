@@ -16,7 +16,7 @@ export const config = {
   auditRequestsPerHour: Math.max(Number.parseInt(process.env.FREE2PA_AUDIT_LIMIT ?? '20', 10), 1),
   auditGlobalRequestsPerHour: Math.max(Number.parseInt(process.env.FREE2PA_AUDIT_GLOBAL_LIMIT ?? '60', 10), 1),
 
-  claimGenerator: 'Free2PA v0.3.3',
+  claimGenerator: 'Free2PA v0.4.0',
   appName:        'Free2PA',
-  appVersion:     '0.3.3',
+  appVersion:     '0.4.0',
 };

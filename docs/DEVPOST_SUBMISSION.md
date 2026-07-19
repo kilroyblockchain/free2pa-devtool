@@ -23,10 +23,11 @@ the collaboration ended.
 
 Karen calls the collection of skills and critical agent-control files the
 **Nerve Center**. It can include files such as `SKILL.md` and `SOUL.md` that
-shape what an agent can do. A file may be changed by an external attack, by
-someone outside the trust group, or by the agent itself. In every case, the
-operational question is the same: does this exact file still have provenance
-the local group accepts?
+shape what an agent can do. A file may be changed by an external attack, an
+engineering mistake, someone outside the trust group, or the agent itself
+acting on a misunderstanding. In every case, the operational question is the
+same: does this exact file still have provenance the local group accepts?
+Free2PA detects the change without guessing its cause.
 
 People form temporary trust groups constantly. A college class trusts its
 members for a semester. Two teams trust each other for one assignment. A
@@ -73,8 +74,15 @@ Free2PA places that decision at the Nerve Center's admission boundary. The
 sidecar preserves the signed publisher and asset hash. If a protected file
 changes, even when an agent rewrites its own `SOUL.md`, the integrity gate
 fails and the implementation can quarantine the file instead of loading it.
-This release demonstrates the pattern with `SKILL.md`; the same exact-byte
-binding applies to other text-based control files.
+The live judge demo makes that boundary concrete with a real Azure-hosted Hello
+World agent. Its trusted `SOUL.md` permits only
+`Hello, <optimistic adjective> world!`. A changed soul instead asks for bitter
+adjectives. The comparison lane passes that changed soul to the model and shows
+the bitter response. Under the protected Block policy, Free2PA quarantines the
+changed soul and the model is never called. Under Repair + report, Free2PA
+recovers the hash-verified signed optimistic soul, runs the model with that
+version, and reports the rejected change. A valid soul from outside the local
+group is stopped before inference as well.
 
 Free2PA's signing, verification, trust, repair, and load-gate features are
 model-independent and run without ChatGPT or an OpenAI API. A verifier operator
@@ -233,7 +241,7 @@ review complement one another only when their responsibilities remain clear.
 ## C2PA disclosure
 
 C2PA has a formal conformance program in which conforming Content Credentials
-are verified by conforming verifiers. Free2PA `0.3.3` is C2PA-inspired but is
+are verified by conforming verifiers. Free2PA `0.4.0` is C2PA-inspired but is
 not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
 provenance credentials in a Free2PA format: a signed publisher identity traces
 origin and asset binding reveals edits. It then addresses an adjacent concern
@@ -245,7 +253,7 @@ does not claim C2PA endorsement.
 ## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.3
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4
 - YouTube demo: https://youtu.be/WU8W2mQBA24
@@ -256,13 +264,16 @@ does not claim C2PA endorsement.
 No account, rebuild, API key, or payment is required.
 
 1. Open the live Agentic Factory. Leave **Changed** and **Block** selected and
-   choose **Run file**. Compare the unchecked load with the protected
-   `QUARANTINE` response.
-2. Select **Repair + report** and run the changed file again. Observe the
-   guarded `RESTORE + REPORT` response.
+   choose **Say hello**. The real Azure model in the unchecked lane follows the
+   altered bitter `SOUL.md`. Free2PA returns `CONTENT_CHANGED`, quarantines the
+   file, and skips the protected model call.
+2. Select **Repair + report** and say hello again. Observe the unchecked bitter
+   greeting beside `RESTORE + RUN + REPORT` and a protected optimistic greeting
+   generated from the hash-verified signed soul.
 3. Run **Outside group** and observe that signature and file checks pass while
-   group trust fails with `UNTRUSTED_ISSUER`.
-4. Run **Trusted** and observe that all checks pass and the agent loads it.
+   group trust fails with `UNTRUSTED_ISSUER`; the protected agent does not start.
+4. Run **Trusted** and observe that all checks pass and both model calls produce
+   optimistic greetings.
 5. Open **Research workbench**, use **Demo files** to load the behavioral-risk
    fixture, and inspect GPT-5.6's structured audit and model metadata.
 
@@ -296,11 +307,12 @@ https://github.com/kilroyblockchain/free2pa-devtool
 > Live sandbox: https://free2pa-buildweek.azurewebsites.net
 >
 > No account, API key, payment, rebuild, or credentials are required. On the
-> Agentic Factory, run Changed with Block to compare an unchecked agent load
-> with Free2PA's live CONTENT_CHANGED / REJECT result. Select Repair + report
-> to see guarded recovery. Run Outside group to see a valid signature and
-> unchanged file rejected as UNTRUSTED_ISSUER. Run Trusted to see all four
-> gates pass and the host LOAD the file. Research workbench provides the
+> Agentic Factory, run Changed with Block and say hello. The real Azure model
+> in the unchecked lane follows the altered bitter SOUL.md; Free2PA reports
+> CONTENT_CHANGED, quarantines it, and skips the protected model call. Select
+> Repair + report to see the same model produce an optimistic greeting from the
+> hash-verified signed soul. Outside group rejects a valid, unchanged soul as
+> UNTRUSTED_ISSUER. Trusted passes every gate. Research workbench provides the
 > optional GPT-5.6 behavioral audit configured on this judge deployment.
 
 ### 27950 - Primary Codex session
@@ -312,14 +324,16 @@ https://github.com/kilroyblockchain/free2pa-devtool
 > Platforms: macOS and Linux with Node.js 20+ and OpenSSL on PATH. Clone
 > https://github.com/kilroyblockchain/free2pa-devtool, run `npm install`,
 > `npm link`, and `free2pa --version`. The exact freeware package is also at
-> https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.3.
+> https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0.
 > Run the included trusted and tampered fixtures using the commands at the top
 > of README.md, or run `npm run check` for all 18 tests. Custom Node harnesses
 > import `loadVerifiedFile` from `free2pa/load-gate`; fixed loaders use a
 > fail-closed CLI preflight; MCP-capable frameworks call `verify_asset` and
 > continue only on `LOAD`. Install the Codex implementer with
 > `free2pa codex-skill install`. Core Free2PA requires no LLM account. Optional
-> auditors use the operator's own account or an installed provider module.
+> auditors use the operator's own account or an installed provider module. The
+> included Hello World example uses the operator's own OpenAI or Azure OpenAI
+> account. The full suite currently contains 20 tests.
 
 ## YouTube upload
 

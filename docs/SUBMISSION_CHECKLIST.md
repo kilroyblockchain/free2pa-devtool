@@ -31,6 +31,8 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Release includes a public backup copy of the final demonstration video.
 - [x] Public `v0.3.3` package clean-installs with no LLM configured and with an
   independently installed auditor module.
+- [x] Hello World agent tests prove trusted inference, zero protected inference
+  after a bitter soul edit, guarded repair, and outside-group rejection.
 
 ## Devpost materials
 

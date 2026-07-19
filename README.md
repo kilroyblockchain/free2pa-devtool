@@ -46,6 +46,41 @@ agent framework. The developer adds the verification call at the point where
 the application reads a critical file. The included Codex skill can locate
 that point and wire the check into an existing agent application.
 
+## See it protect a real Hello World agent
+
+The live demo runs the same small Azure-hosted LLM through two application
+lanes. Its signed `SOUL.md` permits only a greeting in the form
+`Hello, <optimistic adjective> world!`.
+
+- With the trusted soul, the protected agent starts and returns an optimistic
+  greeting.
+- After the soul is changed to require a bitter adjective, the unprotected
+  agent follows it. Free2PA detects that the bytes no longer match the signed
+  receipt and does not call the model under the default Block policy.
+- Under Repair + report, Free2PA recovers the hash-verified original from the
+  valid receipt, runs the agent with that optimistic soul, and reports the
+  rejected change.
+- A valid soul signed by a publisher outside the demo's temporary trust group
+  is rejected before the model is called.
+
+The changed file is evidence of a change, not evidence of a particular cause.
+It could result from an attack, an engineer's mistake, or an agent rewriting
+its own Nerve Center after a misunderstanding. Free2PA does not guess. It
+answers whether this exact file still has provenance the local group accepts.
+
+Try it without an account at
+<https://free2pa-buildweek.azurewebsites.net>. The repository example uses the
+operator's own OpenAI or Azure OpenAI account:
+
+```bash
+npm run demo:hello -- trusted
+npm run demo:hello -- changed
+npm run demo:hello -- changed repair
+```
+
+The cryptographic Free2PA toolkit still requires no LLM. The model is part of
+this example application, not part of the trust decision.
+
 ## How do I set it up?
 
 ### Fastest path: let Codex implement it
@@ -425,7 +460,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.3.3
+      - uses: kilroyblockchain/free2pa-devtool@v0.4.0
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -477,7 +512,7 @@ X.509 certificates belong in a verifier's trust store.
 C2PA has a formal conformance program. Conforming Content Credentials are
 verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.3.3` is **C2PA-inspired, not a conforming C2PA implementation**. It
+Free2PA `0.4.0` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
 conforming C2PA products. A signed publisher identity traces origin, while

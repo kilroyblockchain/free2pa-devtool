@@ -9,6 +9,7 @@ import certsRouter  from './routes/certs.js';
 import skillsRouter from './routes/skills.js';
 import mcpRouter    from './routes/mcp.js';
 import auditRouter  from './routes/audit.js';
+import helloAgentRouter from './routes/helloAgent.js';
 import { getAuditConfiguration } from './services/auditor.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,6 +35,7 @@ export async function createServer() {
   app.use(applySecurityHeaders);
   app.use(express.json({ limit: '2mb' }));
   app.get('/test.html', rejectLegacyTestClient);
+  app.get('/favicon.ico', (_req, res) => res.redirect(307, '/free2pa-mark.svg'));
   app.use(express.static(resolve(__dirname, '..', 'public')));
   app.use(['/api', '/mcp', '/health'], (_req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
@@ -58,6 +60,7 @@ export async function createServer() {
   app.use('/api', certsRouter);
   app.use('/api', skillsRouter);
   app.use('/api', auditRouter);
+  app.use('/api', helloAgentRouter);
   app.use('/',    mcpRouter);
 
   app.get('/health', (_req, res) => res.json({ status: 'ok', app: 'Free2PA', version: config.appVersion }));

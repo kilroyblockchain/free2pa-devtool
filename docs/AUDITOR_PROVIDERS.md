@@ -4,6 +4,10 @@ Free2PA's signing, verification, local publisher trust, repair, CLI, MCP, and
 load-gate features do not require an LLM. Behavioral auditing is an optional
 second layer configured by the verifier operator with their own account.
 
+The bundled Hello World agent also uses the direct OpenAI or Azure OpenAI
+settings below. It is an example application protected by Free2PA, not part of
+the cryptographic gate. Custom auditor modules apply only to behavioral audit.
+
 ## Bring an OpenAI account
 
 ```bash

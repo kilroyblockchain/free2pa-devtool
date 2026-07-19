@@ -332,6 +332,11 @@ The full project narrative and judge instructions live in
 - [x] Set title, description, audience, custom thumbnail, and public visibility.
 - [x] Wait for HD processing, check the processed audio, and confirm 1080p availability.
 - [x] Add the YouTube URL to the Devpost project.
+- [x] Design, render, and independently inspect fifteen 3:2 submission images.
+- [x] Publish the exact gallery set, contact sheet, refined logo, and checksums
+  on the public v0.3.1 release.
+- [x] Replace the Devpost gallery thumbnail with the refined identity frame.
+- [ ] Attach the fifteen images to the Devpost project in their documented order.
 - [ ] Populate every Devpost custom answer and save the complete draft.
 
 ### July 19: submit with buffer

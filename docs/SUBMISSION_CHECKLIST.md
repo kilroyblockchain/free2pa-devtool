@@ -41,6 +41,11 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Live demo URL is entered in the Devpost draft.
 - [x] Installation, supported-platform, and judge-testing instructions are written.
 - [x] README contains the required Codex collaboration narrative.
+- [x] Fifteen 3:2 gallery images are generated, visually audited, and preserved
+  on the public v0.3.1 release.
+- [x] Refined Free2PA identity frame is uploaded as the Devpost thumbnail.
+- [ ] Fifteen gallery images are attached to the Devpost project in the order
+  recorded in `docs/COLLATERAL.md`.
 - [ ] `/feedback` Codex Session ID for the primary build thread is entered.
 - [ ] Submission is finalized before July 21 at 5:00 PM Pacific Time.
 

@@ -1,5 +1,22 @@
 # Integration Patterns
 
+## Choose from discovered facts
+
+- **Custom Node harness:** import `loadVerifiedFile` from
+  `free2pa/load-gate` inside the existing loader. This is the narrowest direct
+  integration.
+- **OpenClaw or another harness with a fixed loader:** inspect its installed
+  version and startup configuration. Use a supported pre-load hook when one is
+  present; otherwise use a fail-closed CLI preflight wrapper around the actual
+  start command.
+- **Framework with MCP support:** run `free2pa serve` and call `verify_asset`
+  from the framework's deterministic file-load hook.
+- **Non-Node custom harness:** call the CLI as a child process or use the MCP
+  contract. Do not port the cryptographic implementation as part of setup.
+
+Never let a product label choose the route. Record the entry point, the exact
+read operation, and the supported extension points first.
+
 ## Load-gate contract
 
 Apply this order to every protected Nerve Center file:

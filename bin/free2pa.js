@@ -16,7 +16,7 @@ import { config } from '../src/config.js';
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 
-const VERSION = '0.3.1';
+const VERSION = '0.3.2';
 const SIDECAR_SUFFIX = '.c2pa.json';
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -388,7 +388,7 @@ async function main() {
   const [command, ...rest] = process.argv.slice(2);
   const { positional, options } = parseArguments(rest);
 
-  if (!command || command === 'help' || options.help) {
+  if (!command || command === 'help' || command === '--help' || options.help) {
     console.log(usage());
     return 0;
   }

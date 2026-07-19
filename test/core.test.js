@@ -26,6 +26,11 @@ import { buildMcpServer } from '../src/routes/mcp.js';
 import { applySecurityHeaders, rejectLegacyTestClient } from '../src/server.js';
 import { consumeAuditAllowance } from '../src/services/auditLimit.js';
 import { config } from '../src/config.js';
+import {
+  Free2PALoadError,
+  loadVerifiedFile,
+  verifyFileForLoad,
+} from '../src/loadGate.js';
 
 const execFileP = promisify(execFile);
 
@@ -33,6 +38,45 @@ test('CLI version matches package metadata', async () => {
   const packageMetadata = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
   const { stdout } = await execFileP(process.execPath, [resolve('bin/free2pa.js'), '--version']);
   assert.equal(stdout.trim(), packageMetadata.version);
+});
+
+test('CLI help works as the first-run discovery command', async () => {
+  const packageMetadata = JSON.parse(await readFile(resolve('package.json'), 'utf8'));
+  const { stdout } = await execFileP(process.execPath, [resolve('bin/free2pa.js'), '--help']);
+  assert.match(stdout, new RegExp(`^Free2PA ${packageMetadata.version.replaceAll('.', '\\.')}\\b`));
+  assert.match(stdout, /free2pa codex-skill install/);
+  assert.match(stdout, /free2pa serve/);
+});
+
+test('load gate returns only trusted content and throws on changed content', async () => {
+  const trusted = await verifyFileForLoad({
+    assetPath: 'public/demo/trusted/SKILL.md',
+    trustStore: 'demo_certs',
+  });
+  assert.equal(trusted.decision, 'LOAD');
+  assert.equal(trusted.reasonCode, 'VERIFIED');
+
+  const content = await loadVerifiedFile({
+    assetPath: 'public/demo/trusted/SKILL.md',
+    trustStore: 'demo_certs',
+  });
+  assert.match(content, /^# /);
+
+  await assert.rejects(
+    loadVerifiedFile({
+      assetPath: 'public/demo/tampered/SKILL.md',
+      trustStore: 'demo_certs',
+    }),
+    (error) => error instanceof Free2PALoadError && error.code === 'CONTENT_CHANGED',
+  );
+
+  const missing = await verifyFileForLoad({
+    assetPath: 'public/demo/malicious/SKILL.md',
+    trustStore: 'demo_certs',
+  });
+  assert.equal(missing.decision, 'REJECT');
+  assert.equal(missing.reasonCode, 'SIDECAR_MISSING');
+  assert.equal(missing.content, undefined);
 });
 
 test('canonicalJson sorts nested object keys deterministically', () => {

@@ -279,8 +279,8 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Automated suite | Passing | 14 tests, including generic MCP trusted, changed, and outside-group cases. |
 | MCP HTTP transport | Passing locally | Live Streamable HTTP client returns `LOAD`, `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` as expected. |
 | Public CI | Green on exact MCP release commit | GitHub Actions run `29652472565` verifies public commit `23a0d93`. |
-| Azure demo | Healthy on `0.3.1` | Production MCP returns trusted `LOAD`, changed `CONTENT_CHANGED`, and outsider `UNTRUSTED_ISSUER`. |
-| Freeware release | Public `v0.3.1` | Package, checksums, images, logo, and backup video are attached to the green commit. |
+| Azure demo | Healthy on `0.3.2` | Production MCP returns trusted `LOAD`, changed `CONTENT_CHANGED`, and outsider `UNTRUSTED_ISSUER`. |
+| Freeware release | Public `v0.3.2` | Package, load-gate API, fact-gathering Codex skill, and implementation runbook are attached to the green commit. |
 | Final video file | Complete | `artifacts/Free2PA-Build-Week-final.mp4`. |
 | Devpost registration | Complete | Authenticated account is already registered for OpenAI Build Week. |
 | Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, and public video uploaded. |
@@ -291,7 +291,7 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 
 - Live Agentic Factory: <https://free2pa-buildweek.azurewebsites.net>
 - Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
-- Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.1>
+- Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.2>
 - Devpost project: <https://devpost.com/software/free2pa>
 - Public YouTube video: <https://youtu.be/WU8W2mQBA24>
 - Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4>

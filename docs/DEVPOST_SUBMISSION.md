@@ -207,7 +207,7 @@ review complement one another only when their responsibilities remain clear.
 ## C2PA disclosure
 
 C2PA has a formal conformance program in which conforming Content Credentials
-are verified by conforming verifiers. Free2PA `0.3.1` is C2PA-inspired but is
+are verified by conforming verifiers. Free2PA `0.3.2` is C2PA-inspired but is
 not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
 provenance credentials in a Free2PA format: a signed publisher identity traces
 origin and asset binding reveals edits. It then addresses an adjacent concern
@@ -219,7 +219,7 @@ does not claim C2PA endorsement.
 ## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.1
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.2
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4
 - YouTube demo: https://youtu.be/WU8W2mQBA24

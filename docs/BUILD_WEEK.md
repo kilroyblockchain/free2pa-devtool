@@ -120,6 +120,12 @@ Delivered additions:
   passed. The exact package clean-installed, the dependency audit reported no
   known vulnerabilities, and production Azure MCP testing returned `LOAD`,
   `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` for the three judge fixtures.
+- Implemented `v0.3.2` as the download-to-done release: the README now begins
+  with runnable Codex and manual setup paths, the Codex skill fact-gathers the
+  target harness before editing, and the new `free2pa/load-gate` API returns
+  verified content or throws before an agent can consume it. A complete
+  implementation runbook records the tools, artifacts, owner decisions, and
+  completion criteria for custom harness, fixed-loader, and MCP integrations.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

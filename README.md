@@ -12,6 +12,192 @@ tamper-evident inside an ad-hoc trust group. A class, project team, short-term
 collaboration, or agent operator runs its own verifier and chooses whose files
 that particular group will accept.
 
+## What does Free2PA do?
+
+Free2PA is a **load gate for agent control files**. You put it between the
+files that steer an agent and the code that loads those files.
+
+For example, suppose your application loads `SOUL.md`, `SKILL.md`, or a tool
+configuration into an agent. Free2PA gives your application one decision
+before it does that:
+
+```text
+control file + signed sidecar + this group's public certificates
+                              |
+                              v
+                  PASS / LOAD or FAIL / REJECT
+```
+
+The workflow is:
+
+1. A publisher signs a control file. Free2PA writes a neighboring
+   `.c2pa.json` sidecar containing its signed provenance receipt.
+2. The group operator places that publisher's **public certificate** in the
+   verifier's trust directory.
+3. Before an agent loads the file, the host calls Free2PA through the CLI, MCP,
+   or HTTP API.
+4. Free2PA checks the signature, the exact file bytes, certificate dates, and
+   membership in this verifier's local trust group.
+5. The host loads only a `PASS` result. On `FAIL`, it can stop, repair from the
+   signed original, alert and continue, or log according to its own policy.
+
+Free2PA does not monitor a folder in the background and it does not alter the
+agent framework. The developer adds the verification call at the point where
+the application reads a critical file. The included Codex skill can locate
+that point and wire the check into an existing agent application.
+
+## How do I set it up?
+
+### Fastest path: let Codex implement it
+
+Install the toolkit and its implementation skill:
+
+```bash
+git clone https://github.com/kilroyblockchain/free2pa-devtool.git
+cd free2pa-devtool
+npm install
+npm link
+free2pa codex-skill install
+```
+
+Then open the agent application's repository in Codex and ask:
+
+```text
+Use $free2pa-protect-agent. First fact-gather this application's entry point,
+Nerve Center files, and load boundaries. Show me the Free2PA fact sheet. Then
+implement a fail-closed Free2PA gate using .free2pa/trusted-publishers, and
+prove trusted, changed, and outside-group behavior.
+```
+
+Codex first reports what it found. After the publisher list and failure policy
+are established, it installs the pinned release, creates the project layout,
+wires the gate into the real loader or startup path, and adds the three boundary
+tests. It must not guess who belongs to the trust group or silently sign edits.
+
+See [Implementation runbook](docs/IMPLEMENTATION_RUNBOOK.md) for the exact
+download-to-done workflow and completion criteria.
+
+### Manual path
+
+This example protects an existing `SOUL.md`. Substitute the path to any text
+file your agent loads.
+
+**1. Install Free2PA**
+
+Prerequisites: macOS or Linux, Node.js 20 or newer, and OpenSSL on `PATH`.
+
+```bash
+git clone https://github.com/kilroyblockchain/free2pa-devtool.git
+cd free2pa-devtool
+npm install
+npm link
+free2pa --version
+```
+
+Before configuring anything, run the included examples to see the contract:
+
+```bash
+# Unchanged file from a publisher in this demo's trust group: exits 0
+free2pa verify public/demo/trusted/SKILL.md --trust-store demo_certs
+
+# File changed after signing: exits nonzero and reports CONTENT_CHANGED
+free2pa verify public/demo/tampered/SKILL.md --trust-store demo_certs
+```
+
+The first command prints `PASS`; the second prints `FAIL`. That same exit-code
+decision is what an agent startup hook or file loader consumes programmatically.
+
+**2. Create a publisher identity**
+
+The private key signs files. Keep it private. The public certificate is what
+you give to groups that should trust your files.
+
+```bash
+free2pa keygen \
+  --name "My Project Publisher" \
+  --id my-project \
+  --days 30 \
+  --out-dir .free2pa
+```
+
+**3. Admit that publisher to this project's trust group**
+
+```bash
+free2pa trust add .free2pa/my-project.crt \
+  --store .free2pa/trusted-publishers \
+  --id my-project
+```
+
+Each developer or deployment controls its own `trusted-publishers` directory.
+To trust a teammate, add their public `.crt` file to the same directory. Never
+add their private key.
+
+**4. Sign the file**
+
+```bash
+free2pa sign ./path/to/SOUL.md \
+  --cert .free2pa/my-project.crt \
+  --key .free2pa/my-project.key \
+  --purpose "Agent identity and behavior instructions"
+```
+
+This creates `./path/to/SOUL.md.c2pa.json` beside the file. Commit the control
+file and sidecar. Do not commit `.free2pa/my-project.key`.
+
+**5. Gate the agent's load operation**
+
+Run this immediately before the application reads `SOUL.md`:
+
+```bash
+free2pa verify ./path/to/SOUL.md \
+  --trust-store .free2pa/trusted-publishers \
+  --json
+```
+
+Exit code `0` means the host may load the file. A nonzero exit means it must
+apply its failure policy. The JSON result explains whether the signature,
+file-integrity, certificate, or group-trust check failed.
+
+For an agent-native integration, launch the local verifier:
+
+```bash
+free2pa serve \
+  --trust-store .free2pa/trusted-publishers \
+  --skills ./path/to \
+  --port 4001
+```
+
+The application can now call the `verify_asset` MCP tool at
+`http://127.0.0.1:4001/mcp` with the exact file and sidecar bytes. Consume its
+structured `decision`: load on `LOAD`; apply the configured failure policy on
+`REJECT`.
+
+### Which integration tool should I use?
+
+| Application shape | Free2PA tool | Where it runs |
+|---|---|---|
+| Custom Node harness | `loadVerifiedFile()` from `free2pa/load-gate` | In the loader, immediately before content enters model context |
+| OpenClaw or another harness with a controllable start command | `free2pa verify` or `free2pa scan` | In a fail-closed preflight wrapper before the harness starts |
+| Framework with an MCP client or shared verifier | `free2pa serve` plus `verify_asset` | At each protected file-load boundary; continue only on `LOAD` |
+| Pull requests and releases | Free2PA GitHub Action | In CI, before changed agent controls can merge |
+| Behavioral review of skill instructions | `free2pa audit` with GPT-5.6 | After provenance verification; never as a replacement for it |
+
+For a custom Node loader, the gate is one import:
+
+```js
+import { loadVerifiedFile } from 'free2pa/load-gate';
+
+const systemInstructions = await loadVerifiedFile({
+  assetPath: 'agent/SOUL.md',
+  trustStore: '.free2pa/trusted-publishers',
+});
+
+startAgent({ systemInstructions });
+```
+
+`loadVerifiedFile` returns the content only when every check passes. Otherwise
+it throws `Free2PALoadError` before the harness receives the untrusted text.
+
 Karen Kilroy, co-chair of the C2PA AI/ML Task Force, conceived the original research
 demo in response to a practical need: college students collaborating on
 OpenClaw agentic nerve centers needed temporary, ad-hoc publisher trust groups.
@@ -110,51 +296,11 @@ Anyone outside the configured group fails the trust check. The same signed
 skill may pass one group's verifier and fail another's. That is intentional:
 the verifier, not a universal authority, defines the trust boundary.
 
-## Quick start
+## CLI reference
 
-Supported platforms and prerequisites:
-
-- macOS or Linux (verified on macOS and GitHub-hosted Ubuntu)
-- Node.js 20 or newer
-- OpenSSL on `PATH`
-
-```bash
-git clone https://github.com/kilroyblockchain/free2pa-devtool.git
-cd free2pa-devtool
-npm ci
-npm link
-free2pa --version
-```
-
-Install the included Codex integration skill with one command:
-
-```bash
-free2pa codex-skill install
-```
-
-Then ask Codex: `Make this agent application tamper-evident for our project
-trust group.` Codex maps the application's Nerve Center, wires programmatic
-verification into its load boundary, and tests trusted, changed, and
-outside-group files. The developer still approves publishers and signing.
-
-Create a short-lived publisher identity:
-
-```bash
-free2pa keygen \
-  --name "Karen Kilroy - Build Week" \
-  --id karen-build-week \
-  --days 7 \
-  --out-dir .free2pa
-```
-
-Sign a skill:
-
-```bash
-free2pa sign ./skills/weather/SKILL.md \
-  --cert .free2pa/karen-build-week.crt \
-  --key .free2pa/karen-build-week.key \
-  --purpose "Retrieve weather without accessing secrets"
-```
+Run `free2pa --help` to see the complete command surface. The setup workflow
+above uses `keygen`, `trust add`, `sign`, and `verify`; the remaining sections
+show shared verifiers, audits, scanning, CI, MCP, and HTTP integration.
 
 ## Launch an ad-hoc verifier
 
@@ -264,7 +410,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.3.1
+      - uses: kilroyblockchain/free2pa-devtool@v0.3.2
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -316,7 +462,7 @@ X.509 certificates belong in a verifier's trust store.
 C2PA has a formal conformance program. Conforming Content Credentials are
 verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.3.1` is **C2PA-inspired, not a conforming C2PA implementation**. It
+Free2PA `0.3.2` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
 conforming C2PA products. A signed publisher identity traces origin, while

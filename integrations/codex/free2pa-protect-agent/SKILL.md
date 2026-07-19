@@ -11,7 +11,41 @@ and the project's own trust group before the application loads it.
 
 ## Workflow
 
-### 1. Find the Nerve Center
+### 1. Fact-gather before changing anything
+
+Inspect the repository and establish how the application actually works before
+installing packages, generating identities, signing files, or editing startup
+code. Do not infer an architecture from product names alone.
+
+Gather and report these facts with file-path evidence:
+
+- supported platforms, language, package manager, and actual start commands;
+- agent entry points and the code paths that read instructions or configuration;
+- local files that affect model instructions, tools, permissions, identity,
+  memory, policy, or startup behavior;
+- existing validation, signing, secret storage, CI, and failure handling;
+- deployment topology and whether verification should be local, shared, CLI,
+  HTTP, or MCP-based;
+- current test commands and the repository's working-tree state; and
+- any existing Free2PA files, sidecars, certificates, or trust directories.
+
+Start the user-facing response with a short **Free2PA fact sheet** containing:
+
+```text
+Agent entry point:
+Candidate Nerve Center files:
+Current load boundary:
+Existing security checks:
+Likely integration surface:
+Unknowns requiring an owner decision:
+```
+
+Separate observed facts from recommendations. If a required fact cannot be
+discovered, ask only for the missing owner decision. Typical owner decisions
+are who may publish, which files are in scope, and whether failure should block,
+repair, alert and continue, or only log. Never create trust policy by guessing.
+
+### 2. Find the Nerve Center
 
 Inspect the application before editing. Identify every local file that can
 change model instructions, tool availability, permissions, identity, memory,
@@ -25,19 +59,19 @@ or startup behavior. Typical examples include:
 Call this collection the project's **Nerve Center** in user-facing output. Do
 not claim that every application uses these exact filenames.
 
-### 2. Define the ad-hoc group
+### 3. Define the ad-hoc group
 
 Ask who is allowed to publish Nerve Center files if the repository does not
 make that clear. Keep trust local to this project. Never admit a certificate or
 sign unexplained file changes merely to make verification pass.
 
-### 3. Install the pinned Free2PA release
+### 4. Install the pinned Free2PA release
 
 For a Node project, install the freeware release as a development dependency:
 
 ```bash
 npm install --save-dev \
-  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/free2pa-0.3.1.tgz
+  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.2/free2pa-0.3.2.tgz
 ```
 
 Verify the archive against the `SHA256SUMS` asset on the same GitHub release
@@ -45,7 +79,7 @@ when the environment supports it.
 For non-Node applications, run the CLI as a build or startup prerequisite
 instead of rewriting its cryptography.
 
-### 4. Add a programmatic load gate
+### 5. Add a programmatic load gate
 
 Create a project-local trust directory and a manifest listing protected files.
 Wire verification immediately before the application reads those files. Make
@@ -58,7 +92,7 @@ Read [integration-patterns.md](references/integration-patterns.md) for the
 language-neutral contract and Node bootstrap example. Adapt it to the existing
 framework instead of replacing the application's loader architecture.
 
-### 5. Sign reviewed files
+### 6. Sign reviewed files
 
 Generate or use an approved publisher identity. Keep the private key outside
 version control. Share only the public certificate. Sign each reviewed Nerve
@@ -73,7 +107,7 @@ content embedded in the receipt only after signature, certificate validity,
 and local group trust pass. Preserve the rejected file as evidence. Never use
 repair to admit an outside publisher or bless the changed bytes.
 
-### 6. Prove the boundary
+### 7. Prove the boundary
 
 Add automated tests for all three cases:
 
@@ -89,7 +123,7 @@ For a remote or shared verifier, call the MCP `verify_asset` tool with the
 exact file contents and neighboring sidecar. Continue only when its structured
 `decision` is `LOAD`; treat a missing or malformed response as failure.
 
-### 7. Report in plain language
+### 8. Report in plain language
 
 Tell the developer:
 

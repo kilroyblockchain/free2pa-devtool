@@ -17,7 +17,7 @@ import { canonicalJson } from '../utils/canonical.js';
  * @param {string} opts.sidecarText  Raw text of the .c2pa.json sidecar
  * @param {string} opts.trustProfile 'dev' | 'org' | 'public'
  */
-export async function verifySkill({ content, sidecarText, trustProfile = 'dev', certPath }) {
+export async function verifySkill({ content, sidecarText, trustProfile = 'dev', certPath, trustStoreDir }) {
   // ── Parse sidecar ────────────────────────────────────────────────────────
   let sidecar;
   try {
@@ -71,7 +71,7 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev', 
   }
 
   // ── 3. Trust profile ─────────────────────────────────────────────────────
-  let trust = await checkTrust(signature.cert_pem, trustProfile, certPath);
+  let trust = await checkTrust(signature.cert_pem, trustProfile, certPath, trustStoreDir);
   if (!certificate.valid) {
     trust = {
       profile: trustProfile,
@@ -94,7 +94,7 @@ export async function verifySkill({ content, sidecarText, trustProfile = 'dev', 
   };
 }
 
-async function checkTrust(certPem, profile, certPathOverride) {
+async function checkTrust(certPem, profile, certPathOverride, trustStoreDir) {
   if (profile === 'dev') {
     // ── Specific cert selected: strict match against that cert only ──────────
     if (certPathOverride) {
@@ -119,12 +119,13 @@ async function checkTrust(certPem, profile, certPathOverride) {
     // ── No cert selected: check against every cert in the trust store ────────
     // Trusted if the sidecar cert matches ANY cert this server knows about.
     try {
-      const files = await readdir(config.certsDir);
+      const directory = trustStoreDir ? resolve(trustStoreDir) : config.certsDir;
+      const files = await readdir(directory);
       const crtFiles = files.filter(f => f.endsWith('.crt'));
 
       for (const file of crtFiles) {
         try {
-          const stored = await readFile(resolve(config.certsDir, file), 'utf-8');
+          const stored = await readFile(resolve(directory, file), 'utf-8');
           if (certPem.trim() === stored.trim()) {
             const certId = basename(file, '.crt');
             return {

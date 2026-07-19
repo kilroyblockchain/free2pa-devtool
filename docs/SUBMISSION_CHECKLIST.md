@@ -29,6 +29,8 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Testing instructions require no rebuild and no paid account.
 - [x] Repository is public with an Apache-2.0 license.
 - [x] Release includes a public backup copy of the final demonstration video.
+- [x] Public `v0.3.3` package clean-installs with no LLM configured and with an
+  independently installed auditor module.
 
 ## Devpost materials
 
@@ -40,6 +42,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Repository URL is entered in the Devpost draft.
 - [x] Live demo URL is entered in the Devpost draft.
 - [x] Installation, supported-platform, and judge-testing instructions are written.
+- [x] Exact answers for all seven live Devpost custom fields are prepared.
 - [x] README contains the required Codex collaboration narrative.
 - [x] Fifteen 3:2 gallery images are generated, visually audited, and preserved
   on the public v0.3.1 release.

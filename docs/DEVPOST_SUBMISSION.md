@@ -269,6 +269,58 @@ No account, rebuild, API key, or payment is required.
 Supported installation platforms are macOS and Linux with Node.js 20 or newer
 and OpenSSL. Full install and CLI instructions are in `docs/JUDGE_GUIDE.md`.
 
+## Devpost custom answers
+
+These IDs match the live OpenAI Build Week submission form fetched on July 19,
+2026. The first two answers require Karen's explicit legal confirmation before
+submission.
+
+### 27945 - Submitter Type
+
+`Individual` - pending Karen's confirmation.
+
+### 27946 - Country of Residence
+
+`United States` - pending Karen's confirmation.
+
+### 27947 - Category
+
+`Developer Tools`
+
+### 27948 - Code repository
+
+https://github.com/kilroyblockchain/free2pa-devtool
+
+### 27949 - Judge sandbox and instructions
+
+> Live sandbox: https://free2pa-buildweek.azurewebsites.net
+>
+> No account, API key, payment, rebuild, or credentials are required. On the
+> Agentic Factory, run Changed with Block to compare an unchecked agent load
+> with Free2PA's live CONTENT_CHANGED / REJECT result. Select Repair + report
+> to see guarded recovery. Run Outside group to see a valid signature and
+> unchanged file rejected as UNTRUSTED_ISSUER. Run Trusted to see all four
+> gates pass and the host LOAD the file. Research workbench provides the
+> optional GPT-5.6 behavioral audit configured on this judge deployment.
+
+### 27950 - Primary Codex session
+
+`019f72ea-75e0-7670-8c90-48602c610d24`
+
+### 27951 - Developer-tool installation and testing
+
+> Platforms: macOS and Linux with Node.js 20+ and OpenSSL on PATH. Clone
+> https://github.com/kilroyblockchain/free2pa-devtool, run `npm install`,
+> `npm link`, and `free2pa --version`. The exact freeware package is also at
+> https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.3.
+> Run the included trusted and tampered fixtures using the commands at the top
+> of README.md, or run `npm run check` for all 18 tests. Custom Node harnesses
+> import `loadVerifiedFile` from `free2pa/load-gate`; fixed loaders use a
+> fail-closed CLI preflight; MCP-capable frameworks call `verify_asset` and
+> continue only on `LOAD`. Install the Codex implementer with
+> `free2pa codex-skill install`. Core Free2PA requires no LLM account. Optional
+> auditors use the operator's own account or an installed provider module.
+
 ## YouTube upload
 
 Title:

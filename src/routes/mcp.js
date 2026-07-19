@@ -165,7 +165,7 @@ export function buildMcpServer(clientId = 'mcp') {
 
   server.tool(
     'audit_skill',
-    'Use GPT-5.6 to review a bundled skill for prompt injection, secret access, data exfiltration, destructive actions, and excessive permissions. This behavioral assessment is independent of cryptographic verification.',
+    'Use the operator-configured optional LLM auditor to review a bundled skill for prompt injection, secret access, data exfiltration, destructive actions, and excessive permissions. This behavioral assessment is independent of cryptographic verification.',
     { name: z.string().describe('Skill folder name in the configured skills directory') },
     async ({ name }) => {
       if (!isValidName(name)) {
@@ -175,7 +175,7 @@ export function buildMcpServer(clientId = 'mcp') {
         const content = await readFile(resolve(config.skillsDir, name, 'SKILL.md'), 'utf8');
         if (!consumeAuditAllowance(clientId)) {
           return {
-            content: [{ type: 'text', text: 'Error: Hourly GPT audit limit reached.' }],
+            content: [{ type: 'text', text: 'Error: Hourly LLM audit limit reached.' }],
             isError: true,
           };
         }

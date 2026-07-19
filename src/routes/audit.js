@@ -14,7 +14,7 @@ router.post('/audit', upload.single('file'), async (req, res) => {
   }
   if (!consumeAuditAllowance(req.ip)) {
     await unlink(req.file.path).catch(() => {});
-    return res.status(429).json({ success: false, error: 'Hourly GPT audit limit reached for this client.' });
+    return res.status(429).json({ success: false, error: 'Hourly LLM audit limit reached for this client.' });
   }
 
   try {
@@ -23,8 +23,10 @@ router.post('/audit', upload.single('file'), async (req, res) => {
       content,
       filename: req.file.originalname,
       model: config.readOnly
-        ? process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL
-        : req.body.model || process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
+        ? process.env.FREE2PA_AUDITOR_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT ||
+          process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL
+        : req.body.model || process.env.FREE2PA_AUDITOR_MODEL ||
+          process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
     });
     res.json({ success: true, report });
   } catch (error) {

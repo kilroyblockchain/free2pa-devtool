@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { resolve } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 export const DEFAULT_AUDIT_MODEL = 'gpt-5.6';
 const AZURE_TOKEN_RESOURCE = 'https://cognitiveservices.azure.com/';
@@ -56,6 +58,14 @@ function configurationError(message) {
 }
 
 export function getAuditConfiguration(environment = process.env) {
+  if (environment.FREE2PA_AUDITOR_MODULE) {
+    return {
+      configured: true,
+      provider: 'installed-module',
+      module: environment.FREE2PA_AUDITOR_MODULE,
+      model: environment.FREE2PA_AUDITOR_MODEL || environment.OPENAI_MODEL || null,
+    };
+  }
   const azureEndpoint = environment.AZURE_OPENAI_ENDPOINT;
   if (azureEndpoint) {
     const usesApiKey = Boolean(environment.AZURE_OPENAI_API_KEY);
@@ -66,10 +76,11 @@ export function getAuditConfiguration(environment = process.env) {
       model: environment.AZURE_OPENAI_DEPLOYMENT || environment.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
     };
   }
+  const configured = Boolean(environment.OPENAI_API_KEY);
   return {
-    configured: Boolean(environment.OPENAI_API_KEY),
-    provider: 'openai-api-key',
-    model: environment.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
+    configured,
+    provider: configured ? 'openai-api-key' : 'none',
+    model: configured ? environment.OPENAI_MODEL || DEFAULT_AUDIT_MODEL : null,
   };
 }
 
@@ -110,7 +121,66 @@ export async function getManagedIdentityAccessToken({
   return payload.access_token;
 }
 
-export async function auditSkill({
+function validateProviderReport(report) {
+  const risks = new Set(['critical', 'high', 'medium', 'low']);
+  if (!report || typeof report !== 'object' || Array.isArray(report)) {
+    throw new Error('The installed auditor returned no structured report.');
+  }
+  if (!risks.has(report.overall_risk)) {
+    throw new Error('The installed auditor returned an invalid overall_risk.');
+  }
+  if (typeof report.summary !== 'string' || !Array.isArray(report.findings) ||
+      !Array.isArray(report.recommendations)) {
+    throw new Error('The installed auditor report does not match the Free2PA audit contract.');
+  }
+  return report;
+}
+
+async function auditWithInstalledProvider({ content, filename, model, providerModule }) {
+  const specifier = providerModule.startsWith('.') || providerModule.startsWith('/')
+    ? pathToFileURL(resolve(providerModule)).href
+    : providerModule;
+  let installed;
+  try {
+    installed = await import(specifier);
+  } catch (error) {
+    throw configurationError(`Could not load auditor module ${providerModule}: ${error.message}`);
+  }
+  const runAudit = installed.auditSkill || installed.default;
+  if (typeof runAudit !== 'function') {
+    throw configurationError(`Auditor module ${providerModule} must export auditSkill() or a default function.`);
+  }
+  const report = validateProviderReport(await runAudit({ content, filename, model }));
+  return {
+    ...report,
+    metadata: {
+      ...report.metadata,
+      provider: report.metadata?.provider || `module:${providerModule}`,
+      model: report.metadata?.model || model || null,
+      audited_at: new Date().toISOString(),
+      asset_sha256: createHash('sha256').update(content, 'utf8').digest('hex'),
+      filename,
+    },
+  };
+}
+
+export async function auditSkill(options = {}) {
+  const {
+    content,
+    filename = 'SKILL.md',
+    model = process.env.FREE2PA_AUDITOR_MODEL || process.env.AZURE_OPENAI_DEPLOYMENT ||
+      process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
+    providerModule = process.env.FREE2PA_AUDITOR_MODULE,
+  } = options;
+  if (typeof content !== 'string' || !content.trim()) throw new Error('The skill file is empty.');
+  if (Buffer.byteLength(content, 'utf8') > 64 * 1024) throw new Error('Skill files larger than 64 KiB cannot be audited.');
+  if (providerModule) {
+    return auditWithInstalledProvider({ content, filename, model, providerModule });
+  }
+  return auditWithOpenAI({ ...options, content, filename, model });
+}
+
+async function auditWithOpenAI({
   content,
   filename = 'SKILL.md',
   apiKey = process.env.OPENAI_API_KEY,
@@ -121,9 +191,6 @@ export async function auditSkill({
   tokenProvider = getManagedIdentityAccessToken,
   fetchImpl = globalThis.fetch,
 } = {}) {
-  if (typeof content !== 'string' || !content.trim()) throw new Error('The skill file is empty.');
-  if (Buffer.byteLength(content, 'utf8') > 64 * 1024) throw new Error('Skill files larger than 64 KiB cannot be audited.');
-
   const requestHeaders = { 'Content-Type': 'application/json' };
   let requestBaseUrl = baseUrl || process.env.OPENAI_BASE_URL;
   if (azureEndpoint) {

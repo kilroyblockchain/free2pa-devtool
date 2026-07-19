@@ -5,7 +5,7 @@ import { homedir } from 'node:os';
 import { basename, dirname, extname, resolve } from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
-import { auditSkill, DEFAULT_AUDIT_MODEL } from '../src/services/auditor.js';
+import { auditSkill, DEFAULT_AUDIT_MODEL, getAuditConfiguration } from '../src/services/auditor.js';
 import {
   addTrustedCertificate,
   generateSigningCertificate,
@@ -16,7 +16,7 @@ import { config } from '../src/config.js';
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 
-const VERSION = '0.3.2';
+const VERSION = '0.3.3';
 const SIDECAR_SUFFIX = '.c2pa.json';
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -30,6 +30,7 @@ Usage:
   free2pa repair <FILE> [--sidecar FILE] [--trust-store DIR] [--backup FILE] [--no-backup]
   free2pa scan [DIR] [--trust-store DIR] [--json]
   free2pa audit <SKILL.md> [--model MODEL] [--out FILE] [--json]
+  free2pa auditor status [--json]
   free2pa codex-skill install [--target DIR] [--force]
   free2pa trust add <CERT.crt> [--store DIR] [--id ID]
   free2pa trust list [--store DIR] [--json]
@@ -48,7 +49,9 @@ Sign metadata:
 
 Environment defaults:
   FREE2PA_CERT          Signing or trust certificate path
-  FREE2PA_KEY           Signing private-key path`;
+  FREE2PA_KEY           Signing private-key path
+  FREE2PA_AUDITOR_MODULE  Optional installed LLM auditor module
+  FREE2PA_AUDITOR_MODEL   Optional provider model name`;
 }
 
 function parseArguments(values) {
@@ -268,7 +271,8 @@ async function audit(assetArgument, options) {
   const report = await auditSkill({
     content,
     filename: basename(assetPath),
-    model: options.model || process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
+    model: options.model || process.env.FREE2PA_AUDITOR_MODEL ||
+      process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
   });
   if (options.out) {
     const outputPath = resolve(options.out);
@@ -277,6 +281,23 @@ async function audit(assetArgument, options) {
   }
   if (options.json || !options.out) console.log(JSON.stringify(report, null, 2));
   return !['critical', 'high'].includes(report.overall_risk);
+}
+
+async function auditor(arguments_, options) {
+  const [action = 'status'] = arguments_;
+  if (action !== 'status') throw new Error('auditor supports: status.');
+  const configuration = getAuditConfiguration();
+  if (options.json) console.log(JSON.stringify(configuration, null, 2));
+  else {
+    console.log(`Optional LLM auditor: ${configuration.configured ? 'configured' : 'not configured'}`);
+    console.log(`  provider: ${configuration.provider}`);
+    if (configuration.module) console.log(`  module:   ${configuration.module}`);
+    if (configuration.model) console.log(`  model:    ${configuration.model}`);
+    if (!configuration.configured) {
+      console.log('  Free2PA signing, verification, trust, repair, and load gates remain available.');
+    }
+  }
+  return 0;
 }
 
 async function trust(arguments_, options) {
@@ -404,6 +425,7 @@ async function main() {
     case 'repair': return (await repair(positional[0], options)) ? 0 : 1;
     case 'scan': return (await scan(positional[0], options)) ? 0 : 1;
     case 'audit': return (await audit(positional[0], options)) ? 0 : 1;
+    case 'auditor': return auditor(positional, options);
     case 'codex-skill': return (await codexSkill(positional, options)) ? 0 : 1;
     case 'trust': return trust(positional, options);
     case 'serve': return serve(options);

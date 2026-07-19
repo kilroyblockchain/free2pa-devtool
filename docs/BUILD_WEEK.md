@@ -126,6 +126,11 @@ Delivered additions:
   verified content or throws before an agent can consume it. A complete
   implementation runbook records the tools, artifacts, owner decisions, and
   completion criteria for custom harness, fixed-loader, and MCP integrations.
+- Prepared `v0.3.3` to make the LLM boundary explicit and extensible. Core
+  provenance and trust features run with no model account. Operators can bring
+  their own OpenAI, Azure OpenAI, or OpenAI-compatible account, or install a
+  provider module for another hosted or local LLM. Provider output remains an
+  optional behavioral report and cannot change a deterministic load decision.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

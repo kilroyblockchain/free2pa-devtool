@@ -180,7 +180,7 @@ structured `decision`: load on `LOAD`; apply the configured failure policy on
 | OpenClaw or another harness with a controllable start command | `free2pa verify` or `free2pa scan` | In a fail-closed preflight wrapper before the harness starts |
 | Framework with an MCP client or shared verifier | `free2pa serve` plus `verify_asset` | At each protected file-load boundary; continue only on `LOAD` |
 | Pull requests and releases | Free2PA GitHub Action | In CI, before changed agent controls can merge |
-| Behavioral review of skill instructions | `free2pa audit` with GPT-5.6 | After provenance verification; never as a replacement for it |
+| Optional behavioral review | `free2pa audit` with an operator-installed LLM provider | After provenance verification; never as a replacement for it |
 
 For a custom Node loader, the gate is one import:
 
@@ -225,9 +225,10 @@ Trust is local and opt-in. There is no global registry and no permanent trust
 relationship. Adding a public certificate admits that publisher. Removing it
 revokes trust on the next verification.
 
-Free2PA also uses GPT-5.6 to review what a skill asks an agent to do. The model
-can identify behavioral risks, but it cannot override a failed cryptographic
-check.
+Free2PA's signing, verification, trust, repair, and load-gate features are
+model-independent and run without ChatGPT or an OpenAI API. An optional
+GPT-5.6 audit can review what a skill asks an agent to do. The model can
+identify behavioral risks, but it cannot override a failed cryptographic check.
 
 ## Live judge demo
 
@@ -348,9 +349,17 @@ free2pa trust remove karen --store ./study-group-certs
 The signature remains mathematically valid, but the next group verification
 fails with `UNTRUSTED_ISSUER`.
 
-## GPT-5.6 security audit
+## Optional LLM security auditors
 
-For direct OpenAI API use, set a server-side API key and audit a skill:
+The Free2PA core requires no LLM account. A verifier operator may bring an
+OpenAI, Azure OpenAI, OpenAI-compatible, local, or other account for independent
+behavioral review. Check the current state with:
+
+```bash
+free2pa auditor status
+```
+
+For direct OpenAI use, provide your own server-side account credential:
 
 ```bash
 export OPENAI_API_KEY="..."
@@ -363,6 +372,12 @@ The server also supports Azure OpenAI v1 through `AZURE_OPENAI_ENDPOINT` and
 managed identity with the `Cognitive Services OpenAI User` role. The hosted
 judge demo uses managed identity and stores no model credential.
 
+Other LLM integrations are installable auditor modules. Install the adapter in
+the Free2PA project, set `FREE2PA_AUDITOR_MODULE` and any account variables its
+provider requires, then run the same `free2pa audit` command. See
+[optional auditor providers](docs/AUDITOR_PROVIDERS.md) for the module contract
+and security boundary.
+
 The audit returns strict structured findings covering:
 
 - prompt injection;
@@ -373,10 +388,10 @@ The audit returns strict structured findings covering:
 - unsafe downloads and supply-chain behavior; and
 - obfuscated instructions.
 
-The skill content is delimited and presented to GPT-5.6 as untrusted data. The
-report records the model, audit time, filename, and SHA-256 of the reviewed
-content. Requests cap model output and reject skill files larger than 64 KiB.
-`critical` and `high` reports produce a nonzero CLI exit code.
+The built-in OpenAI provider presents skill content as delimited, untrusted
+data. Every provider report records the model, audit time, filename, and SHA-256
+of the reviewed content. Files larger than 64 KiB are rejected. `critical` and
+`high` reports produce a nonzero CLI exit code.
 
 ## Repository scanning and CI
 
@@ -410,7 +425,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.3.2
+      - uses: kilroyblockchain/free2pa-devtool@v0.3.3
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -429,7 +444,7 @@ fails. The repository's own workflow runs the action against the judge fixture.
 | `verify_asset` | Verify any Nerve Center file plus sidecar and return structured `PASS`/`FAIL` and `LOAD`/`REJECT`. |
 | `list_skills` | List skills visible to this verifier and whether each has a sidecar. |
 | `verify_skill` | Verify one of the server's bundled demo skills by folder name. |
-| `audit_skill` | Ask GPT-5.6 for an independent structured behavioral security review. |
+| `audit_skill` | Ask the configured optional LLM provider for an independent behavioral security review. |
 
 The host calls `verify_asset` with the exact file bytes and neighboring
 sidecar before placing the file into agent or model context. It consumes the
@@ -447,7 +462,7 @@ research fixtures.
 |---|---|
 | `POST /api/sign` | Sign a skill and return its sidecar. |
 | `POST /api/verify` | Verify a skill and sidecar against this server's trust store. |
-| `POST /api/audit` | Run the GPT-5.6 behavioral audit. |
+| `POST /api/audit` | Run the configured optional LLM behavioral audit. |
 | `GET /api/certs` | List the verifier's current trusted certificates. |
 | `POST /api/certs/import` | Validate and admit one or more public certificates. |
 | `POST /api/certs/generate` | Generate a signing identity for local development. |
@@ -462,7 +477,7 @@ X.509 certificates belong in a verifier's trust store.
 C2PA has a formal conformance program. Conforming Content Credentials are
 verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.3.2` is **C2PA-inspired, not a conforming C2PA implementation**. It
+Free2PA `0.3.3` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
 conforming C2PA products. A signed publisher identity traces origin, while
@@ -552,7 +567,7 @@ is required.
   action already taken by a running agent.
 - TLS, authentication, rate limits, and deployment access controls remain the
   responsibility of a public verifier operator.
-- A GPT audit is probabilistic security analysis, not proof of safety.
+- An LLM audit is probabilistic security analysis, not proof of safety.
 
 ## License
 

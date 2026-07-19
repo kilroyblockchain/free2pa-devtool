@@ -558,7 +558,7 @@
 <body>
 
 <h1>Free2PA</h1>
-<p class="subtitle">Provenance, trust verification, and GPT-5.6 security auditing for AI agent skills</p>
+<p class="subtitle">Provenance, trust verification, and optional LLM security auditing for AI agent skills</p>
 <nav class="utility-row" aria-label="Utilities">
   <details class="demo-menu">
     <summary>Demo files</summary>
@@ -763,7 +763,7 @@
   <!-- AUDIT -->
   <div class="panel">
     <h2>Audit a Skill</h2>
-    <p class="section-note">GPT-5.6 reviews behavioral risk independently from signature and trust verification.</p>
+    <p class="section-note">The operator's optional LLM provider reviews behavioral risk independently from signature and trust verification.</p>
 
     <div class="drop-zone" id="auditDrop">
       <input type="file" id="auditFile" accept=".md,.txt,.skills" />
@@ -777,7 +777,7 @@
       <p class="section-note">Checks prompt injection, secret access, data exfiltration, destructive actions, supply-chain behavior, and excessive permissions.</p>
     </div>
 
-    <button type="button" id="auditBtn" disabled>Run GPT-5.6 Audit</button>
+    <button type="button" id="auditBtn" disabled>Run LLM Audit</button>
     <div class="result" id="auditError"></div>
     <div class="audit-summary" id="auditResult" style="display:none;"></div>
   </div>
@@ -1365,7 +1365,7 @@
       auditError.style.display = 'block';
     } finally {
       auditBtn.disabled = false;
-      auditBtn.textContent = 'Run GPT-5.6 Audit';
+    auditBtn.textContent = 'Run LLM Audit';
     }
   });
 

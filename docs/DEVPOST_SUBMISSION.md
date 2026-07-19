@@ -76,10 +76,15 @@ fails and the implementation can quarantine the file instead of loading it.
 This release demonstrates the pattern with `SKILL.md`; the same exact-byte
 binding applies to other text-based control files.
 
-GPT-5.6 adds an independent structured behavioral audit for prompt injection,
-secret access, data exfiltration, destructive actions, unsafe downloads,
-supply-chain behavior, and excessive permissions. Cryptographic verification
-remains the hard gate; the model cannot turn a failed credential into a pass.
+Free2PA's signing, verification, trust, repair, and load-gate features are
+model-independent and run without ChatGPT or an OpenAI API. A verifier operator
+may optionally add their own LLM account for behavioral review. OpenAI, Azure
+OpenAI, and OpenAI-compatible accounts are supported directly; other local or
+hosted LLMs can be installed as auditor modules through a documented provider
+contract. The configured provider reviews prompt injection, secret access, data
+exfiltration, destructive actions, unsafe downloads, supply-chain behavior,
+and excessive permissions. Cryptographic verification remains the hard gate;
+an LLM can never turn a failed credential into a pass.
 
 Developers can use Free2PA through an installable CLI, browser interface, HTTP
 API, or Streamable HTTP MCP server. The generic MCP `verify_asset` tool accepts
@@ -89,11 +94,20 @@ output and nonzero exit codes support CI and agent-policy enforcement.
 
 The repository also includes a Codex skill for retrofitting Free2PA into an
 existing OpenClaw project, ChatGPT app, MCP server, or other agentic system. A
-developer can ask Codex to identify the application's Nerve Center, install the
-pinned freeware release, place verification before the load boundary, and
-prove that both changed files and publishers outside the project group are
-rejected. The developer still owns every trust and signing decision.
-The packaged CLI installs the skill with `free2pa codex-skill install`.
+developer can ask Codex to fact-gather the real entry point, Nerve Center,
+load boundary, and existing security checks before editing. Codex reports the
+facts and unknown owner decisions, then installs the pinned freeware release,
+places verification before the load boundary, and proves that both changed
+files and publishers outside the project group are rejected. The developer
+still owns every trust and signing decision. The packaged CLI installs the
+skill with `free2pa codex-skill install`.
+
+Custom Node harnesses can import `loadVerifiedFile()` from
+`free2pa/load-gate`. It returns content only after every deterministic check
+passes and throws before rejected text reaches the agent. Fixed loaders can use
+a fail-closed CLI preflight, while MCP-capable frameworks can call
+`verify_asset`. The implementation runbook identifies which tool runs at every
+stage from download through runtime enforcement and CI.
 
 The Azure page is a reference verifier and judge sandbox, not a centralized
 Free2PA service. The repository is the product: each developer decides where
@@ -129,8 +143,8 @@ GPT-5.6 Sol through a scoped managed identity, so no model API key is stored.
 
 The same verification core is composed into several developer-facing surfaces
 rather than being tied to the demo UI: terminal commands for local workflows,
-structured output for automation, a reusable CI action, HTTP endpoints for
-applications, and MCP tools for agents.
+structured output for automation, a framework-neutral Node load-gate API, a
+reusable CI action, HTTP endpoints for applications, and MCP tools for agents.
 
 The signing envelope contains a canonical JSON claim, SHA-256 content binding,
 an embedded X.509 public certificate, and an ES256 signature. Verifiers enforce
@@ -144,16 +158,20 @@ machine-readable reason codes such as `LOCAL_TRUST`, `EXPLICIT_MATCH`,
 Karen Kilroy supplied the central product concept and made the key trust-policy
 and scope decisions. Codex audited three related research repositories, helped
 select the focused agent-skill baseline, implemented the distributable CLI and
-verifier workflow, added tests and security hardening, reviewed dependency and
-browser risks, and prepared reproducible release and judging materials.
+verifier workflow, built the load-gate API, added tests and security hardening,
+reviewed dependency and browser risks, and prepared the fact-gathering skill,
+implementation runbook, reproducible release, and judging materials.
 
 Codex accelerated implementation but did not define the trust model. During
 development, Karen rejected an unnecessary signed group-policy layer and
 restated the simpler invariant that now anchors the product: the verifier is
 where trust lives.
 
-GPT-5.6 is part of the running product. It evaluates a skill's behavioral risk
-as untrusted input and returns structured evidence, impact, and remediation.
+GPT-5.6 was used during Build Week and is the optional auditor configured on the
+judge deployment. It evaluates a skill's behavioral risk as untrusted input and
+returns structured evidence, impact, and remediation. Other operators bring
+their own account or install another provider. The core Free2PA trust gate does
+not depend on a model.
 
 ## Challenges
 
@@ -175,15 +193,23 @@ Week extension separately.
 - Guarded `repair` command that restores a trusted signed original while
   preserving the rejected file as evidence.
 - Installable `free2pa-protect-agent` Codex skill with a one-command installer.
+- Fact-gather-first integration workflow that traces the target harness before
+  changing its loader or trust policy.
+- `free2pa/load-gate` API that returns only verified content to custom Node
+  harnesses and throws before rejected text reaches the agent.
+- Download-to-done implementation runbook for custom, fixed-loader, MCP, and
+  CI integrations.
 - Complete ad-hoc verifier lifecycle from the command line.
 - Outside-group rejection, certificate admission, and immediate revocation.
 - Tamper detection with a human-readable diff.
 - GPT-5.6 structured audits through CLI, HTTP, browser, and MCP.
+- Optional auditor-provider contract for operator-supplied OpenAI, Azure
+  OpenAI, OpenAI-compatible, local, or other LLM accounts.
 - Generic MCP load gate for arbitrary Nerve Center files, not only bundled
   server fixtures.
 - Reusable GitHub Action for pull-request trust enforcement and JSON evidence.
-- Automated tests covering signing, trust, tampering, CLI behavior, and API
-  contracts.
+- Eighteen automated tests covering signing, trust, tampering, CLI behavior,
+  load-gate safety, and API contracts.
 - Read-only and rate-limited public-demo mode.
 - Zero known npm vulnerabilities at release-check time.
 - Apache-2.0 packaging with private keys excluded.
@@ -199,15 +225,15 @@ review complement one another only when their responsibilities remain clear.
 
 - Signed verification-event logs for group accountability.
 - Optional skill dependency and ingredient assertions.
-- Framework-specific loader adapters for OpenClaw, the Agents SDK, and ChatGPT
-  app MCP servers.
+- Additional version-specific convenience adapters built on the generic load
+  gate for popular agent frameworks.
 - Publisher discovery URLs and certificate fingerprint confirmation.
 - Versioned supersession and provenance-completeness assertions.
 
 ## C2PA disclosure
 
 C2PA has a formal conformance program in which conforming Content Credentials
-are verified by conforming verifiers. Free2PA `0.3.2` is C2PA-inspired but is
+are verified by conforming verifiers. Free2PA `0.3.3` is C2PA-inspired but is
 not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
 provenance credentials in a Free2PA format: a signed publisher identity traces
 origin and asset binding reveals edits. It then addresses an adjacent concern
@@ -219,7 +245,7 @@ does not claim C2PA endorsement.
 ## Submission links
 
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.2
+- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.3
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4
 - YouTube demo: https://youtu.be/WU8W2mQBA24

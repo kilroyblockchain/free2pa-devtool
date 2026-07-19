@@ -34,7 +34,7 @@ free2pa codex-skill install
 Open the target agent repository in Codex and invoke
 `$free2pa-protect-agent`. The skill must inspect before editing.
 
-**Done when:** `free2pa --version` prints `0.3.2`, and the skill exists at
+**Done when:** `free2pa --version` prints `0.3.3`, and the skill exists at
 `$CODEX_HOME/skills/free2pa-protect-agent`.
 
 ## 2. Establish the facts
@@ -65,7 +65,7 @@ For a Node repository, pin the release artifact:
 
 ```bash
 npm install --save-dev \
-  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.2/free2pa-0.3.2.tgz
+  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.3/free2pa-0.3.3.tgz
 ```
 
 For another language, keep the Node CLI as a startup or build prerequisite. Do

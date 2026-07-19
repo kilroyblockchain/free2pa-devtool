@@ -75,6 +75,6 @@ trust all pass.
 
 Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.2>
+Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.3>
 
 Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29644256018>

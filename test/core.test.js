@@ -45,7 +45,21 @@ test('CLI help works as the first-run discovery command', async () => {
   const { stdout } = await execFileP(process.execPath, [resolve('bin/free2pa.js'), '--help']);
   assert.match(stdout, new RegExp(`^Free2PA ${packageMetadata.version.replaceAll('.', '\\.')}\\b`));
   assert.match(stdout, /free2pa codex-skill install/);
+  assert.match(stdout, /free2pa auditor status/);
   assert.match(stdout, /free2pa serve/);
+});
+
+test('Free2PA core reports an unconfigured optional auditor without failing', async () => {
+  const { stdout } = await execFileP(process.execPath, [resolve('bin/free2pa.js'), 'auditor', 'status'], {
+    env: {
+      ...process.env,
+      OPENAI_API_KEY: '',
+      AZURE_OPENAI_ENDPOINT: '',
+      FREE2PA_AUDITOR_MODULE: '',
+    },
+  });
+  assert.match(stdout, /Optional LLM auditor: not configured/);
+  assert.match(stdout, /signing, verification, trust, repair, and load gates remain available/);
 });
 
 test('load gate returns only trusted content and throws on changed content', async () => {
@@ -395,6 +409,43 @@ test('GPT audit supports Azure OpenAI with managed identity and no stored key', 
     configured: true,
     provider: 'azure-openai-managed-identity',
     model: 'free2pa-gpt-5-6',
+  });
+});
+
+test('an installed LLM auditor is optional and follows the provider contract', async () => {
+  const directory = await mkdtemp(resolve(tmpdir(), 'free2pa-auditor-'));
+  const modulePath = resolve(directory, 'auditor.mjs');
+  await writeFile(modulePath, `
+    export async function auditSkill({ filename, model }) {
+      return {
+        overall_risk: 'low',
+        summary: 'Provider reviewed ' + filename,
+        findings: [],
+        recommendations: [],
+        metadata: { provider: 'test-llm-account', model }
+      };
+    }
+  `);
+
+  const report = await auditSkill({
+    content: '# Local skill\n\nSummarize the supplied text.',
+    filename: 'LOCAL.md',
+    model: 'locally-installed-model',
+    providerModule: modulePath,
+  });
+  assert.equal(report.overall_risk, 'low');
+  assert.equal(report.metadata.provider, 'test-llm-account');
+  assert.equal(report.metadata.model, 'locally-installed-model');
+  assert.equal(report.metadata.asset_sha256.length, 64);
+
+  assert.deepEqual(getAuditConfiguration({
+    FREE2PA_AUDITOR_MODULE: 'my-auditor',
+    FREE2PA_AUDITOR_MODEL: 'my-model',
+  }), {
+    configured: true,
+    provider: 'installed-module',
+    module: 'my-auditor',
+    model: 'my-model',
   });
 });
 

@@ -222,7 +222,7 @@ does not claim C2PA endorsement.
 - Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.1
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4
-- YouTube demo: `TODO`
+- YouTube demo: https://youtu.be/WU8W2mQBA24
 - Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
 
 ## Judge testing instructions
@@ -262,9 +262,11 @@ Description:
 >
 > Source: https://github.com/kilroyblockchain/free2pa-devtool
 
-Upload `artifacts/Free2PA-Build-Week-final.mp4` as a public video. It is 2:51.4,
+The public video is https://youtu.be/WU8W2mQBA24. The uploaded master is 2:51.4,
 1920x1080 H.264/AAC, has Azure Neural HD English narration, no music, and
-normalized speech at approximately -16.8 LUFS.
+normalized speech at approximately -16.8 LUFS. YouTube's processed rendition
+was independently checked at 2:51.46 with 1080p available and no new audio
+dropouts.
 
 ## Gallery assets
 

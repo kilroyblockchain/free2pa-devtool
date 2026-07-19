@@ -115,6 +115,11 @@ Delivered additions:
   and returns structured `LOAD` or `REJECT` decisions with stable reason codes.
   Its in-memory and real Streamable HTTP tests cover trusted, changed, and
   outside-group publishers.
+- Published `v0.3.1` from public commit `23a0d93` after
+  [GitHub Actions run 29652472565](https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29652472565)
+  passed. The exact package clean-installed, the dependency audit reported no
+  known vulnerabilities, and production Azure MCP testing returned `LOAD`,
+  `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` for the three judge fixtures.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

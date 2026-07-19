@@ -278,22 +278,23 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Core toolkit | Complete | Public source and Apache-2.0 license. |
 | Automated suite | Passing | 14 tests, including generic MCP trusted, changed, and outside-group cases. |
 | MCP HTTP transport | Passing locally | Live Streamable HTTP client returns `LOAD`, `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` as expected. |
-| Public CI | Green before current MCP addition | GitHub Actions run `29647055036`. A new run is required after publishing the MCP addition. |
-| Azure demo | Healthy on `0.3.0` | `/health` returns app, version, and OK status. MCP upgrade deployment is pending. |
-| Freeware release | Public `v0.3.0` | Package, checksums, images, logo, and backup video are attached. MCP upgrade release is pending. |
+| Public CI | Green on exact MCP release commit | GitHub Actions run `29652472565` verifies public commit `23a0d93`. |
+| Azure demo | Healthy on `0.3.1` | Production MCP returns trusted `LOAD`, changed `CONTENT_CHANGED`, and outsider `UNTRUSTED_ISSUER`. |
+| Freeware release | Public `v0.3.1` | Package, checksums, images, logo, and backup video are attached to the green commit. |
 | Final video file | Complete | `artifacts/Free2PA-Build-Week-final.mp4`. |
 | Devpost registration | Complete | Authenticated account is already registered for OpenAI Build Week. |
-| Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, and logo uploaded. |
-| YouTube | Pending | Authenticated YouTube Studio channel is available; public upload is not complete. |
-| Final Devpost submission | Pending | Requires YouTube URL, entrant assertions, custom fields, and final submit action. |
+| Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, and public video uploaded. |
+| YouTube | Public and verified | `https://youtu.be/WU8W2mQBA24`; 2:51.46, custom thumbnail, 1080p available, and processed audio checked for dropouts. |
+| Final Devpost submission | Pending | Requires entrant assertions, custom fields, and final submit action. |
 
 ## Public links
 
 - Live Agentic Factory: <https://free2pa-buildweek.azurewebsites.net>
 - Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
-- Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.0>
+- Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.3.1>
 - Devpost project: <https://devpost.com/software/free2pa>
-- Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.0/Free2PA-Build-Week-demo.mp4>
+- Public YouTube video: <https://youtu.be/WU8W2mQBA24>
+- Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4>
 
 ## Devpost field packet
 
@@ -305,7 +306,7 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Repository | `https://github.com/kilroyblockchain/free2pa-devtool` |
 | Judge demo | `https://free2pa-buildweek.azurewebsites.net` |
 | Session ID | `019f72ea-75e0-7670-8c90-48602c610d24` |
-| Video | Public YouTube URL pending |
+| Video | `https://youtu.be/WU8W2mQBA24` |
 | Submitter type | Karen must confirm Individual, Team of Individuals, or Organization. |
 | Country | Karen must confirm the country entered as the legal residence. |
 | Ownership and eligibility | Karen must make the final legal assertions. |
@@ -317,20 +318,20 @@ The full project narrative and judge instructions live in
 
 ### July 18: finish the product surface
 
-- [ ] Finish the generic MCP implementation and documentation.
-- [ ] Run the full suite, real Streamable HTTP test, dependency audit, package
+- [x] Finish the generic MCP implementation and documentation.
+- [x] Run the full suite, real Streamable HTTP test, dependency audit, package
   inspection, and diff checks.
-- [ ] Commit to the private development repository and sanitized public repository.
-- [ ] Publish a release containing the generic MCP tool and exact checksums.
-- [ ] Deploy the same commit to Azure and test all three MCP verdicts in production.
-- [ ] Update the Devpost write-up with the final MCP capability.
+- [x] Commit to the private development repository and sanitized public repository.
+- [x] Publish a release containing the generic MCP tool and exact checksums.
+- [x] Deploy the same commit to Azure and test all three MCP verdicts in production.
+- [x] Update the Devpost write-up with the final MCP capability.
 
 ### July 18-19: finish media and submission draft
 
-- [ ] Upload the final MP4 to Karen's authenticated YouTube channel.
-- [ ] Set title, description, audience, and public visibility.
-- [ ] Wait for HD processing, then check audio continuously and confirm 1080p text.
-- [ ] Add the YouTube URL to the repository dossier and Devpost project.
+- [x] Upload the final MP4 to Karen's authenticated YouTube channel.
+- [x] Set title, description, audience, custom thumbnail, and public visibility.
+- [x] Wait for HD processing, check the processed audio, and confirm 1080p availability.
+- [x] Add the YouTube URL to the Devpost project.
 - [ ] Populate every Devpost custom answer and save the complete draft.
 
 ### July 19: submit with buffer
@@ -395,4 +396,3 @@ The Build Week entry is complete only when all of the following are proven:
 - Karen has confirmed the required legal and entrant assertions.
 - The project is submitted before the deadline and its final URLs work while
   logged out.
-

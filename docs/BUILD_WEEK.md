@@ -137,6 +137,18 @@ Delivered additions:
   inference, and guarded repair restoring the signed optimistic soul before a
   fresh model call. Tests prove blocked content produces no protected model
   call and that repair passes only the signed original.
+- Published `v0.4.0` from public commit `7a1cd00` after
+  [GitHub Actions run 29704365424](https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29704365424)
+  passed all 20 tests. The exact 64 KB archive clean-installed with no model
+  account, ran the packaged Hello World trusted/block/repair cases with a test
+  provider, and reported zero npm vulnerabilities. Its SHA-256 is
+  `55d141b24ae36900c559c01445c820f04a6bf05bde92501e8c3e5c8b017b48bb`.
+- Deployed the same commit to Azure and verified the real managed-identity
+  GPT-5.6 path in Chrome at desktop and 390px mobile widths. Changed/Block
+  returned an unchecked `Hello, miserable world!` beside `AGENT NOT STARTED`;
+  Changed/Repair returned a protected `Hello, wonderful world!` from the signed
+  soul; Trusted loaded; Outside group rejected. Chrome reported no console or
+  HTTP errors and no horizontal overflow.
 
 Codex is being used to inspect the prototype, define the product boundary,
 implement and test the new tool, review security-sensitive code, and prepare

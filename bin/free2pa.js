@@ -16,7 +16,7 @@ import { config } from '../src/config.js';
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 
-const VERSION = '0.4.0';
+const VERSION = '0.4.1';
 const SIDECAR_SUFFIX = '.c2pa.json';
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 

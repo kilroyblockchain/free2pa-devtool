@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Free2PA | The seat belt for agent control files</title>
-  <meta name="description" content="See the same agentic Nerve Center run with and without Free2PA provenance and ad-hoc trust verification.">
+  <title>Free2PA | Hello World reference integration</title>
+  <meta name="description" content="A minimal reference application showing Free2PA at the SOUL.md load boundary of a real LLM agent.">
   <link rel="icon" href="/free2pa-mark.svg" type="image/svg+xml">
   <style>
     :root {
@@ -241,10 +241,10 @@
     <a class="brand" href="/" aria-label="Free2PA home">
       <img src="/free2pa-mark.svg" alt="">
       <span class="brand-name">Free2PA</span>
-      <span class="brand-tag">Ad-hoc agent trust</span>
+      <span class="brand-tag">Hello World reference integration</span>
     </a>
     <nav class="nav" aria-label="Project links">
-      <a href="/hello-world.html">Hello World example</a>
+      <a href="/">Toolkit factory</a>
       <a class="secondary-link" href="/workbench.html">Research workbench</a>
       <a href="https://github.com/kilroyblockchain/free2pa-devtool">Repository</a>
       <a href="https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1">Freeware</a>
@@ -254,15 +254,15 @@
   <main class="shell">
     <section class="intro">
       <div>
-        <div class="eyebrow">Live agentic factory</div>
-        <h1>The seat belt for the files that steer your agent.</h1>
+        <div class="eyebrow">Reference integration / Hello World</div>
+        <h1>One small agent protected by the Free2PA toolkit.</h1>
       </div>
-      <p class="intro-copy"><strong>Free2PA puts a signed receipt beside an agent's critical control files.</strong> When the agent starts or loads a file, code checks whether it changed and whether its publisher belongs to this project's temporary trust group.</p>
+      <p class="intro-copy"><strong>This is one implementation example, not the Free2PA product boundary.</strong> It shows a developer placing the general load gate before a real LLM consumes <code>SOUL.md</code>.</p>
     </section>
 
     <section class="factory" aria-labelledby="factoryTitle">
       <div class="factory-toolbar">
-        <div class="factory-title" id="factoryTitle">Run the same file through both agent lanes<span>The protected lane calls the deployed Free2PA verifier. The other lane deliberately skips it.</span></div>
+        <div class="factory-title" id="factoryTitle">Run the Hello World reference application<span>Both lanes use the live Azure model. Only the protected lane applies Free2PA before loading <code>SOUL.md</code>.</span></div>
         <div class="segmented" role="tablist" aria-label="Nerve Center file scenario">
           <button class="segment" type="button" role="tab" data-case="trusted" aria-selected="false">Trusted</button>
           <button class="segment" type="button" role="tab" data-case="changed" aria-selected="true">Changed</button>
@@ -276,26 +276,26 @@
             <option value="alert">Alert + continue</option>
             <option value="log">Log only</option>
           </select>
-          <button class="run-button" id="runFactory" type="button">Run file</button>
+          <button class="run-button" id="runFactory" type="button">Say hello</button>
         </div>
       </div>
 
       <div class="factory-grid">
         <aside class="input-rack" aria-label="Nerve Center files">
           <div class="rack-label">Nerve Center input</div>
-          <p class="rack-help">Files that shape identity, tools, permissions, and behavior.</p>
+          <p class="rack-help">The soul may change through an attack, an engineering mistake, or an agent's own misunderstanding. Free2PA detects the changed bytes, not a guessed cause.</p>
           <div class="file-list">
             <button class="file-button" type="button" data-case="trusted" aria-selected="false">
-              <span class="file-name mono">SKILL.md</span>
-              <span class="file-note">Signed by a group member</span>
+              <span class="file-name mono">SOUL.md</span>
+              <span class="file-note">Signed optimistic soul</span>
             </button>
             <button class="file-button" type="button" data-case="changed" aria-selected="true">
               <span class="file-name mono">SOUL.md</span>
-              <span class="file-note">Instructions changed after signing</span>
+              <span class="file-note">Changed to bitter adjectives</span>
             </button>
             <button class="file-button" type="button" data-case="outside" aria-selected="false">
-              <span class="file-name mono">TOOL.md</span>
-              <span class="file-note">Valid signature, outside this group</span>
+              <span class="file-name mono">SOUL.md</span>
+              <span class="file-note">Valid soul, outside this group</span>
             </button>
           </div>
         </aside>
@@ -308,9 +308,9 @@
               <div class="flow-arrow">›</div>
               <div class="flow-node bypass"><div class="node-top">Load boundary</div><div class="node-main">Unchecked</div><div class="node-sub">No signed receipt is inspected.</div></div>
               <div class="flow-arrow">›</div>
-              <div class="flow-node"><div class="node-top">Agent runtime</div><div class="node-main">Instructions loaded</div><div class="node-sub">The agent cannot see provenance on its own.</div></div>
+              <div class="flow-node"><div class="node-top">Agent runtime</div><div class="node-main">Azure-hosted LLM</div><div class="node-sub">Receives the unchecked soul and “hello”.</div></div>
               <div class="flow-arrow">›</div>
-              <div class="flow-node outcome warn" id="plainOutcome"><div class="node-top">Result</div><div class="node-main" id="plainAction">RUNS UNCHECKED</div><div class="node-sub" id="plainReason">The changed file reaches the agent.</div></div>
+              <div class="flow-node outcome warn" id="plainOutcome"><div class="node-top">Hello World Agent</div><div class="node-main" id="plainAction">WAITING</div><div class="node-sub" id="plainReason">The unprotected lane will run the current soul.</div></div>
             </div>
           </div>
 
@@ -321,9 +321,9 @@
               <div class="flow-arrow">›</div>
               <div class="flow-node gate"><div class="node-top">Free2PA gate</div><div class="node-main" id="gateStatus">Ready to verify</div><div class="checks"><span class="check" id="checkSig">SIGN</span><span class="check" id="checkHash">FILE</span><span class="check" id="checkTrust">GROUP</span></div></div>
               <div class="flow-arrow">›</div>
-              <div class="flow-node"><div class="node-top">Host policy</div><div class="node-main" id="policyName">Block</div><div class="node-sub">The application consumes the result in code.</div></div>
+              <div class="flow-node"><div class="node-top">Host policy + model</div><div class="node-main" id="policyName">Block</div><div class="node-sub">Code decides whether Azure receives the soul.</div></div>
               <div class="flow-arrow">›</div>
-              <div class="flow-node outcome" id="protectedOutcome"><div class="node-top">Result</div><div class="node-main" id="protectedAction">WAITING</div><div class="node-sub" id="protectedReason">Run this file through the live verifier.</div></div>
+              <div class="flow-node outcome" id="protectedOutcome"><div class="node-top">Hello World Agent</div><div class="node-main" id="protectedAction">WAITING</div><div class="node-sub" id="protectedReason">Say hello through the protected load boundary.</div></div>
             </div>
           </div>
         </div>
@@ -338,23 +338,23 @@
 
     <div class="below">
       <section>
-        <div class="eyebrow">Installable Codex skill</div>
-        <h2>Ask Codex to protect an existing agent.</h2>
-        <p>The included skill finds the application's Nerve Center, wires verification before file loading, and proves the trusted, changed, and outside-group cases. Install it with <span class="mono">free2pa codex-skill install</span>. The developer owns every trust decision.</p>
-        <a class="skill-link" href="https://github.com/kilroyblockchain/free2pa-devtool/tree/main/integrations/codex/free2pa-protect-agent">View <span class="mono">free2pa-protect-agent</span> →</a>
+        <div class="eyebrow">Return to the toolkit</div>
+        <h2>Use the general Agentic Factory.</h2>
+        <p>The root experience verifies multiple Nerve Center file types without any model dependency and exposes the reusable CLI, Node, HTTP, MCP, CI, and Codex surfaces.</p>
+        <a class="skill-link" href="/">Open the Free2PA toolkit factory →</a>
       </section>
       <section>
-        <div class="eyebrow">Freeware developer toolkit</div>
-        <h2>CLI, CI action, HTTP API, and MCP.</h2>
-        <p>Use the interface that fits the agent system. Results are deterministic and machine-readable; optional LLM behavioral review stays independent from the cryptographic trust gate.</p>
+        <div class="eyebrow">Reference source</div>
+        <h2>A minimal host integration.</h2>
+        <p>The packaged example shows the exact pre-load call, blocked model path, and guarded repair path. The core verification remains deterministic and model-independent.</p>
         <div class="install-row">
           <div class="install-code mono" id="installCommand">npm install free2pa-0.4.1.tgz</div>
           <button class="copy-button" id="copyInstall" type="button">Copy URL</button>
         </div>
         <div class="three-facts">
-          <div class="fact"><strong>Changed</strong><span>Signed bytes no longer match.</span></div>
-          <div class="fact"><strong>Outside</strong><span>Publisher is not in this group.</span></div>
-          <div class="fact"><strong>Programmable</strong><span>Block, alert, or log in code.</span></div>
+          <div class="fact"><strong>Example</strong><span>One protected <code>SOUL.md</code> boundary.</span></div>
+          <div class="fact"><strong>Proof</strong><span>Blocked files never reach the model.</span></div>
+          <div class="fact"><strong>Reusable</strong><span>The same gate fits other control files.</span></div>
         </div>
       </section>
     </div>
@@ -363,16 +363,13 @@
   <script>
     const cases = {
       trusted: {
-        file: '/demo/trusted/SKILL.md', sidecar: '/demo/trusted/SKILL.md.c2pa.json',
-        display: 'SKILL.md', note: 'Signed by a group member', plain: 'The file reaches the agent without an identity or integrity check.'
+        display: 'SOUL.md', note: 'Signed optimistic soul'
       },
       changed: {
-        file: '/demo/tampered/SKILL.md', sidecar: '/demo/tampered/SKILL.md.c2pa.json',
-        display: 'SOUL.md', note: 'Instructions changed after signing', plain: 'The changed file reaches the agent.'
+        display: 'SOUL.md', note: 'Changed to bitter adjectives'
       },
       outside: {
-        file: '/demo/outside/SKILL.md', sidecar: '/demo/outside/SKILL.md.c2pa.json',
-        display: 'TOOL.md', note: 'Valid signature, outside this group', plain: 'The outside publisher reaches the agent.'
+        display: 'SOUL.md', note: 'Valid soul, outside this group'
       }
     };
     const installUrl = 'https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/free2pa-0.4.1.tgz';
@@ -387,10 +384,10 @@
       const selected = cases[name];
       all('.lane-file').forEach((item) => { item.textContent = selected.display; });
       all('.lane-file-note').forEach((item) => { item.textContent = selected.note; });
+      byId('plainReason').textContent = 'The unprotected lane will run the current soul.';
+      byId('plainAction').textContent = 'WAITING';
+      byId('plainOutcome').className = 'flow-node outcome warn';
       resetProtected();
-      byId('plainReason').textContent = selected.plain;
-      byId('plainAction').textContent = 'RUNS UNCHECKED';
-      byId('plainOutcome').className = `flow-node outcome ${name === 'trusted' ? 'warn' : 'bad'}`;
     }
 
     function resetProtected() {
@@ -399,6 +396,9 @@
       byId('protectedAction').textContent = 'WAITING';
       byId('protectedReason').textContent = 'Run this file through the live verifier.';
       byId('protectedOutcome').className = 'flow-node outcome';
+      byId('plainAction').textContent = 'WAITING';
+      byId('plainReason').textContent = 'The unprotected lane will run the current soul.';
+      byId('plainOutcome').className = 'flow-node outcome warn';
       byId('logPulse').className = 'log-pulse';
       byId('machineLog').textContent = 'verifier.ready { interface: "HTTP", consumer: "agent runtime" }';
       byId('logTime').textContent = 'waiting';
@@ -409,12 +409,6 @@
       byId(id).textContent = `${id === 'checkSig' ? 'SIGN' : id === 'checkHash' ? 'FILE' : 'GROUP'} ${pass ? 'PASS' : 'FAIL'}`;
     }
 
-    async function fetchBlob(url) {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error(`Could not load fixture: ${response.status}`);
-      return response.blob();
-    }
-
     async function runFactory() {
       const button = byId('runFactory');
       const scenario = cases[activeCase];
@@ -422,60 +416,54 @@
       button.textContent = 'Checking';
       byId('gateStatus').textContent = 'Verifying in code';
       byId('logPulse').className = 'log-pulse live';
-      byId('machineLog').textContent = `POST /api/verify { asset: "${scenario.display}", policy: "${byId('responsePolicy').value}" }`;
+      byId('machineLog').textContent = `POST /api/hello-agent/compare { input: "hello", scenario: "${activeCase}", policy: "${byId('responsePolicy').value}" }`;
       byId('logTime').textContent = 'running';
 
       try {
-        const [asset, sidecar] = await Promise.all([fetchBlob(scenario.file), fetchBlob(scenario.sidecar)]);
-        const form = new FormData();
-        form.append('file', asset, scenario.display);
-        form.append('sidecar', sidecar, `${scenario.display}.c2pa.json`);
-        form.append('trustProfile', 'dev');
-        const response = await fetch('/api/verify', { method: 'POST', body: form });
+        const response = await fetch('/api/hello-agent/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario: activeCase, policy: byId('responsePolicy').value }),
+        });
         const result = await response.json();
         if (!response.ok || !result.success) throw new Error(result.error || `Verifier returned ${response.status}`);
 
-        const signature = result.signatureValid === true;
-        const integrity = result.hashMatch === true;
-        const trusted = result.trust?.trusted === true && result.certificate?.valid !== false;
+        const signature = result.protected.checks.signatureValid === true;
+        const integrity = result.protected.checks.fileUnchanged === true;
+        const trusted = result.protected.checks.publisherTrusted === true && result.protected.checks.certificateCurrent === true;
         const passed = signature && integrity && trusted;
         setCheck('checkSig', signature);
         setCheck('checkHash', integrity);
         setCheck('checkTrust', trusted);
         byId('gateStatus').textContent = passed ? 'Verification passed' : 'Verification failed';
 
-        const policy = byId('responsePolicy').value;
-        let action = 'LOAD';
-        let reason = 'The signed file is unchanged and its publisher belongs to this group.';
-        let outcomeClass = 'good';
-        if (!passed && policy === 'block') {
-          action = activeCase === 'changed' ? 'QUARANTINE' : 'REJECT';
-          reason = integrity ? 'The publisher is outside this project group.' : 'The current file does not match its signed receipt.';
-          outcomeClass = 'bad';
-        } else if (!passed && policy === 'alert') {
-          action = 'ALERT + CONTINUE';
-          reason = 'The host records a high-visibility alert and continues by explicit policy.';
-          outcomeClass = 'warn';
-        } else if (!passed && policy === 'log') {
-          action = 'LOG + CONTINUE';
-          reason = 'The host logs the failed verification and continues by explicit policy.';
-          outcomeClass = 'warn';
-        } else if (!passed && policy === 'repair') {
-          if (signature && trusted && !integrity) {
-            action = 'RESTORE + REPORT';
-            reason = 'The host can restore the signed original, preserve the rejected copy, and report the repair.';
-            outcomeClass = 'good';
-          } else {
-            action = 'STOP + REPORT';
-            reason = 'No current, locally trusted signed original is available for a safe repair.';
-            outcomeClass = 'bad';
-          }
-        }
+        byId('plainAction').textContent = result.unprotected.agent.output;
+        byId('plainReason').textContent = 'RUN UNCHECKED · current SOUL.md reached the Azure model.';
+        byId('plainOutcome').className = `flow-node outcome ${activeCase === 'changed' ? 'bad' : 'warn'}`;
 
-        byId('protectedAction').textContent = action;
+        const protectedAgent = result.protected.agent;
+        const action = result.protected.action;
+        const reason = protectedAgent.started
+          ? `${action} · ${protectedAgent.provider} / ${protectedAgent.model}`
+          : `${action} · ${result.protected.reasonCode}; protected model call skipped.`;
+        const outcomeClass = protectedAgent.started
+          ? passed || action.startsWith('RESTORE') ? 'good' : 'warn'
+          : 'bad';
+        byId('protectedAction').textContent = protectedAgent.output || 'AGENT NOT STARTED';
         byId('protectedReason').textContent = reason;
         byId('protectedOutcome').className = `flow-node outcome ${outcomeClass}`;
-        byId('machineLog').textContent = JSON.stringify({ passed, action, signature, integrity, group_trust: trusted, reason: result.trust?.reason });
+        byId('machineLog').textContent = JSON.stringify({
+          input: result.input,
+          passed,
+          action,
+          signature,
+          integrity,
+          group_trust: trusted,
+          agent_started: protectedAgent.started,
+          protected_output: protectedAgent.output,
+          unprotected_output: result.unprotected.agent.output,
+          reason: result.protected.reasonCode,
+        });
         byId('logTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       } catch (error) {
         byId('gateStatus').textContent = 'Verifier unavailable';
@@ -486,7 +474,7 @@
         byId('logTime').textContent = 'error';
       } finally {
         button.disabled = false;
-        button.textContent = 'Run file';
+        button.textContent = 'Say hello';
       }
     }
 

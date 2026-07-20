@@ -29,7 +29,7 @@ Official deadline: July 21, 2026 at 5:00 PM Pacific Time.
 - [x] Testing instructions require no rebuild and no paid account.
 - [x] Repository is public with an Apache-2.0 license.
 - [x] Release includes a public backup copy of the final demonstration video.
-- [x] Public `v0.4.0` package clean-installs with no LLM configured; the prior
+- [x] Public `v0.4.1` package clean-installs with no LLM configured; the prior
   provider-module check remains covered by the automated suite.
 - [x] Hello World agent tests prove trusted inference, zero protected inference
   after a bitter soul edit, guarded repair, and outside-group rejection.

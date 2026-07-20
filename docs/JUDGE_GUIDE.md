@@ -17,20 +17,17 @@ Open <https://free2pa-buildweek.azurewebsites.net>. No files are required for
 the primary test; each button calls the submitted verifier with a prepared
 public fixture.
 
-1. Leave **Changed** and **Block** selected, then choose **Say hello**. The live
-   Azure model in the unchecked lane follows the altered `SOUL.md` and returns
-   a bitter greeting. The protected lane returns `SIGN PASS`, `FILE FAIL`, and
-   `GROUP PASS`, then `QUARANTINE`; its model call is skipped.
-2. Set the protected policy to **Repair + report** and say hello again. The
-   unchecked lane remains bitter. The protected lane returns
-   `RESTORE + RUN + REPORT`, recovers only the hash-verified signed optimistic
-   soul, and asks the same model for a new optimistic greeting.
-3. Select **Outside group** and say hello. Signature and file integrity pass,
-   local trust fails with `UNTRUSTED_ISSUER`, and the protected agent does not
-   start.
-4. Select **Trusted** and say hello. All three gates pass and both Azure-hosted
-   agents return optimistic greetings.
-5. Open **Research workbench**, download the behavioral-risk fixture from
+1. Leave **Changed** and **Block** selected, then choose **Run file**. The
+   unchecked lane loads the altered file. The protected lane returns
+   `SIGN PASS`, `FILE FAIL`, and `GROUP PASS`, then `QUARANTINE`.
+2. Set the policy to **Repair + report** and run again. Free2PA verifies the
+   embedded original, returns `RESTORE + REPORT`, and preserves the rejected
+   copy as evidence in the command-line workflow.
+3. Select **Outside group** and run again. Signature and file integrity pass,
+   local trust fails with `UNTRUSTED_ISSUER`, and the host returns `REJECT`.
+4. Select **Trusted**. Every gate passes and the host returns `LOAD`.
+5. Open **Hello World example** to inspect one real LLM host integration, or
+   open **Research workbench**, download the behavioral-risk fixture from
    **Demo files**, and run **GPT-5.6 Audit**. The structured result records the
    model, Azure managed-identity provider, audit time, and asset hash.
 
@@ -87,6 +84,6 @@ trust all pass.
 
 Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0>
+Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1>
 
 Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29704365424>

@@ -6,9 +6,9 @@ of interchangeable screenshots.
 
 Download the exact set:
 
-- [Gallery ZIP](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-Devpost-Gallery-v0.4.0.zip)
-- [Contact sheet](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/contact-sheet.png)
-- ZIP SHA-256: `36ea97a814f3012f9cb3cb312dfd744dfcc358a374aa3bc285a88407e669b49a`
+- [Gallery ZIP](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-Devpost-Gallery-v0.4.1.zip)
+- [Contact sheet](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/contact-sheet.png)
+- ZIP SHA-256: `105b2e6f3792fb4a4e142bb8e2263a5d5c82d24b9c3c5915caedfc33d5de3ddb`
 
 The local working copies are in `artifacts/devpost-gallery/`.
 
@@ -16,18 +16,18 @@ The local working copies are in `artifacts/devpost-gallery/`.
 
 1. `01-free2pa-identity.png` - Product identity and literal offer.
 2. `02-nerve-center-load-gate.png` - Nerve Center problem and programmatic gate.
-3. `03-live-agentic-factory.png` - Real Azure-hosted Hello World agent comparison.
-4. `04-trusted-file-loads.png` - Trusted soul loads before the protected model call.
-5. `05-changed-file-quarantined.png` - Unchecked agent turns bitter while the protected agent stops.
-6. `06-guarded-repair-and-report.png` - Signed original is restored before the protected agent runs.
-7. `07-outside-publisher-rejected.png` - Valid outside-group soul is rejected before model context.
-8. `08-host-enforcement-policies.png` - Block, repair, alert, and log application policies.
+3. `03-live-agentic-factory.png` - Generic model-independent Agentic Factory.
+4. `04-trusted-file-loads.png` - All provenance gates pass and the host loads.
+5. `05-changed-file-quarantined.png` - Changed bytes are quarantined before load.
+6. `06-outside-publisher-rejected.png` - Authentic outside-group publisher is rejected.
+7. `07-host-enforcement-policies.png` - Block, repair, alert, and log application policies.
+8. `08-guarded-repair-and-report.png` - Signed original is restored with evidence.
 9. `09-ad-hoc-trust-boundary.png` - Verifier-local ad-hoc group model.
 10. `10-signed-sidecar-four-gates.png` - Sidecar credential and four independent gates.
 11. `11-mcp-verify-asset.png` - Generic MCP `verify_asset` structured response.
 12. `12-installable-codex-skill.png` - Codex retrofit workflow.
 13. `13-developer-toolkit-surfaces.png` - CLI, CI, HTTP, MCP, and browser surfaces.
-14. `14-gpt-5-6-behavioral-audit.png` - Independent GPT-5.6 behavioral audit.
+14. `14-hello-world-reference-integration.png` - One LLM host integration and optional audit boundary.
 15. `15-build-week-provenance.png` - Research baseline, new work, and C2PA disclosure.
 
 ## Identity system
@@ -48,12 +48,12 @@ Primary colors:
 - Context blue: `#76a9ff`
 
 The standalone PNG logo is available at
-https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-logo.png.
+https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-logo.png.
 
 ## Evidence standard
 
-Images 3 through 7 use captures from the deployed Azure application, its real
-GPT-5.6 Hello World agent, and its real verification responses. The MCP field
-names in image 11 match the v0.4.0 output schema. The Build Week claims in image
-15 match the documented baseline and released implementation. No private keys,
-credentials, personal data, or non-public services appear in the set.
+Images 3 through 8 use the generic Agentic Factory and real Free2PA verification
+responses. Image 14 alone centers the Hello World reference integration. The
+MCP field names in image 11 match the v0.4.1 output schema. The Build Week
+claims in image 15 match the documented baseline and released implementation.
+No private keys, credentials, personal data, or non-public services appear.

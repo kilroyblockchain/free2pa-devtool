@@ -277,12 +277,12 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Item | State | Evidence |
 |---|---|---|
 | Core toolkit | Complete | Public source and Apache-2.0 license. |
-| Automated suite | Passing | 20 tests, including protected model-call suppression, guarded repair, generic MCP trusted, changed, and outside-group cases. |
+| Automated suite | Passing | 21 tests, including protected model-call suppression, guarded repair, generic MCP cases, and the toolkit-first product hierarchy. |
 | MCP HTTP transport | Passing locally | Live Streamable HTTP client returns `LOAD`, `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` as expected. |
 | Public CI | Green on current public documentation commit | GitHub Actions run `29714038314` verifies public commit `894b248`. |
-| Azure demo | Healthy on `0.4.0` | Real managed-identity GPT-5.6 Hello World comparison proves trusted inference, changed-soul quarantine, guarded repair, and outside-group rejection; production MCP remains available. |
-| Freeware release | Public `v0.4.0` | Package, load-gate API, fact-gathering Codex skill, runnable Hello World agent, signed fixtures, implementation runbook, and optional LLM provider contract are attached to the green commit. |
-| Final video file | Complete | `artifacts/Free2PA-Build-Week-v0.4.0.mp4`. |
+| Azure demo | Toolkit-first revision ready | Generic Agentic Factory is primary; managed-identity Hello World remains a separate reference integration; production MCP remains available. |
+| Freeware release | `v0.4.1` prepared | Package, load-gate API, fact-gathering Codex skill, reference agent, signed fixtures, runbook, and optional LLM provider contract are included. |
+| Final video file | Complete | `artifacts/Free2PA-Build-Week-v0.4.1.mp4`; 2:55.7, 1080p, continuous normalized narration. |
 | Devpost registration | Complete | Authenticated account is already registered for OpenAI Build Week. |
 | Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, public video, and 15-image gallery uploaded and logged-out verified. |
 | YouTube | Public and verified | `https://youtu.be/utuJHUSHp_c`; 2:56.2 master, custom thumbnail, public oEmbed, 1080p video, and 48 kHz audio available. |
@@ -292,10 +292,10 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 
 - Live Agentic Factory: <https://free2pa-buildweek.azurewebsites.net>
 - Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
-- Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0>
+- Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1>
 - Devpost project: <https://devpost.com/software/free2pa>
 - Public YouTube video: <https://youtu.be/utuJHUSHp_c>
-- Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-Build-Week-v0.4.0.mp4>
+- Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-Build-Week-v0.4.1.mp4>
 
 ## Devpost field packet
 
@@ -335,7 +335,7 @@ The full project narrative and judge instructions live in
 - [x] Add the YouTube URL to the Devpost project.
 - [x] Design, render, and independently inspect fifteen 3:2 submission images.
 - [x] Publish the exact gallery set, contact sheet, refined logo, and checksums
-  on the public v0.4.0 release.
+  on the public v0.4.1 release.
 - [x] Replace the Devpost gallery thumbnail with the refined identity frame.
 - [x] Attach the fifteen images to the Devpost project in their documented order.
 - [ ] Populate every Devpost custom answer and save the complete draft.

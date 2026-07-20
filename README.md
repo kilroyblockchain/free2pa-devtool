@@ -46,44 +46,6 @@ agent framework. The developer adds the verification call at the point where
 the application reads a critical file. The included Codex skill can locate
 that point and wire the check into an existing agent application.
 
-## See it protect a real Hello World agent
-
-The live demo runs the same small Azure-hosted LLM through two application
-lanes. Its signed `SOUL.md` permits only a greeting in the form
-`Hello, <optimistic adjective> world!`.
-
-- With the trusted soul, the protected agent starts and returns an optimistic
-  greeting.
-- After the soul is changed to require a bitter adjective, the unprotected
-  agent follows it. Free2PA detects that the bytes no longer match the signed
-  receipt and does not call the model under the default Block policy.
-- Under Repair + report, Free2PA recovers the hash-verified original from the
-  valid receipt, runs the agent with that optimistic soul, and reports the
-  rejected change.
-- A valid soul signed by a publisher outside the demo's temporary trust group
-  is rejected before the model is called.
-
-The changed file is evidence of a change, not evidence of a particular cause.
-It could result from an attack, an engineer's mistake, or an agent rewriting
-its own Nerve Center after a misunderstanding. Free2PA does not guess. It
-establishes the two provenance facts at the heart of C2PA: who originated the
-file, and whether the signed bytes were edited. The local verifier then decides
-whether that origin and edit history is acceptable for its temporary trust
-group.
-
-Try it without an account at
-<https://free2pa-buildweek.azurewebsites.net>. The repository example uses the
-operator's own OpenAI or Azure OpenAI account:
-
-```bash
-npm run demo:hello -- trusted
-npm run demo:hello -- changed
-npm run demo:hello -- changed repair
-```
-
-The cryptographic Free2PA toolkit still requires no LLM. The model is part of
-this example application, not part of the trust decision.
-
 ## How do I set it up?
 
 ### Fastest path: let Codex implement it
@@ -303,6 +265,34 @@ by this release and demo.
 
 No account, rebuild, or paid service is required for judge testing.
 
+### Hello World reference integration
+
+The separate
+[Hello World reference page](https://free2pa-buildweek.azurewebsites.net/hello-world.html)
+shows one minimal application placing the same general load gate before a real
+Azure-hosted LLM consumes `SOUL.md`. It is an integration example, not the
+Free2PA product boundary.
+
+Its signed soul permits only `Hello, <optimistic adjective> world!`. A changed
+soul requests bitter adjectives. Under Block, Free2PA detects the edited bytes
+and skips the protected model call. Under Repair + report, it recovers the
+hash-verified signed original before starting the protected agent. A valid soul
+from a publisher outside the verifier's temporary group is also rejected before
+model context.
+
+Run the packaged example with the operator's own OpenAI or Azure OpenAI account:
+
+```bash
+npm run demo:hello -- trusted
+npm run demo:hello -- changed
+npm run demo:hello -- changed repair
+```
+
+The changed file proves a change, not a particular cause. It could result from
+an attack, an engineering mistake, or an agent rewriting its own Nerve Center
+after a misunderstanding. The cryptographic Free2PA toolkit requires no LLM;
+the model belongs to this reference application, not the trust decision.
+
 ## The three checks
 
 Every verification answers three separate questions:
@@ -463,7 +453,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: kilroyblockchain/free2pa-devtool@v0.4.0
+      - uses: kilroyblockchain/free2pa-devtool@v0.4.1
         with:
           path: skills
           trust-store: .free2pa/trusted-publishers
@@ -515,7 +505,7 @@ X.509 certificates belong in a verifier's trust store.
 C2PA has a formal conformance program. Conforming Content Credentials are
 verified by conforming verifiers, providing an interoperable provenance layer.
 
-Free2PA `0.4.0` is **C2PA-inspired, not a conforming C2PA implementation**. It
+Free2PA `0.4.1` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
 conforming C2PA products. Like C2PA, its provenance claim is specifically about

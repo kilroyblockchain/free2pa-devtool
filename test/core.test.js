@@ -705,3 +705,20 @@ test('the removed legacy test client is not exposed', () => {
   assert.equal(statusCode, 404);
   assert.deepEqual(body, { error: 'Not found' });
 });
+
+test('public product hierarchy keeps Hello World as a reference integration', async () => {
+  const [toolkitPage, helloPage] = await Promise.all([
+    readFile(resolve('public/index.html'), 'utf8'),
+    readFile(resolve('public/hello-world.html'), 'utf8'),
+  ]);
+
+  assert.match(toolkitPage, /Run the same file through both agent lanes/);
+  assert.match(toolkitPage, /POST \/api\/verify/);
+  assert.match(toolkitPage, /href="\/hello-world\.html">Hello World example/);
+  assert.doesNotMatch(toolkitPage, /\/api\/hello-agent\/compare/);
+
+  assert.match(helloPage, /Reference integration \/ Hello World/);
+  assert.match(helloPage, /one implementation example, not the Free2PA product boundary/i);
+  assert.match(helloPage, /\/api\/hello-agent\/compare/);
+  assert.match(helloPage, /href="\/">Toolkit factory/);
+});

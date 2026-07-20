@@ -227,7 +227,7 @@ Week extension separately.
 - Generic MCP load gate for arbitrary Nerve Center files, not only bundled
   server fixtures.
 - Reusable GitHub Action for pull-request trust enforcement and JSON evidence.
-- Eighteen automated tests covering signing, trust, tampering, CLI behavior,
+- Twenty-one automated tests covering signing, trust, tampering, CLI behavior,
   load-gate safety, and API contracts.
 - Read-only and rate-limited public-demo mode.
 - Zero known npm vulnerabilities at release-check time.
@@ -267,7 +267,7 @@ does not claim C2PA endorsement.
 - Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1
 - Live demo: https://free2pa-buildweek.azurewebsites.net
 - Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-Build-Week-v0.4.1.mp4
-- YouTube demo: https://youtu.be/utuJHUSHp_c
+- YouTube demo: https://youtu.be/ENMRlkhARVQ
 - Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
 
 ## Judge testing instructions
@@ -362,7 +362,7 @@ Description:
 >
 > Source: https://github.com/kilroyblockchain/free2pa-devtool
 
-The public video is https://youtu.be/utuJHUSHp_c. The uploaded master is 2:56.2,
+The public video is https://youtu.be/ENMRlkhARVQ. The uploaded master is 2:55.7,
 1920x1080 H.264/AAC, has Azure Neural HD English narration, no music, and
 normalized speech at approximately -16.7 dB mean volume. The source decoded
 without error and contains no unexplained audio dropouts. YouTube's public

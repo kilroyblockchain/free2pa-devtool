@@ -279,13 +279,13 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Core toolkit | Complete | Public source and Apache-2.0 license. |
 | Automated suite | Passing | 21 tests, including protected model-call suppression, guarded repair, generic MCP cases, and the toolkit-first product hierarchy. |
 | MCP HTTP transport | Passing locally | Live Streamable HTTP client returns `LOAD`, `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` as expected. |
-| Public CI | Green on current public documentation commit | GitHub Actions run `29714038314` verifies public commit `894b248`. |
-| Azure demo | Toolkit-first revision ready | Generic Agentic Factory is primary; managed-identity Hello World remains a separate reference integration; production MCP remains available. |
-| Freeware release | `v0.4.1` prepared | Package, load-gate API, fact-gathering Codex skill, reference agent, signed fixtures, runbook, and optional LLM provider contract are included. |
+| Public CI | Green on the `v0.4.1` release commit | GitHub Actions run `29739052381` verifies public commit `6d0c195`. |
+| Azure demo | Healthy on `0.4.1` | Generic Agentic Factory is primary; managed-identity Hello World is a separate reference integration; production MCP passes all three verdicts. |
+| Freeware release | Public `v0.4.1` | Package, load-gate API, fact-gathering Codex skill, reference agent, signed fixtures, runbook, video, gallery, and checksums are attached to public commit `6d0c195`. |
 | Final video file | Complete | `artifacts/Free2PA-Build-Week-v0.4.1.mp4`; 2:55.7, 1080p, continuous normalized narration. |
 | Devpost registration | Complete | Authenticated account is already registered for OpenAI Build Week. |
-| Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, public video, and 15-image gallery uploaded and logged-out verified. |
-| YouTube | Public and verified | `https://youtu.be/utuJHUSHp_c`; 2:56.2 master, custom thumbnail, public oEmbed, 1080p video, and 48 kHz audio available. |
+| Devpost project | Draft populated | Project `free2pa`, ID `1346166`; toolkit-first write-up, links, technologies, logo, new public video, and revised 15-image gallery are saved. |
+| YouTube | Public and verified | `https://youtu.be/ENMRlkhARVQ`; 2:55.7 master, generic trust-gate thumbnail, public oEmbed, 1080p video, and separate audio streams available. |
 | Final Devpost submission | Pending | Requires entrant assertions, custom fields, and final submit action. |
 
 ## Public links
@@ -294,7 +294,7 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 - Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 - Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1>
 - Devpost project: <https://devpost.com/software/free2pa>
-- Public YouTube video: <https://youtu.be/utuJHUSHp_c>
+- Public YouTube video: <https://youtu.be/ENMRlkhARVQ>
 - Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-Build-Week-v0.4.1.mp4>
 
 ## Devpost field packet
@@ -307,7 +307,7 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Repository | `https://github.com/kilroyblockchain/free2pa-devtool` |
 | Judge demo | `https://free2pa-buildweek.azurewebsites.net` |
 | Session ID | `019f72ea-75e0-7670-8c90-48602c610d24` |
-| Video | `https://youtu.be/utuJHUSHp_c` |
+| Video | `https://youtu.be/ENMRlkhARVQ` |
 | Submitter type | Karen must confirm Individual, Team of Individuals, or Organization. |
 | Country | Karen must confirm the country entered as the legal residence. |
 | Ownership and eligibility | Karen must make the final legal assertions. |

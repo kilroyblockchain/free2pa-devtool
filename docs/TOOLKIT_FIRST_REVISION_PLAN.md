@@ -3,8 +3,8 @@
 **Prepared for:** Karen Kilroy  
 **Purpose:** Correct the OpenAI Build Week presentation so Free2PA is clearly
 the product and Hello World is clearly one implementation example.  
-**Status:** Approved by Karen. Implementation is in progress; final submission
-still requires Karen's legal confirmations and explicit authorization.
+**Status:** Approved, implemented, tested, and published. Final submission still
+requires Karen's legal confirmations and explicit authorization.
 
 ---
 

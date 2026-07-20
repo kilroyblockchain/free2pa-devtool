@@ -279,12 +279,12 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Core toolkit | Complete | Public source and Apache-2.0 license. |
 | Automated suite | Passing | 20 tests, including protected model-call suppression, guarded repair, generic MCP trusted, changed, and outside-group cases. |
 | MCP HTTP transport | Passing locally | Live Streamable HTTP client returns `LOAD`, `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` as expected. |
-| Public CI | Green on exact release evidence commit | GitHub Actions run `29709680200` verifies public commit `f6d95ec`. |
+| Public CI | Green on current public documentation commit | GitHub Actions run `29714038314` verifies public commit `894b248`. |
 | Azure demo | Healthy on `0.4.0` | Real managed-identity GPT-5.6 Hello World comparison proves trusted inference, changed-soul quarantine, guarded repair, and outside-group rejection; production MCP remains available. |
 | Freeware release | Public `v0.4.0` | Package, load-gate API, fact-gathering Codex skill, runnable Hello World agent, signed fixtures, implementation runbook, and optional LLM provider contract are attached to the green commit. |
 | Final video file | Complete | `artifacts/Free2PA-Build-Week-v0.4.0.mp4`. |
 | Devpost registration | Complete | Authenticated account is already registered for OpenAI Build Week. |
-| Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, and public video uploaded. |
+| Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, public video, and 15-image gallery uploaded and logged-out verified. |
 | YouTube | Public and verified | `https://youtu.be/utuJHUSHp_c`; 2:56.2 master, custom thumbnail, public oEmbed, 1080p video, and 48 kHz audio available. |
 | Final Devpost submission | Pending | Requires entrant assertions, custom fields, and final submit action. |
 
@@ -335,9 +335,9 @@ The full project narrative and judge instructions live in
 - [x] Add the YouTube URL to the Devpost project.
 - [x] Design, render, and independently inspect fifteen 3:2 submission images.
 - [x] Publish the exact gallery set, contact sheet, refined logo, and checksums
-  on the public v0.3.1 release.
+  on the public v0.4.0 release.
 - [x] Replace the Devpost gallery thumbnail with the refined identity frame.
-- [ ] Attach the fifteen images to the Devpost project in their documented order.
+- [x] Attach the fifteen images to the Devpost project in their documented order.
 - [ ] Populate every Devpost custom answer and save the complete draft.
 
 ### July 19: submit with buffer

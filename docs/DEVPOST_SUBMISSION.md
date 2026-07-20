@@ -368,8 +368,8 @@ The final set contains fifteen 1800x1200 images. It moves from product identity
 through real verifier outcomes, enforcement policy, the trust model, MCP and
 Codex integrations, GPT-5.6, and the Build Week provenance disclosure.
 
-- Exact gallery ZIP: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Devpost-Gallery-v0.3.1.zip
-- Contact sheet: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/contact-sheet.png
-- Refined logo: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-logo.png
+- Exact gallery ZIP: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-Devpost-Gallery-v0.4.0.zip
+- Contact sheet: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/contact-sheet.png
+- Refined logo: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-logo.png
 - Upload order and captions: `docs/COLLATERAL.md`
 - Gallery ZIP SHA-256: `f645d53e2b67219bf4c92b8aa8ec487dd32af0eb5ffba2ce50a97e152f8b3786`

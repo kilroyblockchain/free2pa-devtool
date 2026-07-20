@@ -6,9 +6,9 @@ of interchangeable screenshots.
 
 Download the exact set:
 
-- [Gallery ZIP](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Devpost-Gallery-v0.3.1.zip)
-- [Contact sheet](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/contact-sheet.png)
-- ZIP SHA-256: `f645d53e2b67219bf4c92b8aa8ec487dd32af0eb5ffba2ce50a97e152f8b3786`
+- [Gallery ZIP](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-Devpost-Gallery-v0.4.0.zip)
+- [Contact sheet](https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/contact-sheet.png)
+- ZIP SHA-256: `36ea97a814f3012f9cb3cb312dfd744dfcc358a374aa3bc285a88407e669b49a`
 
 The local working copies are in `artifacts/devpost-gallery/`.
 
@@ -16,11 +16,11 @@ The local working copies are in `artifacts/devpost-gallery/`.
 
 1. `01-free2pa-identity.png` - Product identity and literal offer.
 2. `02-nerve-center-load-gate.png` - Nerve Center problem and programmatic gate.
-3. `03-live-agentic-factory.png` - Full live product experience.
-4. `04-trusted-file-loads.png` - All deterministic checks pass and the host loads.
-5. `05-changed-file-quarantined.png` - Changed bytes fail and the host quarantines.
-6. `06-guarded-repair-and-report.png` - Trusted signed original is restored and reported.
-7. `07-outside-publisher-rejected.png` - Authentic outside-group publisher is rejected.
+3. `03-live-agentic-factory.png` - Real Azure-hosted Hello World agent comparison.
+4. `04-trusted-file-loads.png` - Trusted soul loads before the protected model call.
+5. `05-changed-file-quarantined.png` - Unchecked agent turns bitter while the protected agent stops.
+6. `06-guarded-repair-and-report.png` - Signed original is restored before the protected agent runs.
+7. `07-outside-publisher-rejected.png` - Valid outside-group soul is rejected before model context.
 8. `08-host-enforcement-policies.png` - Block, repair, alert, and log application policies.
 9. `09-ad-hoc-trust-boundary.png` - Verifier-local ad-hoc group model.
 10. `10-signed-sidecar-four-gates.png` - Sidecar credential and four independent gates.
@@ -48,12 +48,12 @@ Primary colors:
 - Context blue: `#76a9ff`
 
 The standalone PNG logo is available at
-https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-logo.png.
+https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-logo.png.
 
 ## Evidence standard
 
-Images 3 through 7 use captures from the deployed Azure application and its real
-verification responses. The MCP field names in image 11 match the v0.3.1 output
-schema. The Build Week claims in image 15 match the documented baseline and
-released implementation. No private keys, credentials, personal data, or
-non-public services appear in the set.
+Images 3 through 7 use captures from the deployed Azure application, its real
+GPT-5.6 Hello World agent, and its real verification responses. The MCP field
+names in image 11 match the v0.4.0 output schema. The Build Week claims in image
+15 match the documented baseline and released implementation. No private keys,
+credentials, personal data, or non-public services appear in the set.

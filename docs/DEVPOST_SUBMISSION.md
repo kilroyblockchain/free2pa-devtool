@@ -25,9 +25,11 @@ Karen calls the collection of skills and critical agent-control files the
 **Nerve Center**. It can include files such as `SKILL.md` and `SOUL.md` that
 shape what an agent can do. A file may be changed by an external attack, an
 engineering mistake, someone outside the trust group, or the agent itself
-acting on a misunderstanding. In every case, the operational question is the
-same: does this exact file still have provenance the local group accepts?
-Free2PA detects the change without guessing its cause.
+acting on a misunderstanding. In every case, Free2PA establishes the two
+provenance facts at the heart of C2PA: who originated this file, and whether its
+signed bytes were edited. The local verifier then decides whether that origin
+and edit history is acceptable for its temporary trust group. Free2PA detects
+the change without guessing its cause.
 
 People form temporary trust groups constantly. A college class trusts its
 members for a semester. Two teams trust each other for one assignment. A
@@ -255,8 +257,8 @@ does not claim C2PA endorsement.
 - Repository: https://github.com/kilroyblockchain/free2pa-devtool
 - Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0
 - Live demo: https://free2pa-buildweek.azurewebsites.net
-- Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4
-- YouTube demo: https://youtu.be/WU8W2mQBA24
+- Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-Build-Week-v0.4.0.mp4
+- YouTube demo: https://youtu.be/utuJHUSHp_c
 - Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
 
 ## Judge testing instructions
@@ -354,11 +356,11 @@ Description:
 >
 > Source: https://github.com/kilroyblockchain/free2pa-devtool
 
-The public video is https://youtu.be/WU8W2mQBA24. The uploaded master is 2:51.4,
+The public video is https://youtu.be/utuJHUSHp_c. The uploaded master is 2:56.2,
 1920x1080 H.264/AAC, has Azure Neural HD English narration, no music, and
-normalized speech at approximately -16.8 LUFS. YouTube's processed rendition
-was independently checked at 2:51.46 with 1080p available and no new audio
-dropouts.
+normalized speech at approximately -16.7 dB mean volume. The source decoded
+without error and contains no unexplained audio dropouts. YouTube's public
+rendition was independently checked with 1080p video and 48 kHz audio available.
 
 ## Gallery assets
 

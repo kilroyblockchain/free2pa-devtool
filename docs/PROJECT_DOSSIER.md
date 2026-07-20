@@ -185,9 +185,10 @@ context; it does not imply C2PA endorsement.
 
 C2PA has a formal conformance program in which conforming Content Credentials
 are verified by conforming verifiers. Free2PA is C2PA-inspired but uses its own
-sidecar format to carry C2PA-style provenance credentials. A signed publisher
-identity traces origin and exact-byte binding reveals edits. Free2PA then
-addresses an adjacent agentic question: which publishers does this local,
+sidecar format to carry C2PA-style provenance credentials. Like C2PA, its
+provenance claim is about origin and edits: a signed publisher identity traces
+origin and exact-byte binding reveals whether the signed bytes changed. Free2PA
+then addresses an adjacent agentic question: which publishers does this local,
 temporary verifier trust?
 
 ## Research baseline and Build Week scope
@@ -276,15 +277,15 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 | Item | State | Evidence |
 |---|---|---|
 | Core toolkit | Complete | Public source and Apache-2.0 license. |
-| Automated suite | Passing | 14 tests, including generic MCP trusted, changed, and outside-group cases. |
+| Automated suite | Passing | 20 tests, including protected model-call suppression, guarded repair, generic MCP trusted, changed, and outside-group cases. |
 | MCP HTTP transport | Passing locally | Live Streamable HTTP client returns `LOAD`, `CONTENT_CHANGED`, and `UNTRUSTED_ISSUER` as expected. |
-| Public CI | Green on exact MCP release commit | GitHub Actions run `29652472565` verifies public commit `23a0d93`. |
+| Public CI | Green on exact release evidence commit | GitHub Actions run `29709680200` verifies public commit `f6d95ec`. |
 | Azure demo | Healthy on `0.4.0` | Real managed-identity GPT-5.6 Hello World comparison proves trusted inference, changed-soul quarantine, guarded repair, and outside-group rejection; production MCP remains available. |
 | Freeware release | Public `v0.4.0` | Package, load-gate API, fact-gathering Codex skill, runnable Hello World agent, signed fixtures, implementation runbook, and optional LLM provider contract are attached to the green commit. |
-| Final video file | Complete | `artifacts/Free2PA-Build-Week-final.mp4`. |
+| Final video file | Complete | `artifacts/Free2PA-Build-Week-v0.4.0.mp4`. |
 | Devpost registration | Complete | Authenticated account is already registered for OpenAI Build Week. |
 | Devpost project | Draft populated | Project `free2pa`, ID `1346166`; current write-up, links, technologies, logo, and public video uploaded. |
-| YouTube | Public and verified | `https://youtu.be/WU8W2mQBA24`; 2:51.46, custom thumbnail, 1080p available, and processed audio checked for dropouts. |
+| YouTube | Public and verified | `https://youtu.be/utuJHUSHp_c`; 2:56.2 master, custom thumbnail, public oEmbed, 1080p video, and 48 kHz audio available. |
 | Final Devpost submission | Pending | Requires entrant assertions, custom fields, and final submit action. |
 
 ## Public links
@@ -293,20 +294,20 @@ Azure Neural HD narration, no music, and approximately -16.8 LUFS audio.
 - Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
 - Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.0>
 - Devpost project: <https://devpost.com/software/free2pa>
-- Public YouTube video: <https://youtu.be/WU8W2mQBA24>
-- Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.3.1/Free2PA-Build-Week-demo.mp4>
+- Public YouTube video: <https://youtu.be/utuJHUSHp_c>
+- Backup video: <https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.0/Free2PA-Build-Week-v0.4.0.mp4>
 
 ## Devpost field packet
 
 | Field | Prepared value |
 |---|---|
 | Project | Free2PA |
-| Tagline | The automatic trust gate for the files that steer AI agents. |
+| Tagline | The seat belt for the files that steer AI agents. |
 | Category | Developer Tools |
 | Repository | `https://github.com/kilroyblockchain/free2pa-devtool` |
 | Judge demo | `https://free2pa-buildweek.azurewebsites.net` |
 | Session ID | `019f72ea-75e0-7670-8c90-48602c610d24` |
-| Video | `https://youtu.be/WU8W2mQBA24` |
+| Video | `https://youtu.be/utuJHUSHp_c` |
 | Submitter type | Karen must confirm Individual, Team of Individuals, or Organization. |
 | Country | Karen must confirm the country entered as the legal residence. |
 | Ownership and eligibility | Karen must make the final legal assertions. |

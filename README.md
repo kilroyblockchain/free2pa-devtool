@@ -66,7 +66,10 @@ lanes. Its signed `SOUL.md` permits only a greeting in the form
 The changed file is evidence of a change, not evidence of a particular cause.
 It could result from an attack, an engineer's mistake, or an agent rewriting
 its own Nerve Center after a misunderstanding. Free2PA does not guess. It
-answers whether this exact file still has provenance the local group accepts.
+establishes the two provenance facts at the heart of C2PA: who originated the
+file, and whether the signed bytes were edited. The local verifier then decides
+whether that origin and edit history is acceptable for its temporary trust
+group.
 
 Try it without an account at
 <https://free2pa-buildweek.azurewebsites.net>. The repository example uses the
@@ -515,10 +518,11 @@ verified by conforming verifiers, providing an interoperable provenance layer.
 Free2PA `0.4.0` is **C2PA-inspired, not a conforming C2PA implementation**. It
 uses sidecar files to carry C2PA-style provenance credentials in a Free2PA
 format, not a C2PA Manifest Store, and does not claim interoperability with
-conforming C2PA products. A signed publisher identity traces origin, while
-asset binding reveals edits. Free2PA then addresses an adjacent local-policy
-question for an agentic nerve center: which publishers does this temporary
-group choose to trust? It is not a replacement for C2PA conformance.
+conforming C2PA products. Like C2PA, its provenance claim is specifically about
+origin and edits: a signed publisher identity traces origin, while asset binding
+reveals whether the signed bytes changed. Free2PA then addresses an adjacent
+local-policy question for an agentic nerve center: which publishers does this
+temporary group choose to trust? It is not a replacement for C2PA conformance.
 
 ## OpenAI Build Week
 

@@ -1078,7 +1078,7 @@
       byId('soulHeading').textContent = 'Unsigned saved SOUL.md';
       byId('signSoul').hidden = false;
       byId('editStatus').className = 'edit-status warning';
-      byId('editStatus').textContent = 'Saved revision is not signed yet. A new signature is required before this version can be trusted.';
+      byId('editStatus').textContent = 'File changed after signature. Free2PA will fall back to the last signed file until this revision is signed.';
       showSoulText(savedSoulText);
     }
 
@@ -1317,7 +1317,7 @@
                 ? 'Unsigned saved revision is pending signature. Free2PA loaded the previous signed SOUL.md.'
               : 'Control file verified. Free2PA returned LOAD.';
           } else if (repaired) {
-            byId('alertSummary').textContent = 'Saved edit detected. Free2PA restored the signed original and returned LOAD.';
+            byId('alertSummary').textContent = 'File changed after signature. Free2PA fell back to the last signed SOUL.md and returned LOAD.';
           } else {
             byId('alertSummary').textContent = 'Control file did not verify, so the model call was stopped.';
           }

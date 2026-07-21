@@ -794,7 +794,8 @@ test('public product hierarchy opens with the Hello World demo', async () => {
   assert.match(helloPage, /\/api\/hello-agent\/run-edited/);
   assert.match(helloPage, /\/api\/hello-agent\/sign-edited/);
   assert.match(helloPage, /\/api\/hello-agent\/run-signed-edited/);
-  assert.match(helloPage, /A new signature is required/);
+  assert.match(helloPage, /File changed after signature/);
+  assert.match(helloPage, /fall back to the last signed file/);
   assert.match(helloPage, /previous signed SOUL\.md remains active/);
   assert.match(helloPage, /tooltip-close/);
   assert.match(helloPage, /Change only this one control word/);

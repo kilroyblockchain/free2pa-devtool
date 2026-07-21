@@ -70,15 +70,15 @@ Only then does `SOUL.md` enter model context.
 
 If the user saves an edit, the UI treats it as a new local revision.
 
-Important: even if the saved text matches the older signed text, the demo
-requires a new signature. This models a strict approval boundary: a local write
-event is not trusted merely because the final bytes look familiar.
+Important: a saved revision does not become active until it is signed. If the
+saved text matches the previous signed text, the app continues to run the
+previous verified version while the unsigned local revision waits for approval.
 
 Expected UI state:
 
 ```text
-SIGN REQUIRED
-UNSIGNED_LOCAL_REVISION
+LOAD
+unsigned saved revision pending; previous signed SOUL.md remains active
 ```
 
 ### Changed but unsigned file

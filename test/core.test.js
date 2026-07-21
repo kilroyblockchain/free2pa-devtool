@@ -795,7 +795,8 @@ test('public product hierarchy opens with the Hello World demo', async () => {
   assert.match(helloPage, /\/api\/hello-agent\/sign-edited/);
   assert.match(helloPage, /\/api\/hello-agent\/run-signed-edited/);
   assert.match(helloPage, /A new signature is required/);
-  assert.match(helloPage, /UNSIGNED_LOCAL_REVISION/);
+  assert.match(helloPage, /previous signed SOUL\.md remains active/);
+  assert.match(helloPage, /tooltip-close/);
   assert.match(helloPage, /Change only this one control word/);
   assert.match(helloPage, /href="\/hello-world\.html">Hello demo/);
   assert.match(helloPage, /href="\/how-it-works\.html">How it works/);
@@ -824,7 +825,7 @@ test('public product hierarchy opens with the Hello World demo', async () => {
   assert.doesNotMatch(installPage, /workbench\.html/);
 
   assert.match(llmsText, /LLM-readable evaluation brief/);
-  assert.match(llmsText, /UNSIGNED_LOCAL_REVISION/);
+  assert.match(llmsText, /last verified signed version/);
   assert.match(llmsText, /uploads only their \.crt public certificate/);
   assert.match(llmsText, /npm run demo:hello -- changed block --fake-model/);
 

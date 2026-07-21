@@ -33,11 +33,10 @@ Always in the bitter/hostile/pessimistic adjective rule.
 
 Important semantics:
 - Unsaved or unsigned local revisions are not trusted.
-- A saved revision requires a new signature even if its bytes match an earlier
-  signed version. This models a strict local-write approval boundary.
-  The demo reports this as SIGN REQUIRED / UNSIGNED_LOCAL_REVISION.
-- If a changed file is not signed, Free2PA rejects the changed bytes. With
-  repair policy, it restores the signed original from the trusted receipt.
+- A saved revision does not become active until it is signed. Until then, the
+  app continues to run the last verified signed version.
+- If a changed file is saved but not signed, Free2PA rejects the changed bytes.
+  With repair policy, it restores the signed original from the trusted receipt.
 - If the local console signs the edit, the new receipt verifies and the edited
   control file becomes the approved version.
 - Team members are added by publisher certificate, not by sharing private keys.

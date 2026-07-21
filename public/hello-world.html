@@ -319,8 +319,25 @@
       font-size: .76rem;
       line-height: 1.45;
     }
+    .tooltip-close {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: .78rem;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: 2px 2px 0 var(--line);
+    }
     .tooltip-panel h2 {
-      margin: 0 0 8px;
+      margin: 0 30px 8px 0;
       font-size: .92rem;
       line-height: 1.1;
     }
@@ -345,10 +362,28 @@
     .tooltip-panel .passes span {
       display: flex;
       justify-content: space-between;
+      align-items: center;
       gap: 10px;
       border: 2px solid var(--line);
       background: var(--paper);
       padding: 6px 8px;
+      font-size: .7rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .tooltip-panel .passes span span {
+      display: inline;
+      border: 0;
+      background: transparent;
+      padding: 0;
+      font-size: inherit;
+      font-weight: inherit;
+      line-height: inherit;
+    }
+    .tooltip-panel .passes strong {
+      font-size: inherit;
+      line-height: inherit;
+      font-weight: 900;
     }
     .window-bar {
       min-height: 40px;
@@ -800,6 +835,7 @@
               <details class="verify-tooltip load-payload">
                 <summary aria-label="LOAD payload">LOAD</summary>
                 <div class="tooltip-panel">
+                  <button class="tooltip-close" type="button" aria-label="Close tooltip">×</button>
                   <h2>Return payload</h2>
                   <pre id="machineLog">ready: model call waits for verification</pre>
                 </div>
@@ -820,6 +856,7 @@
               <details class="verify-tooltip">
                 <summary aria-label="How Free2PA verifies it">?</summary>
                 <div class="tooltip-panel">
+                  <button class="tooltip-close" type="button" aria-label="Close tooltip">×</button>
                   <h2>How Free2PA verifies it</h2>
                   <p>Use this with any agent control file: prompts, skills, policies, tool manifests, or this demo's <code>SOUL.md</code>. Free2PA returns <code>LOAD</code> only when the proof matches.</p>
                   <dl>
@@ -830,9 +867,9 @@
                     <div>
                       <dt>Checks</dt>
                       <dd class="passes">
-                        <span>Signature <strong>PASS</strong></span>
-                        <span>File matches receipt <strong>PASS</strong></span>
-                        <span>Publisher trusted <strong>PASS</strong></span>
+                        <span><span>Signature</span> <strong>PASS</strong></span>
+                        <span><span>File matches receipt</span> <strong>PASS</strong></span>
+                        <span><span>Publisher trusted</span> <strong>PASS</strong></span>
                       </dd>
                     </div>
                     <div>
@@ -1201,7 +1238,7 @@
       byId('alertSummary').textContent = savedSoulText !== null && savedSoulText !== originalSoulText
         ? 'Checking saved SOUL.md edit against the signed receipt.'
         : savedSoulText !== null
-          ? 'Saved SOUL.md revision needs a new signature before this app can use it.'
+          ? 'Saved SOUL.md revision is not signed yet. The app will continue with the previous signed SOUL.md until this revision is signed.'
         : signedEditedSidecar
           ? 'Checking the new SOUL.md signature from the local Free2PA console.'
         : 'Checking the signed receipt before the control file reaches model context.';
@@ -1214,29 +1251,17 @@
       const scenario = scenarioForRun();
       byId('serviceOutput').hidden = true;
       const edited = savedSoulText !== null && savedSoulText !== originalSoulText;
+      const unsignedPending = savedSoulText !== null && !edited;
       const signedEdited = signedEditedSidecar && signedEditedSoulText;
-      if (savedSoulText !== null && !edited) {
-        byId('gateStatus').textContent = 'SIGN REQUIRED';
-        byId('gateStatus').className = 'decision warn';
-        byId('guardState').textContent = 'unsigned';
-        byId('alertSummary').textContent = 'This saved revision matches the old text, but it is still a new local write. Sign it before the app can use it.';
-        byId('machineLog').textContent = JSON.stringify({
-          action: 'SIGN REQUIRED',
-          reason: 'UNSIGNED_LOCAL_REVISION',
-          model_started: false,
-        });
-        setBubble('protectedOutput', 'Hello World Agent', 'Saved SOUL.md revision needs a new signature before it can be used.', 'bubble agent blocked');
-        button.disabled = false;
-        button.textContent = '👋 Say Hello';
-        return;
-      }
       const policy = edited ? 'repair' : 'block';
       const endpoint = signedEdited ? '/api/hello-agent/run-signed-edited' : edited ? '/api/hello-agent/run-edited' : '/api/hello-agent/run';
       byId('machineLog').textContent = edited
         ? `POST ${endpoint} { content: saved SOUL.md edit, policy: "${policy}" }`
         : signedEdited
           ? `POST ${endpoint} { content: signed SOUL.md edit, sidecar: signed receipt, policy: "${policy}" }`
-        : `POST ${endpoint} { scenario: "${scenario}", policy: "${policy}" }`;
+        : unsignedPending
+          ? `POST ${endpoint} { scenario: "${scenario}", policy: "${policy}", note: "unsigned saved revision pending; previous signed SOUL.md remains active" }`
+          : `POST ${endpoint} { scenario: "${scenario}", policy: "${policy}" }`;
 
       try {
         const requestBody = signedEdited
@@ -1288,6 +1313,8 @@
           if (passed) {
             byId('alertSummary').textContent = signedEdited
               ? 'Signed edit verified. Free2PA returned LOAD for the approved version.'
+              : unsignedPending
+                ? 'Unsigned saved revision is pending signature. Free2PA loaded the previous signed SOUL.md.'
               : 'Control file verified. Free2PA returned LOAD.';
           } else if (repaired) {
             byId('alertSummary').textContent = 'Saved edit detected. Free2PA restored the signed original and returned LOAD.';
@@ -1336,6 +1363,12 @@
     byId('editSoul').addEventListener('click', startSoulEdit);
     byId('saveSoul').addEventListener('click', saveSoulEdit);
     byId('signSoul').addEventListener('click', signSoulEdit);
+    document.addEventListener('click', (event) => {
+      const close = event.target.closest('.tooltip-close');
+      if (!close) return;
+      const tooltip = close.closest('details');
+      if (tooltip) tooltip.open = false;
+    });
     resetResult();
     loadSoulText();
   </script>

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Protect an Agent with Free2PA"
+  short_description: "Add tamper-evident trust to agent control files"
+  default_prompt: "Use $free2pa-protect-agent to fact-gather how this agent loads its control files, report the Free2PA fact sheet, then make the application tamper-evident for our project trust group."

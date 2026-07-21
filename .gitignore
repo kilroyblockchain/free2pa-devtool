@@ -1,0 +1,12 @@
+node_modules/
+uploads/
+certs/*.key
+certs/*.csr
+certs/*.srl
+certs/tmp_*.conf
+.env
+.free2pa/
+.DS_Store
+.idea/
+coverage/
+artifacts/

@@ -1,0 +1,12 @@
+.claude/
+.idea/
+certs/
+docs/
+radio_intern/
+reference/
+skills/
+test/
+cbor_validator/
+src/routes/images.js
+src/services/hardBoundVerifier.js
+src/services/trustList.js

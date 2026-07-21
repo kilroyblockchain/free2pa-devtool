@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free2PA | How it works</title>
+  <meta name="description" content="How Free2PA verifies and restores tamper-evident agent control files before they enter model context.">
+  <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM-readable Free2PA brief">
+  <link rel="alternate" type="text/markdown" href="/llm-evaluation.md" title="LLM evaluation brief">
+  <link rel="icon" href="/free2pa-mark.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #e9e2cf;
+      --ink: #171717;
+      --muted: #6a6254;
+      --paper: #fffdf4;
+      --panel: #f7f1de;
+      --line: #171717;
+      --yellow: #ffe45c;
+      --green: #0a8f4b;
+      --green-soft: #dff4e7;
+      --red-soft: #ffe0dc;
+      --blue-soft: #dfeaff;
+      --blue: #4c7dff;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 18px 18px, rgba(23,23,23,.08) 1px, transparent 1px),
+        var(--bg);
+      background-size: 24px 24px;
+      color: var(--ink);
+      font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    code, pre { font: inherit; }
+    .shell { width: min(1320px, calc(100% - 40px)); margin: 0 auto; }
+
+    .topbar {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid var(--line);
+      border-top: 0;
+      background: var(--paper);
+      padding: 0 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 900; }
+    .brand img { width: 28px; height: 28px; }
+    .brand span:last-child { color: var(--muted); font-size: .68rem; text-transform: uppercase; }
+    .nav { display: flex; gap: 16px; align-items: center; }
+    .nav a {
+      color: var(--ink);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 28px;
+      text-decoration: none;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: .72rem;
+      font-weight: 900;
+      line-height: 1;
+      box-shadow: inset 0 -3px 0 transparent;
+      transition: background-color .16s ease, box-shadow .16s ease, color .16s ease;
+    }
+    .nav a:hover { background: var(--blue-soft); box-shadow: inset 0 -3px 0 rgba(76, 125, 255, .45); }
+    .nav a[aria-current="page"] {
+      background: var(--blue-soft);
+      box-shadow: inset 0 -3px 0 var(--blue);
+    }
+
+    .hero { padding: 38px 0 20px; }
+    .eyebrow {
+      display: inline-block;
+      margin-bottom: 12px;
+      padding: 4px 7px;
+      background: var(--ink);
+      color: var(--paper);
+      font-size: .68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; max-width: 1050px; font-size: clamp(1.8rem, 4.2vw, 4rem); line-height: .96; letter-spacing: -.07em; }
+    .hero-subhead {
+      margin: 14px 0 0;
+      max-width: 1120px;
+      color: var(--muted);
+      font-size: clamp(.84rem, 1.25vw, 1.08rem);
+      line-height: 1.42;
+      font-weight: 700;
+    }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border: 2px solid var(--line);
+      background: var(--paper);
+      box-shadow: 8px 8px 0 var(--line);
+      margin: 18px 0 34px;
+    }
+    .proof-item {
+      min-height: 126px;
+      padding: 16px;
+      border-right: 2px solid var(--line);
+    }
+    .proof-item:last-child { border-right: 0; }
+    .proof-item span {
+      display: inline-grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      margin-bottom: 12px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--green-soft);
+      font-size: .74rem;
+      font-weight: 900;
+    }
+    .proof-item strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: .82rem;
+      text-transform: uppercase;
+    }
+    .proof-item p { margin: 0; color: var(--muted); font-size: .74rem; line-height: 1.45; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(360px, 1.05fr);
+      gap: 22px;
+      align-items: start;
+      margin-bottom: 42px;
+    }
+    .card {
+      border: 2px solid var(--line);
+      background: var(--paper);
+      box-shadow: 7px 7px 0 var(--line);
+      padding: 18px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 1.1rem; letter-spacing: -.03em; }
+    .card p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.55; }
+    .card p + p { margin-top: 10px; }
+    .card a { color: var(--ink); font-weight: 900; }
+
+    .receipt {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    .file-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .file {
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 12px;
+      min-height: 124px;
+    }
+    .file strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .74rem;
+      text-transform: uppercase;
+    }
+    .file pre {
+      margin: 0;
+      white-space: pre-wrap;
+      color: var(--muted);
+      font-size: .7rem;
+      line-height: 1.45;
+    }
+    .signed { background: var(--green-soft); }
+
+    .checks {
+      display: grid;
+      gap: 10px;
+    }
+    .check {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 10px;
+    }
+    .check span:first-child {
+      display: grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      font-size: .7rem;
+      font-weight: 900;
+    }
+    .check strong { font-size: .76rem; text-transform: uppercase; }
+    .check small { display: block; margin-top: 3px; color: var(--muted); font-size: .68rem; line-height: 1.35; }
+    .badge {
+      border: 2px solid var(--line);
+      background: var(--green-soft);
+      padding: 4px 7px;
+      font-size: .66rem;
+      font-weight: 900;
+    }
+
+    .decision-map {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .decision {
+      border: 2px solid var(--line);
+      background: var(--green-soft);
+      padding: 14px;
+      min-height: 118px;
+    }
+    .decision.reject { background: var(--red-soft); }
+    .decision.restore { background: var(--yellow); }
+    .decision strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: .78rem;
+      text-transform: uppercase;
+    }
+    .decision p { font-size: .74rem; }
+
+    .code-card pre {
+      margin: 12px 0 0;
+      overflow: auto;
+      border: 2px solid var(--line);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 14px;
+      font-size: .72rem;
+      line-height: 1.5;
+    }
+
+    .restore-flow {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .restore-step {
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 12px;
+    }
+    .restore-step strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: .72rem;
+      text-transform: uppercase;
+    }
+    .restore-step p { font-size: .7rem; }
+
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 2px 0 50px;
+    }
+    .cta a {
+      display: inline-block;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 5px 5px 0 var(--line);
+      padding: 10px 12px;
+      text-decoration: none;
+      font-size: .76rem;
+      font-weight: 900;
+    }
+    .cta a:first-child { background: var(--green-soft); }
+
+    @media (max-width: 900px) {
+      .proof-strip, .grid, .restore-flow { grid-template-columns: 1fr; }
+      .proof-item { border-right: 0; border-bottom: 2px solid var(--line); }
+      .proof-item:last-child { border-bottom: 0; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 24px, 1320px); }
+      .brand span:last-child { display: none; }
+      .nav { gap: 10px; }
+      .file-pair, .decision-map { grid-template-columns: 1fr; }
+      h1 { font-size: 1.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <a class="brand" href="/" aria-label="Free2PA home">
+      <img src="/free2pa-mark.svg" alt="">
+      <span>Free2PA</span>
+      <span>How it works</span>
+    </a>
+    <nav class="nav" aria-label="Project links">
+      <a href="/">Hello World demo</a>
+      <a aria-current="page" href="/how-it-works.html">How it works</a>
+      <a href="/install.html">Install</a>
+      <a href="/llms.txt">LLM brief</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <h1>Free2PA checks the file before the agent can read it.</h1>
+      <p class="hero-subhead">Agent control files are executable context. Free2PA puts a signed receipt beside each protected file, verifies the receipt at the load boundary, and returns a simple decision: <code>LOAD</code>, <code>REJECT</code>, or restore the signed original before the model sees anything.</p>
+    </section>
+
+    <section class="proof-strip" aria-label="Free2PA flow">
+      <div class="proof-item">
+        <span>1</span>
+        <strong>Sign reviewed text</strong>
+        <p>A trusted publisher signs the approved control file and creates a neighboring receipt.</p>
+      </div>
+      <div class="proof-item">
+        <span>2</span>
+        <strong>Verify before load</strong>
+        <p>The host checks the receipt exactly where it would normally read prompts, skills, tools, or policy.</p>
+      </div>
+      <div class="proof-item">
+        <span>3</span>
+        <strong>Return a decision</strong>
+        <p>Unchanged and trusted files get <code>LOAD</code>. Failed proof gets <code>REJECT</code>.</p>
+      </div>
+      <div class="proof-item">
+        <span>4</span>
+        <strong>Restore if allowed</strong>
+        <p>If the file was edited, Free2PA can recover the signed original and report the rejected change.</p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="card receipt">
+        <h2>1. The receipt sits beside the file</h2>
+        <p>The control file stays readable Markdown. The proof lives in a sidecar, so existing apps can adopt Free2PA without inventing a new prompt format.</p>
+        <div class="file-pair">
+          <div class="file">
+            <strong>SOUL.md</strong>
+            <pre># Hello World Agent
+
+Respond with:
+Hello, &lt;positive&gt; world!</pre>
+          </div>
+          <div class="file signed">
+            <strong>SOUL.md.c2pa.json</strong>
+            <pre>{
+  "asset": {
+    "hash": "sha256...",
+    "content": "base64..."
+  },
+  "signature": "ES256..."
+}</pre>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <h2>2. The verifier checks separate facts</h2>
+        <div class="checks">
+          <div class="check">
+            <span>✓</span>
+            <div><strong>Receipt signature</strong><small>Was this receipt signed by the certificate inside it?</small></div>
+            <b class="badge">PASS</b>
+          </div>
+          <div class="check">
+            <span>✓</span>
+            <div><strong>File hash</strong><small>Does the current file still match the signed hash?</small></div>
+            <b class="badge">PASS</b>
+          </div>
+          <div class="check">
+            <span>✓</span>
+            <div><strong>Certificate current</strong><small>Is the publisher certificate inside its validity window?</small></div>
+            <b class="badge">PASS</b>
+          </div>
+          <div class="check">
+            <span>✓</span>
+            <div><strong>Publisher trusted</strong><small>Is that certificate in this app's local trust group?</small></div>
+            <b class="badge">PASS</b>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="card">
+        <h2>3. The app gets a small answer</h2>
+        <p>Free2PA does not need to become the agent framework. It returns a load decision the host can enforce before model context is built.</p>
+        <div class="decision-map">
+          <div class="decision">
+            <strong>LOAD</strong>
+            <p>The file is signed, unchanged, current, and locally trusted. The verified text can enter model context.</p>
+          </div>
+          <div class="decision reject">
+            <strong>REJECT</strong>
+            <p>The receipt is invalid, the file changed, the certificate is stale, or the publisher is outside the group.</p>
+          </div>
+          <div class="decision restore">
+            <strong>RESTORE + RUN + REPORT</strong>
+            <p>The edited file is rejected, the signed original is recovered, and the event is reported.</p>
+          </div>
+          <div class="decision reject">
+            <strong>STOP + REPORT</strong>
+            <p>Repair is refused if the receipt, certificate, or publisher trust does not verify.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="card code-card">
+        <h2>4. Add it at the read path</h2>
+        <p>The integration point is the moment your app reads a control file.</p>
+        <pre>import { loadVerifiedFile } from 'free2pa/load-gate';
+
+const instructions = await loadVerifiedFile({
+  assetPath: 'SOUL.md',
+  trustStore: 'trusted-publishers',
+});
+
+// Only verified text reaches model context.
+await model.responses.create({
+  instructions,
+  input: userMessage,
+});</pre>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>5. Restore is deliberately narrow</h2>
+      <p>Repair is not a way to bless changed instructions. It only uses the original content embedded in a valid, current, locally trusted receipt.</p>
+      <div class="restore-flow">
+        <div class="restore-step">
+          <strong>Changed file detected</strong>
+          <p>The current file hash does not match the signed hash, so the changed text is not loaded.</p>
+        </div>
+        <div class="restore-step">
+          <strong>Trusted receipt verified</strong>
+          <p>The receipt signature, certificate, and publisher trust still pass.</p>
+        </div>
+        <div class="restore-step">
+          <strong>Signed original recovered</strong>
+          <p>The embedded original is decoded, re-hashed, and used only if it matches the signed hash.</p>
+        </div>
+      </div>
+    </section>
+
+    <nav class="cta" aria-label="Next steps">
+      <a href="/">Run the Hello World demo →</a>
+      <a href="/install.html">See it installed in Hello World →</a>
+      <a href="/llm-evaluation.md">Read the LLM evaluation brief →</a>
+      <a href="https://github.com/kilroyblockchain/free2pa-devtool/tree/main/integrations/codex/free2pa-protect-agent">Add it with Codex →</a>
+    </nav>
+  </main>
+</body>
+</html>

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Free2PA local trust gate</title>
+  <desc id="desc">Two provenance checks converge on a decision point inside an open local trust boundary.</desc>
+  <path d="M18 11.8A23 23 0 1 1 18 52.2" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="square"/>
+  <path d="M3.5 23.5h15.5L29 32M3.5 40.5h15.5L29 32" fill="none" stroke="currentColor" stroke-width="5.5" stroke-linecap="square" stroke-linejoin="miter"/>
+  <circle cx="34" cy="32" r="6" fill="currentColor"/>
+</svg>

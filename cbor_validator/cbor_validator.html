@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>CBOR Diagnostic Notation Validator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style>
+        body {
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            background: radial-gradient(circle at top, #1b1f3b, #0b0d1a);
+            color: #e6e6f0;
+            margin: 0;
+            padding: 2rem;
+        }
+        h1 { font-weight: 600; letter-spacing: 0.03em; }
+        .container { max-width: 900px; margin: auto; }
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            background: #0f1328;
+            color: #eaeaff;
+            border: 1px solid #2b2f55;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+            font-size: 0.93rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .btn-row { display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap; }
+        button {
+            padding: 0.65rem 1.4rem;
+            border-radius: 999px;
+            border: none;
+            cursor: pointer;
+            background: linear-gradient(135deg, #7b5cff, #4fd1c5);
+            color: #0b0d1a;
+            font-weight: 600;
+            font-size: 0.93rem;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-upload {
+            background: #1a1f42;
+            color: #b6c6ff;
+            border: 1px solid #2b2f55;
+        }
+        .btn-upload:hover { background: #22274e; opacity: 1; }
+        .filename-chip {
+            font-size: 0.8rem;
+            color: #7070a0;
+            font-family: ui-monospace, monospace;
+        }
+        .result {
+            margin-top: 1.5rem;
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            background: #0f1328;
+            border: 1px solid #2b2f55;
+            font-family: ui-monospace, monospace;
+            font-size: 0.88rem;
+            min-height: 2rem;
+        }
+        .ok    { color: #7dffb3; }
+        .error { color: #ff8a8a; }
+        .warn  { color: #ffd080; }
+        .note  { margin-top: 1rem; font-size: 0.83rem; color: #b6b6d6; line-height: 1.6; }
+        code   { font-family: ui-monospace, monospace; }
+
+        /* ── tree styles ── */
+        .summary { margin-bottom: 0.75rem; font-weight: 600; font-size: 0.92rem; }
+        .tree { padding: 0.25rem 0; }
+        .tree-node { padding: 0.12rem 0; }
+        .tree-children {
+            margin-left: 1rem;
+            border-left: 1px solid #252848;
+            padding-left: 0.85rem;
+        }
+        .tree-line { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.3rem; }
+        .type-badge {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 0.06rem 0.38rem;
+            border-radius: 3px;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+        /* major type colours */
+        .t0 { background: #162f4a; color: #6dcfff; }  /* uint  */
+        .t1 { background: #2e1650; color: #b97aff; }  /* nint  */
+        .t2 { background: #123325; color: #6affb0; }  /* bstr  */
+        .t3 { background: #332112; color: #ffb36a; }  /* tstr  */
+        .t4 { background: #21321e; color: #b8f07a; }  /* array */
+        .t5 { background: #321e2e; color: #ff78c0; }  /* map   */
+        .t6 { background: #333212; color: #fff06a; }  /* tag   */
+        .t7 { background: #12283a; color: #78baff; }  /* simple/float */
+
+        .node-val  { color: #dde0ff; white-space: pre; }
+        .node-key  { color: #9ab8e8; font-style: italic; }
+        .node-meta { color: #666899; font-size: 0.82rem; }
+        .node-warn { color: #ffc84a; font-size: 0.8rem; display: block; margin-left: 0.3rem; }
+        .tag-info  { color: #666899; font-size: 0.8rem; font-style: italic; }
+        .arrow     { color: #444678; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>CBOR Diagnostic Notation Validator</h1>
+    <p>Paste CBOR Diagnostic Notation (RFC 8949 §8.1) below and press <strong>Validate</strong> or <strong>Ctrl+Enter</strong>.</p>
+
+    <textarea id="input" placeholder='{1: 2, "name": h'"'"'010203'"'"', 100("tagged"), [_ true, null, NaN], {_ "k": simple(42)}}'></textarea>
+
+    <input type="file" id="file-input" accept=".diag,.txt,.cbor,.json,text/*" style="display:none" />
+    <div class="btn-row">
+        <button onclick="runValidator()">Validate</button>
+        <button class="btn-upload" onclick="document.getElementById('file-input').click()">&#8599; Open File</button>
+        <span class="filename-chip" id="filename-chip"></span>
+    </div>
+
+    <div id="result" class="result"><span class="node-meta">Output appears here.</span></div>
+
+    <div class="note">
+        <strong>Full semantic checks:</strong>
+        integer ranges (uint 0..2&#x2074;&#x2044;&#x207b;&#x00b9;, nint &#x2212;1..&#x2212;2&#x2074;&#x2044;),
+        hex byte strings (even-length, valid digits),
+        base64/base32 encoding validity,
+        map key uniqueness,
+        tag content types per RFC 8949 §3.4 (tags 0–5, 21–24, 32–36, 55799),
+        <code>simple(n)</code> range and reserved values,
+        float encoding suffixes (<code>_1</code> half, <code>_2</code> single, <code>_3</code> double),
+        indefinite-length string chunk homogeneity.<br>
+        Supports: <code>h'...'</code>, <code>b64'...'</code>, <code>b32'...'</code>, <code>n(...)</code> tags,
+        <code>simple(n)</code>, <code>[_ ...]</code> / <code>{_ ...}</code> / <code>(_ ...)</code>,
+        <code>// line comments</code>, numeric separators (<code>1_000</code>), hex literals (<code>0x1a</code>).
+    </div>
+</div>
+
+<script>
+'use strict';
+
+// ── ParseError ────────────────────────────────────────────────────────────────
+class ParseError extends Error {
+  constructor(msg, pos) { super(msg); this.pos = pos; }
+}
+
+// ── Token types ───────────────────────────────────────────────────────────────
+const TT = Object.freeze({
+  INT:'INT', FLOAT:'FLOAT',
+  TEXT:'TEXT',
+  HEX_BYTES:'HEX_BYTES', B64_BYTES:'B64_BYTES', B32_BYTES:'B32_BYTES',
+  TRUE:'TRUE', FALSE:'FALSE', NULL:'NULL', UNDEF:'UNDEF',
+  NAN:'NAN', INF:'INF', NEGINF:'NEGINF',
+  SIMPLE_KW:'SIMPLE_KW',
+  LBRACE:'{', RBRACE:'}', LBRACKET:'[', RBRACKET:']',
+  LPAREN:'(', RPAREN:')',
+  COMMA:',', COLON:':', UNDERSCORE:'_',
+  EOF:'EOF',
+});
+
+// ── Tokenizer ─────────────────────────────────────────────────────────────────
+class Tokenizer {
+  constructor(src) { this.src = src; this.pos = 0; }
+  eof()      { return this.pos >= this.src.length; }
+  ch()       { return this.src[this.pos]; }
+  peek(n=1)  { return this.src[this.pos + n]; }
+  adv()      { return this.src[this.pos++]; }
+  err(msg, pos = this.pos) { throw new ParseError(msg, pos); }
+
+  skipWS() {
+    for (;;) {
+      while (!this.eof() && /\s/.test(this.ch())) this.adv();
+      if (!this.eof() && this.ch() === '/' && this.peek() === '/') {
+        while (!this.eof() && this.ch() !== '\n') this.adv();
+      } else break;
+    }
+  }
+
+  readStr() {
+    const sp = this.pos;
+    this.adv(); // opening "
+    let v = '';
+    while (!this.eof()) {
+      const c = this.adv();
+      if (c === '"') return { type: TT.TEXT, value: v, pos: sp };
+      if (c !== '\\') { v += c; continue; }
+      if (this.eof()) break;
+      const e = this.adv();
+      if (e === 'u') {
+        const h = this.src.slice(this.pos, this.pos + 4);
+        if (!/^[0-9a-fA-F]{4}$/.test(h)) this.err(`Invalid \\u escape at position ${this.pos}`);
+        v += String.fromCodePoint(parseInt(h, 16));
+        this.pos += 4;
+      } else {
+        const ESC = { '"':'"', '\\':'\\', '/':'/', b:'\b', f:'\f', n:'\n', r:'\r', t:'\t' };
+        if (!(e in ESC)) this.err(`Invalid escape \\${e} at position ${this.pos - 1}`);
+        v += ESC[e];
+      }
+    }
+    this.err('Unterminated string at position ' + sp);
+  }
+
+  readBytes() {
+    const sp = this.pos;
+    let enc;
+    if (this.src.startsWith("h'", this.pos))    { enc = 'hex'; this.pos += 1; }
+    else if (this.src.startsWith("b64'", this.pos)) { enc = 'b64'; this.pos += 3; }
+    else if (this.src.startsWith("b32'", this.pos)) { enc = 'b32'; this.pos += 3; }
+    else this.err('Unexpected byte string prefix at position ' + sp);
+    this.pos++; // consume opening '
+    const cs = this.pos;
+    while (!this.eof() && this.ch() !== "'") this.adv();
+    if (this.eof()) this.err('Unterminated byte string at position ' + sp);
+    const content = this.src.slice(cs, this.pos);
+    this.adv(); // consume closing '
+    const type = enc === 'hex' ? TT.HEX_BYTES : enc === 'b64' ? TT.B64_BYTES : TT.B32_BYTES;
+    return { type, value: content, pos: sp };
+  }
+
+  readNum() {
+    const sp = this.pos;
+    let s = '';
+    const neg = this.ch() === '-';
+    if (neg) s += this.adv();
+
+    // Hex literal: 0x...
+    if (this.ch() === '0' && /[xX]/.test(this.peek())) {
+      this.adv(); this.adv(); // skip 0x
+      const hs = this.pos;
+      while (!this.eof() && /[0-9a-fA-F_]/.test(this.ch())) this.adv();
+      const hexDigits = this.src.slice(hs, this.pos).replace(/_/g, '');
+      if (!hexDigits) this.err('Empty hex literal at position ' + sp);
+      const val = BigInt('0x' + hexDigits);
+      return { type: TT.INT, value: neg ? -val : val, pos: sp };
+    }
+
+    while (!this.eof() && /[0-9_]/.test(this.ch())) s += this.adv();
+
+    let isFloat = false;
+    if (!this.eof() && this.ch() === '.' && /[0-9]/.test(this.peek())) {
+      isFloat = true; s += this.adv();
+      while (!this.eof() && /[0-9_]/.test(this.ch())) s += this.adv();
+    }
+    if (!this.eof() && /[eE]/.test(this.ch())) {
+      isFloat = true; s += this.adv();
+      if (!this.eof() && /[+\-]/.test(this.ch())) s += this.adv();
+      while (!this.eof() && /[0-9]/.test(this.ch())) s += this.adv();
+    }
+
+    // Encoding suffix: _0 _1 _2 _3
+    let sfx = null;
+    if (!this.eof() && this.ch() === '_' && /[0-3]/.test(this.peek())) {
+      this.adv(); sfx = parseInt(this.adv());
+    }
+
+    const clean = s.replace(/_/g, '');
+    if (!clean || clean === '-') this.err('Invalid number at position ' + sp);
+
+    if (isFloat) return { type: TT.FLOAT, value: parseFloat(clean), raw: clean, sfx, pos: sp };
+    try {
+      return { type: TT.INT, value: BigInt(clean), sfx, pos: sp };
+    } catch {
+      return { type: TT.FLOAT, value: parseFloat(clean), raw: clean, sfx, pos: sp };
+    }
+  }
+
+  next() {
+    this.skipWS();
+    if (this.eof()) return { type: TT.EOF, pos: this.pos };
+    const sp = this.pos, c = this.ch();
+
+    // Byte strings (must come before identifier check)
+    if (c === 'h' && this.peek() === "'") return this.readBytes();
+    if (c === 'b' && this.src.startsWith("64'", this.pos + 1)) return this.readBytes();
+    if (c === 'b' && this.src.startsWith("32'", this.pos + 1)) return this.readBytes();
+
+    // Text string
+    if (c === '"') return this.readStr();
+
+    // Numbers
+    if (/[0-9]/.test(c)) return this.readNum();
+    if (c === '-') {
+      if (/[0-9]/.test(this.peek())) return this.readNum();
+      if (this.src.startsWith('-Infinity', this.pos)) { this.pos += 9; return { type: TT.NEGINF, pos: sp }; }
+      this.err(`Unexpected '-' at position ${sp}`);
+    }
+
+    // Underscore: indefinite-length marker (handled before identifier regex)
+    if (c === '_') { this.adv(); return { type: TT.UNDERSCORE, pos: sp }; }
+
+    // Identifiers / keywords
+    if (/[a-zA-Z]/.test(c)) {
+      let w = '';
+      while (!this.eof() && /[a-zA-Z0-9_]/.test(this.ch())) w += this.adv();
+      switch (w) {
+        case 'true':      return { type: TT.TRUE,      pos: sp };
+        case 'false':     return { type: TT.FALSE,     pos: sp };
+        case 'null':      return { type: TT.NULL,      pos: sp };
+        case 'undefined': return { type: TT.UNDEF,     pos: sp };
+        case 'NaN':       return { type: TT.NAN,       pos: sp };
+        case 'Infinity':  return { type: TT.INF,       pos: sp };
+        case 'simple':    return { type: TT.SIMPLE_KW, pos: sp };
+        default: this.err(`Unknown identifier '${w}' at position ${sp}`);
+      }
+    }
+
+    // Punctuation
+    const PUNCT = {
+      '{': TT.LBRACE,   '}': TT.RBRACE,
+      '[': TT.LBRACKET, ']': TT.RBRACKET,
+      '(': TT.LPAREN,   ')': TT.RPAREN,
+      ',': TT.COMMA,    ':': TT.COLON,
+    };
+    if (c in PUNCT) { this.adv(); return { type: PUNCT[c], pos: sp }; }
+
+    this.err(`Unexpected character '${c}' at position ${sp}`);
+  }
+
+  tokenize() {
+    const toks = [];
+    let t;
+    do { toks.push(t = this.next()); } while (t.type !== TT.EOF);
+    return toks;
+  }
+}
+
+// ── Parser ────────────────────────────────────────────────────────────────────
+class Parser {
+  constructor(toks) { this.toks = toks; this.pos = 0; }
+  cur()  { return this.toks[this.pos]; }
+  adv()  { return this.toks[this.pos++]; }
+  expect(type) {
+    const t = this.cur();
+    if (t.type !== type) throw new ParseError(`Expected '${type}', got '${t.type}'`, t.pos);
+    return this.adv();
+  }
+  err(msg) { throw new ParseError(msg, this.cur().pos); }
+
+  parseVal() {
+    const t = this.cur();
+
+    // Integer — may be followed by '(' for tagged value
+    if (t.type === TT.INT) {
+      this.adv();
+      if (this.cur().type === TT.LPAREN) {
+        // Tagged value: n(content)
+        this.adv(); // consume (
+        const content = this.parseVal();
+        this.expect(TT.RPAREN);
+        return { kind: 'tag', tagNumber: t.value, content, pos: t.pos };
+      }
+      return t.value >= 0n
+        ? { kind: 'uint', value: t.value, sfx: t.sfx, pos: t.pos }
+        : { kind: 'nint', value: t.value, sfx: t.sfx, pos: t.pos };
+    }
+
+    if (t.type === TT.FLOAT)  { this.adv(); return { kind: 'float',  value: t.value, raw: t.raw, sfx: t.sfx, pos: t.pos }; }
+    if (t.type === TT.NAN)    { this.adv(); return { kind: 'float',  value: NaN,       pos: t.pos }; }
+    if (t.type === TT.INF)    { this.adv(); return { kind: 'float',  value: Infinity,  pos: t.pos }; }
+    if (t.type === TT.NEGINF) { this.adv(); return { kind: 'float',  value: -Infinity, pos: t.pos }; }
+    if (t.type === TT.TEXT)   { this.adv(); return { kind: 'tstr',   value: t.value,   pos: t.pos }; }
+    if (t.type === TT.HEX_BYTES) { this.adv(); return { kind: 'bstr', enc: 'hex', content: t.value, pos: t.pos }; }
+    if (t.type === TT.B64_BYTES) { this.adv(); return { kind: 'bstr', enc: 'b64', content: t.value, pos: t.pos }; }
+    if (t.type === TT.B32_BYTES) { this.adv(); return { kind: 'bstr', enc: 'b32', content: t.value, pos: t.pos }; }
+    if (t.type === TT.TRUE)   { this.adv(); return { kind: 'bool',  value: true,  pos: t.pos }; }
+    if (t.type === TT.FALSE)  { this.adv(); return { kind: 'bool',  value: false, pos: t.pos }; }
+    if (t.type === TT.NULL)   { this.adv(); return { kind: 'null',                pos: t.pos }; }
+    if (t.type === TT.UNDEF)  { this.adv(); return { kind: 'undef',               pos: t.pos }; }
+
+    // simple(n)
+    if (t.type === TT.SIMPLE_KW) {
+      this.adv();
+      this.expect(TT.LPAREN);
+      const nt = this.cur();
+      if (nt.type !== TT.INT) this.err('simple() requires an integer argument');
+      const n = nt.value; this.adv();
+      this.expect(TT.RPAREN);
+      return { kind: 'simple', value: n, pos: t.pos };
+    }
+
+    if (t.type === TT.LBRACKET) return this.parseArray();
+    if (t.type === TT.LBRACE)   return this.parseMap();
+
+    // ( _ chunks... ) — indefinite-length byte/text string sequence
+    if (t.type === TT.LPAREN) {
+      this.adv();
+      if (this.cur().type === TT.UNDERSCORE) {
+        this.adv();
+        const chunks = [];
+        if (this.cur().type !== TT.RPAREN) {
+          chunks.push(this.parseVal());
+          while (this.cur().type === TT.COMMA) {
+            this.adv();
+            if (this.cur().type === TT.RPAREN) break;
+            chunks.push(this.parseVal());
+          }
+        }
+        this.expect(TT.RPAREN);
+        return { kind: 'indef_str', chunks, pos: t.pos };
+      }
+      this.err(`Unexpected '(' at position ${t.pos}; use n(...) for tags or (_ ...) for indefinite strings`);
+    }
+
+    this.err(`Unexpected token '${t.type}' at position ${t.pos}`);
+  }
+
+  parseArray() {
+    const sp = this.cur().pos;
+    this.expect(TT.LBRACKET);
+    let indefinite = false;
+    if (this.cur().type === TT.UNDERSCORE) { indefinite = true; this.adv(); }
+    const items = [];
+    if (this.cur().type !== TT.RBRACKET) {
+      items.push(this.parseVal());
+      while (this.cur().type === TT.COMMA) {
+        this.adv();
+        if (this.cur().type === TT.RBRACKET) break; // trailing comma
+        items.push(this.parseVal());
+      }
+    }
+    this.expect(TT.RBRACKET);
+    return { kind: 'array', items, indefinite, pos: sp };
+  }
+
+  parseMap() {
+    const sp = this.cur().pos;
+    this.expect(TT.LBRACE);
+    let indefinite = false;
+    if (this.cur().type === TT.UNDERSCORE) { indefinite = true; this.adv(); }
+    const pairs = [];
+    if (this.cur().type !== TT.RBRACE) {
+      const k = this.parseVal(); this.expect(TT.COLON); const v = this.parseVal();
+      pairs.push({ key: k, val: v });
+      while (this.cur().type === TT.COMMA) {
+        this.adv();
+        if (this.cur().type === TT.RBRACE) break; // trailing comma
+        const k2 = this.parseVal(); this.expect(TT.COLON); const v2 = this.parseVal();
+        pairs.push({ key: k2, val: v2 });
+      }
+    }
+    this.expect(TT.RBRACE);
+    return { kind: 'map', pairs, indefinite, pos: sp };
+  }
+
+  parse() {
+    const val = this.parseVal();
+    if (this.cur().type !== TT.EOF)
+      throw new ParseError(`Extra content after value at position ${this.cur().pos}`, this.cur().pos);
+    return val;
+  }
+}
+
+// ── Semantic analysis ─────────────────────────────────────────────────────────
+const UINT_MAX = (1n << 64n) - 1n;
+const NINT_MIN = -(1n << 64n);
+
+const TAG_INFO = new Map([
+  [0n,     { label: 'Date/Time String',       expect: 'tstr'      }],
+  [1n,     { label: 'Epoch-based Date/Time',  expect: 'number'    }],
+  [2n,     { label: 'Positive Bignum',        expect: 'bstr'      }],
+  [3n,     { label: 'Negative Bignum',        expect: 'bstr'      }],
+  [4n,     { label: 'Decimal Fraction',       expect: 'array2int' }],
+  [5n,     { label: 'Bigfloat',               expect: 'array2int' }],
+  [21n,    { label: 'Base64URL Bytes',        expect: 'bstr'      }],
+  [22n,    { label: 'Base64 Bytes',           expect: 'bstr'      }],
+  [23n,    { label: 'Base16 Bytes',           expect: 'bstr'      }],
+  [24n,    { label: 'Encoded CBOR Item',      expect: 'bstr'      }],
+  [32n,    { label: 'URI',                    expect: 'tstr'      }],
+  [33n,    { label: 'Base64URL Text',         expect: 'tstr'      }],
+  [34n,    { label: 'Base64 Text',            expect: 'tstr'      }],
+  [35n,    { label: 'Regular Expression',     expect: 'tstr'      }],
+  [36n,    { label: 'MIME Message',           expect: 'tstr'      }],
+  [55799n, { label: 'Self-Described CBOR',    expect: 'any'       }],
+]);
+
+function tagContentOk(node, expect) {
+  switch (expect) {
+    case 'tstr':     return node.kind === 'tstr';
+    case 'bstr':     return node.kind === 'bstr';
+    case 'number':   return ['uint','nint','float'].includes(node.kind);
+    case 'array2int':
+      return node.kind === 'array' && node.items.length === 2 &&
+             ['uint','nint'].includes(node.items[0].kind) &&
+             ['uint','nint'].includes(node.items[1].kind);
+    default: return true;
+  }
+}
+
+function nodeKey(node) {
+  switch (node.kind) {
+    case 'uint': case 'nint': return 'i:' + String(node.value);
+    case 'float': return 'f:' + (isNaN(node.value) ? 'NaN' : String(node.value));
+    case 'tstr':  return 's:' + node.value;
+    case 'bstr':  return 'b:' + node.enc + ':' + node.content;
+    case 'bool':  return 'bool:' + node.value;
+    case 'null':  return 'null';
+    case 'undef': return 'undefined';
+    default: return 'x:' + JSON.stringify(node);
+  }
+}
+
+function semanticCheck(root) {
+  const warns = [];
+  function push(node, msg) { warns.push({ node, msg }); }
+
+  function walk(n) {
+    switch (n.kind) {
+
+      case 'uint':
+        if (n.value > UINT_MAX)
+          push(n, `Value ${n.value} exceeds CBOR unsigned integer max (2\u2074\u2044\u207b\u00b9 = ${UINT_MAX}).`);
+        if (n.sfx != null)
+          push(n, `Encoding suffix _${n.sfx} is not valid for integers (only for floats: _1 half, _2 single, _3 double).`);
+        break;
+
+      case 'nint':
+        if (n.value < NINT_MIN)
+          push(n, `Value ${n.value} exceeds CBOR negative integer min (\u22122\u2074\u2044 = ${NINT_MIN}).`);
+        break;
+
+      case 'float':
+        if (n.sfx === 0)
+          push(n, 'Encoding suffix _0 is not a standard float precision; use _1 (half/16-bit), _2 (single/32-bit), or _3 (double/64-bit).');
+        break;
+
+      case 'bstr': {
+        const c = n.content.replace(/\s/g, '');
+        if (n.enc === 'hex') {
+          if (!/^[0-9a-fA-F]*$/.test(c))
+            push(n, `Hex byte string contains non-hex characters.`);
+          else if (c.length % 2 !== 0)
+            push(n, `Hex byte string h'...' has ${c.length} hex digits — must be even (each byte is 2 digits).`);
+        }
+        if (n.enc === 'b64') {
+          if (!/^[A-Za-z0-9+/]*={0,2}$/.test(c))
+            push(n, `Base64 byte string contains invalid characters.`);
+          else if (c.length % 4 !== 0)
+            push(n, `Base64 byte string has length ${c.length} — must be a multiple of 4 (check padding '=').`);
+        }
+        if (n.enc === 'b32') {
+          if (!/^[A-Z2-7=]*$/.test(c) && !/^[a-z2-7=]*$/.test(c))
+            push(n, `Base32 byte string should use uppercase A-Z and digits 2-7, with '=' padding.`);
+        }
+        break;
+      }
+
+      case 'tag': {
+        const info = TAG_INFO.get(n.tagNumber);
+        if (info && info.expect !== 'any' && !tagContentOk(n.content, info.expect))
+          push(n, `Tag ${n.tagNumber} (${info.label}) expects ${info.expect} content, got '${n.content.kind}'.`);
+        walk(n.content);
+        break;
+      }
+
+      case 'map': {
+        const seen = new Map();
+        for (const { key, val } of n.pairs) {
+          walk(key); walk(val);
+          const k = nodeKey(key);
+          if (seen.has(k))
+            push(n, `Duplicate map key: ${leafDisplay(key)}`);
+          else
+            seen.set(k, true);
+        }
+        break;
+      }
+
+      case 'array':
+        for (const item of n.items) walk(item);
+        break;
+
+      case 'simple': {
+        const v = Number(n.value);
+        if (v < 0 || v > 255)
+          push(n, `simple(${v}) is out of CBOR range 0..255.`);
+        else if (v >= 20 && v <= 23) {
+          const names = { 20:'false', 21:'true', 22:'null', 23:'undefined' };
+          push(n, `simple(${v}) is the wire encoding of '${names[v]}'; use the keyword directly.`);
+        } else if (v >= 24 && v <= 31)
+          push(n, `simple(${v}) is in the reserved range 24..31 (conflicts with CBOR additional-info encoding).`);
+        break;
+      }
+
+      case 'indef_str': {
+        if (n.chunks.length > 0) {
+          const kinds = n.chunks.map(c => c.kind);
+          const allBstr = kinds.every(k => k === 'bstr');
+          const allTstr = kinds.every(k => k === 'tstr');
+          if (!allBstr && !allTstr)
+            push(n, 'Indefinite string chunks must all be byte strings or all be text strings, not a mix.');
+        }
+        for (const ch of n.chunks) walk(ch);
+        break;
+      }
+    }
+  }
+
+  walk(root);
+  return warns;
+}
+
+function leafDisplay(node) {
+  switch (node.kind) {
+    case 'uint': case 'nint': return String(node.value);
+    case 'float': { const v = node.value; return isNaN(v) ? 'NaN' : !isFinite(v) ? (v > 0 ? 'Infinity' : '-Infinity') : String(v); }
+    case 'tstr':  return JSON.stringify(node.value);
+    case 'bstr':  return (node.enc === 'hex' ? "h'" : node.enc === 'b64' ? "b64'" : "b32'") + node.content + "'";
+    case 'bool':  return String(node.value);
+    case 'null':  return 'null';
+    case 'undef': return 'undefined';
+    default: return node.kind;
+  }
+}
+
+// ── Renderer ──────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+const BADGES = {
+  uint:      ['t0', 'UINT'],
+  nint:      ['t1', 'NINT'],
+  bstr:      ['t2', 'BSTR'],
+  tstr:      ['t3', 'TSTR'],
+  array:     ['t4', 'ARRAY'],
+  map:       ['t5', 'MAP'],
+  tag:       ['t6', 'TAG'],
+  float:     ['t7', 'FLOAT'],
+  bool:      ['t7', 'SIMPLE'],
+  null:      ['t7', 'SIMPLE'],
+  undef:     ['t7', 'SIMPLE'],
+  simple:    ['t7', 'SIMPLE'],
+  indef_str: ['t2', 'INDEF'],
+};
+
+function bdg(kind) {
+  const [cls, label] = BADGES[kind] || ['t7', kind.toUpperCase()];
+  const titles = { t0:'major 0 (uint)', t1:'major 1 (nint)', t2:'major 2 (bstr)',
+                   t3:'major 3 (tstr)', t4:'major 4 (array)', t5:'major 5 (map)',
+                   t6:'major 6 (tag)', t7:'major 7 (float/simple)' };
+  return `<span class="type-badge ${cls}" title="${titles[cls]}">${label}</span>`;
+}
+
+function warnsFor(node, warns) {
+  return warns
+    .filter(w => w.node === node)
+    .map(w => `<span class="node-warn">\u26a0 ${esc(w.msg)}</span>`)
+    .join('');
+}
+
+function renderNode(node, warns) {
+  const wh = warnsFor(node, warns);
+
+  switch (node.kind) {
+
+    case 'uint': {
+      const sfxNote = node.sfx != null ? ` <span class="node-meta">(_${node.sfx})</span>` : '';
+      return `<div class="tree-line">${bdg('uint')} <span class="node-val">${esc(String(node.value))}</span>${sfxNote}${wh}</div>`;
+    }
+
+    case 'nint':
+      return `<div class="tree-line">${bdg('nint')} <span class="node-val">${esc(String(node.value))}</span>${wh}</div>`;
+
+    case 'float': {
+      const v = node.value;
+      const disp = isNaN(v) ? 'NaN' : !isFinite(v) ? (v > 0 ? 'Infinity' : '-Infinity') : String(v);
+      const sfxLabels = { 1:'half/16-bit', 2:'single/32-bit', 3:'double/64-bit' };
+      const sfxNote = node.sfx != null
+        ? ` <span class="node-meta">(${sfxLabels[node.sfx] || '_' + node.sfx})</span>` : '';
+      return `<div class="tree-line">${bdg('float')} <span class="node-val">${esc(disp)}</span>${sfxNote}${wh}</div>`;
+    }
+
+    case 'tstr':
+      return `<div class="tree-line">${bdg('tstr')} <span class="node-val">${esc(JSON.stringify(node.value))}</span>${wh}</div>`;
+
+    case 'bstr': {
+      const c = node.content.replace(/\s/g, '');
+      const bytes = node.enc === 'hex' ? Math.floor(c.length / 2) + ' bytes' : `(${node.enc})`;
+      const preview = node.content.length > 52 ? node.content.slice(0, 52) + '\u2026' : node.content;
+      const pfx = node.enc === 'hex' ? "h'" : node.enc === 'b64' ? "b64'" : "b32'";
+      return `<div class="tree-line">${bdg('bstr')} <span class="node-val">${esc(pfx)}${esc(preview)}'</span> <span class="node-meta">(${bytes})</span>${wh}</div>`;
+    }
+
+    case 'bool':
+      return `<div class="tree-line">${bdg('bool')} <span class="node-val">${node.value}</span>${wh}</div>`;
+
+    case 'null':
+      return `<div class="tree-line">${bdg('null')} <span class="node-val">null</span>${wh}</div>`;
+
+    case 'undef':
+      return `<div class="tree-line">${bdg('undef')} <span class="node-val">undefined</span>${wh}</div>`;
+
+    case 'simple':
+      return `<div class="tree-line">${bdg('simple')} <span class="node-val">simple(${esc(String(node.value))})</span>${wh}</div>`;
+
+    case 'array': {
+      const cnt = node.items.length;
+      const meta = `${cnt} item${cnt !== 1 ? 's' : ''}${node.indefinite ? ', indefinite-length' : ''}`;
+      const children = node.items.map(item =>
+        `<div class="tree-node">${renderNode(item, warns)}</div>`).join('');
+      return `<div class="tree-line">${bdg('array')} <span class="node-meta">[${meta}]</span>${wh}</div>`
+           + (children ? `<div class="tree-children">${children}</div>` : '');
+    }
+
+    case 'map': {
+      const cnt = node.pairs.length;
+      const meta = `${cnt} pair${cnt !== 1 ? 's' : ''}${node.indefinite ? ', indefinite-length' : ''}`;
+      const mapWh = warnsFor(node, warns); // map-level warnings (duplicate key, etc.)
+      const children = node.pairs.map(({ key, val }) => {
+        const isScalarK = ['uint','nint','float','tstr','bool','null','undef'].includes(key.kind);
+        const isScalarV = ['uint','nint','float','tstr','bool','null','undef'].includes(val.kind);
+        const keyWh = warnsFor(key, warns);
+        const valWh = warnsFor(val, warns);
+        if (isScalarK && isScalarV) {
+          return `<div class="tree-node"><div class="tree-line">`
+               + `<span class="node-key">${esc(leafDisplay(key))}</span>`
+               + ` <span class="arrow">\u2192</span> `
+               + `${renderNode(val, warns).replace(/^<div class="tree-line">/, '').replace(/<\/div>$/, '')}`
+               + `</div></div>`;
+        }
+        // Complex key or value — render each as its own subtree
+        return `<div class="tree-node">`
+             + `<div class="tree-line"><span class="node-meta">key:</span></div>`
+             + `<div class="tree-children"><div class="tree-node">${renderNode(key, warns)}</div></div>`
+             + `<div class="tree-line"><span class="node-meta">val:</span></div>`
+             + `<div class="tree-children"><div class="tree-node">${renderNode(val, warns)}</div></div>`
+             + `</div>`;
+      }).join('');
+      return `<div class="tree-line">${bdg('map')} <span class="node-meta">{${meta}}</span>${mapWh}</div>`
+           + (children ? `<div class="tree-children">${children}</div>` : '');
+    }
+
+    case 'tag': {
+      const info = TAG_INFO.get(node.tagNumber);
+      const infoLabel = info ? ` <span class="tag-info">\u2014 ${esc(info.label)}</span>` : '';
+      const child = `<div class="tree-node">${renderNode(node.content, warns)}</div>`;
+      return `<div class="tree-line">${bdg('tag')} <span class="node-val">${esc(String(node.tagNumber))}(\u2026)</span>${infoLabel}${wh}</div>`
+           + `<div class="tree-children">${child}</div>`;
+    }
+
+    case 'indef_str': {
+      const cnt = node.chunks.length;
+      const kinds = [...new Set(node.chunks.map(c => c.kind))].join('/');
+      const children = node.chunks.map(ch =>
+        `<div class="tree-node">${renderNode(ch, warns)}</div>`).join('');
+      return `<div class="tree-line">${bdg('indef_str')} <span class="node-meta">(_ ${cnt} chunk${cnt !== 1 ? 's' : ''}, ${kinds})</span>${wh}</div>`
+           + (children ? `<div class="tree-children">${children}</div>` : '');
+    }
+
+    default:
+      return `<div class="tree-line"><span class="node-meta">[unknown: ${esc(node.kind)}]</span></div>`;
+  }
+}
+
+// ── Entry point ───────────────────────────────────────────────────────────────
+function runValidator() {
+  const input  = document.getElementById('input').value.trim();
+  const result = document.getElementById('result');
+
+  if (!input) {
+    result.innerHTML = '<span class="error">Input is empty.</span>';
+    return;
+  }
+
+  try {
+    const tokens = new Tokenizer(input).tokenize();
+    const ast    = new Parser(tokens).parse();
+    const warns  = semanticCheck(ast);
+    const wc     = warns.length;
+
+    const summary = wc === 0
+      ? `<div class="summary ok">\u2714 Valid CBOR Diagnostic Notation \u2014 no issues found.</div>`
+      : `<div class="summary warn">\u26a0 Parsed with ${wc} semantic warning${wc !== 1 ? 's' : ''}.</div>`;
+
+    result.innerHTML = summary + `<div class="tree"><div class="tree-node">${renderNode(ast, warns)}</div></div>`;
+  } catch (e) {
+    const pos = e.pos != null ? ` (position ${e.pos})` : '';
+    result.innerHTML = `<span class="error">\u2716 ${esc(e.message)}${pos}</span>`;
+  }
+}
+
+// File upload
+document.getElementById('file-input').addEventListener('change', function () {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    document.getElementById('input').value = e.target.result;
+    document.getElementById('filename-chip').textContent = file.name;
+    document.getElementById('result').innerHTML = '<span class="node-meta">File loaded \u2014 press Validate.</span>';
+  };
+  reader.onerror = () => {
+    document.getElementById('result').innerHTML = '<span class="error">\u2716 Could not read file.</span>';
+  };
+  reader.readAsText(file);
+  this.value = ''; // allow re-selecting the same file
+});
+
+// Ctrl+Enter shortcut
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); runValidator(); }
+});
+</script>
+</body>
+</html>

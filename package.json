@@ -1,0 +1,60 @@
+{
+  "name": "free2pa",
+  "version": "0.4.2",
+  "description": "Provenance, trust verification, and security auditing for AI agent control files",
+  "main": "index.js",
+  "type": "module",
+  "exports": {
+    ".": "./index.js",
+    "./load-gate": "./src/loadGate.js",
+    "./server": "./src/server.js"
+  },
+  "bin": {
+    "free2pa": "bin/free2pa.js"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "demo:hello": "node examples/hello-world-agent/agent.mjs",
+    "generate-cert": "node bin/free2pa.js keygen --name \"Free2PA Dev Signing\" --id signing --out-dir certs",
+    "test": "node --test",
+    "check": "node --check bin/free2pa.js && node --test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.2",
+    "zod": "^4.3.6"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "license": "Apache-2.0",
+  "keywords": [
+    "ai-agent",
+    "codex",
+    "mcp",
+    "provenance",
+    "security",
+    "skills"
+  ],
+  "files": [
+    "bin/",
+    "src/**/*.js",
+    "!src/routes/images.js",
+    "!src/services/hardBoundVerifier.js",
+    "!src/services/trustList.js",
+    "public/",
+    "integrations/",
+    "examples/",
+    "docs/IMPLEMENTATION_RUNBOOK.md",
+    "docs/AUDITOR_PROVIDERS.md",
+    "!public/free2pa.png",
+    "!public/workbench.html",
+    "!public/test.html",
+    "index.js",
+    "README.md",
+    "LICENSE"
+  ]
+}

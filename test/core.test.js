@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { resolve } from 'node:path';
 import { promisify } from 'node:util';
@@ -21,7 +21,7 @@ import {
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 import { canonicalJson } from '../src/utils/canonical.js';
-import { cleanupUploads } from '../src/routes/verify.js';
+import { cleanupUploads, loadDecision } from '../src/routes/verify.js';
 import { buildMcpServer } from '../src/routes/mcp.js';
 import { applySecurityHeaders, rejectLegacyTestClient } from '../src/server.js';
 import { consumeAuditAllowance } from '../src/services/auditLimit.js';
@@ -63,6 +63,14 @@ test('Free2PA core reports an unconfigured optional auditor without failing', as
   assert.match(stdout, /signing, verification, trust, repair, and load gates remain available/);
 });
 
+test('package entrypoint is safe to import as a library', async () => {
+  const library = await import('../index.js');
+  assert.equal(typeof library.signSkill, 'function');
+  assert.equal(typeof library.verifySkill, 'function');
+  assert.equal(typeof library.loadVerifiedFile, 'function');
+  assert.equal(typeof library.createServer, 'function');
+});
+
 test('load gate returns only trusted content and throws on changed content', async () => {
   const trusted = await verifyFileForLoad({
     assetPath: 'public/demo/trusted/SKILL.md',
@@ -99,7 +107,7 @@ test('Hello World agent blocks a bitter soul and repairs from the signed optimis
   const calls = [];
   const runModel = async ({ soul, input }) => {
     calls.push({ soul, input });
-    const bitter = /bitter or pessimistic/i.test(soul);
+    const bitter = /Always use a bitter, hostile, pessimistic/i.test(soul);
     return {
       output: bitter ? 'Hello, miserable world!' : 'Hello, beautiful world!',
       provider: 'test-model',
@@ -118,6 +126,7 @@ test('Hello World agent blocks a bitter soul and repairs from the signed optimis
   assert.equal(trusted.action, 'LOAD');
   assert.equal(trusted.agent.started, true);
   assert.equal(trusted.agent.output, 'Hello, beautiful world!');
+  assert.doesNotMatch(calls.at(-1).input, /exact positive adjective/i);
 
   const changed = await runHelloWorldAgent({
     ...options,
@@ -143,8 +152,8 @@ test('Hello World agent blocks a bitter soul and repairs from the signed optimis
   });
   assert.equal(repaired.action, 'RESTORE + RUN + REPORT');
   assert.equal(repaired.agent.output, 'Hello, beautiful world!');
-  assert.match(calls.at(-1).soul, /optimistic adjective/i);
-  assert.doesNotMatch(calls.at(-1).soul, /bitter or pessimistic/i);
+  assert.match(calls.at(-1).soul, /Never use a bitter, hostile, pessimistic/i);
+  assert.doesNotMatch(calls.at(-1).soul, /Always use a bitter, hostile, pessimistic/i);
 
   const outside = await runHelloWorldAgent({
     ...options,
@@ -237,7 +246,7 @@ test('signing and verification detect content tampering and publisher trust', as
   assert.equal(untrusted.trust.trusted, false);
 });
 
-test('MCP verify_asset returns a structured load-gate decision for arbitrary files', async () => {
+test('MCP verify_asset and verify_skill return structured load-gate decisions', async () => {
   const directory = await mkdtemp(resolve(tmpdir(), 'free2pa-mcp-'));
   const publisher = await generateSigningCertificate({
     name: 'MCP Publisher',
@@ -265,8 +274,17 @@ test('MCP verify_asset returns a structured load-gate decision for arbitrary fil
     certPath: outsider.certPath,
     keyPath: outsider.keyPath,
   });
+  const skillName = 'agent-policy';
+  const skillDirectory = resolve(directory, skillName);
+  await mkdir(skillDirectory);
+  await Promise.all([
+    writeFile(resolve(skillDirectory, 'SKILL.md'), content),
+    writeFile(resolve(skillDirectory, 'SKILL.md.c2pa.json'), JSON.stringify(sidecar, null, 2)),
+  ]);
   const originalCertsDir = config.certsDir;
+  const originalSkillsDir = config.skillsDir;
   config.certsDir = directory;
+  config.skillsDir = directory;
 
   const server = buildMcpServer('test-client');
   const client = new Client({ name: 'free2pa-test', version: '1.0.0' });
@@ -333,8 +351,26 @@ test('MCP verify_asset returns a structured load-gate decision for arbitrary fil
     assert.equal(outside.structuredContent.signature_valid, true);
     assert.equal(outside.structuredContent.file_unchanged, true);
     assert.equal(outside.structuredContent.publisher_trusted, false);
+
+    const bundled = await client.callTool({
+      name: 'verify_skill',
+      arguments: { name: skillName },
+    });
+    assert.deepEqual(bundled.structuredContent, {
+      asset: `${skillName}/SKILL.md`,
+      verdict: 'PASS',
+      decision: 'LOAD',
+      signature_valid: true,
+      file_unchanged: true,
+      certificate_current: true,
+      publisher_trusted: true,
+      reason_code: 'VERIFIED',
+      publisher: 'O=Free2PA\nCN=MCP Publisher',
+      certificate_fingerprint: bundled.structuredContent.certificate_fingerprint,
+    });
   } finally {
     config.certsDir = originalCertsDir;
+    config.skillsDir = originalSkillsDir;
     await client.close();
     await server.close();
   }
@@ -622,6 +658,7 @@ test('judge fixtures demonstrate trusted, outside-group, and tampered verdicts',
   assert.equal(trusted.signatureValid, true);
   assert.equal(trusted.hashMatch, true);
   assert.equal(trusted.trust.trusted, true);
+  assert.deepEqual(loadDecision(trusted), { decision: 'LOAD', reasonCode: 'VERIFIED' });
 
   const [outsideContent, outsideSidecar] = await fixture('outside');
   const outside = await verifySkill({
@@ -632,6 +669,7 @@ test('judge fixtures demonstrate trusted, outside-group, and tampered verdicts',
   assert.equal(outside.signatureValid, true);
   assert.equal(outside.hashMatch, true);
   assert.equal(outside.trust.trusted, false);
+  assert.deepEqual(loadDecision(outside), { decision: 'REJECT', reasonCode: 'UNTRUSTED_ISSUER' });
 
   const [tamperedContent, originalSidecar] = await fixture('tampered');
   const tampered = await verifySkill({
@@ -642,6 +680,7 @@ test('judge fixtures demonstrate trusted, outside-group, and tampered verdicts',
   assert.equal(tampered.signatureValid, true);
   assert.equal(tampered.hashMatch, false);
   assert.equal(tampered.trust.trusted, true);
+  assert.deepEqual(loadDecision(tampered), { decision: 'REJECT', reasonCode: 'CONTENT_CHANGED' });
 });
 
 test('scan emits CI evidence and fails for an outside-group publisher', async () => {
@@ -662,6 +701,36 @@ test('scan emits CI evidence and fails for an outside-group publisher', async ()
       const report = JSON.parse(error.stdout);
       return error.code === 1 && report.passed === false &&
         report.results[0].trust.reason === 'UNTRUSTED_ISSUER';
+    },
+  );
+});
+
+test('scan covers SOUL.md and signed non-SKILL control files', async () => {
+  const cliPath = resolve('bin/free2pa.js');
+  const trusted = await execFileP(process.execPath, [
+    cliPath, 'scan', 'public/demo/hello-agent/trusted',
+    '--trust-store', 'public/demo/hello-agent/trusted-publishers',
+    '--json',
+  ]);
+  const trustedReport = JSON.parse(trusted.stdout);
+  assert.equal(trustedReport.passed, true);
+  assert.equal(trustedReport.count, 1);
+  assert.match(trustedReport.results[0].asset, /SOUL\.md$/);
+
+  await assert.rejects(
+    execFileP(process.execPath, [
+      cliPath, 'scan', 'public/demo/hello-agent/changed',
+      '--trust-store', 'public/demo/hello-agent/trusted-publishers',
+      '--json',
+    ]),
+    (error) => {
+      const report = JSON.parse(error.stdout);
+      assert.equal(error.code, 1);
+      assert.equal(report.passed, false);
+      assert.equal(report.count, 1);
+      assert.match(report.results[0].asset, /SOUL\.md$/);
+      assert.equal(report.results[0].hashMatch, false);
+      return true;
     },
   );
 });
@@ -706,19 +775,62 @@ test('the removed legacy test client is not exposed', () => {
   assert.deepEqual(body, { error: 'Not found' });
 });
 
-test('public product hierarchy keeps Hello World as a reference integration', async () => {
-  const [toolkitPage, helloPage] = await Promise.all([
+test('public product hierarchy opens with the Hello World demo', async () => {
+  const [landingPage, helloPage, howItWorksPage, installPage, llmsText, llmEvaluation] = await Promise.all([
     readFile(resolve('public/index.html'), 'utf8'),
     readFile(resolve('public/hello-world.html'), 'utf8'),
+    readFile(resolve('public/how-it-works.html'), 'utf8'),
+    readFile(resolve('public/install.html'), 'utf8'),
+    readFile(resolve('public/llms.txt'), 'utf8'),
+    readFile(resolve('public/llm-evaluation.md'), 'utf8'),
   ]);
 
-  assert.match(toolkitPage, /Run the same file through both agent lanes/);
-  assert.match(toolkitPage, /POST \/api\/verify/);
-  assert.match(toolkitPage, /href="\/hello-world\.html">Hello World example/);
-  assert.doesNotMatch(toolkitPage, /\/api\/hello-agent\/compare/);
+  assert.match(landingPage, /url=\/hello-world\.html/);
+  assert.match(landingPage, /window\.location\.replace\('\/hello-world\.html'\)/);
+  assert.doesNotMatch(landingPage, /Stop changed agent instructions before they load/);
 
-  assert.match(helloPage, /Reference integration \/ Hello World/);
-  assert.match(helloPage, /one implementation example, not the Free2PA product boundary/i);
-  assert.match(helloPage, /\/api\/hello-agent\/compare/);
-  assert.match(helloPage, /href="\/">Toolkit factory/);
+  assert.match(helloPage, /Tamper-evident controls for your agents\./);
+  assert.match(helloPage, /\/api\/hello-agent\/run/);
+  assert.match(helloPage, /\/api\/hello-agent\/run-edited/);
+  assert.match(helloPage, /\/api\/hello-agent\/sign-edited/);
+  assert.match(helloPage, /\/api\/hello-agent\/run-signed-edited/);
+  assert.match(helloPage, /A new signature is required/);
+  assert.match(helloPage, /UNSIGNED_LOCAL_REVISION/);
+  assert.match(helloPage, /Change only this one control word/);
+  assert.match(helloPage, /href="\/hello-world\.html">Hello demo/);
+  assert.match(helloPage, /href="\/how-it-works\.html">How it works/);
+  assert.match(helloPage, /href="\/install\.html">Install/);
+  assert.match(helloPage, /href="\/llms\.txt">LLM brief/);
+  assert.doesNotMatch(helloPage, /workbench\.html/);
+
+  assert.match(howItWorksPage, /Free2PA checks the file before the agent can read it\./);
+  assert.match(howItWorksPage, /RESTORE \+ RUN \+ REPORT/);
+  assert.match(howItWorksPage, /free2pa\/load-gate/);
+  assert.match(howItWorksPage, /loadVerifiedFile/);
+  assert.match(howItWorksPage, /href="\/install\.html">Install/);
+  assert.match(howItWorksPage, /href="\/llms\.txt">LLM brief/);
+  assert.doesNotMatch(howItWorksPage, /workbench\.html/);
+
+  assert.match(installPage, /Here is Free2PA installed in Hello World\./);
+  assert.match(installPage, /SOUL\.md\.c2pa\.json/);
+  assert.match(installPage, /trusted-publishers/);
+  assert.match(installPage, /free2pa\/load-gate/);
+  assert.match(installPage, /loadVerifiedFile/);
+  assert.match(installPage, /Add a team member/);
+  assert.match(installPage, /upload only the public certificate/);
+  assert.match(installPage, /trust remove ava/);
+  assert.match(installPage, /--fake-model/);
+  assert.match(installPage, /href="\/llms\.txt">LLM brief/);
+  assert.doesNotMatch(installPage, /workbench\.html/);
+
+  assert.match(llmsText, /LLM-readable evaluation brief/);
+  assert.match(llmsText, /UNSIGNED_LOCAL_REVISION/);
+  assert.match(llmsText, /uploads only their \.crt public certificate/);
+  assert.match(llmsText, /npm run demo:hello -- changed block --fake-model/);
+
+  assert.match(llmEvaluation, /Free2PA LLM Evaluation Brief/);
+  assert.match(llmEvaluation, /Adding team members/);
+  assert.match(llmEvaluation, /trust remove ava/);
+  assert.match(llmEvaluation, /changed\/block -> exits nonzero by design/);
+  assert.match(llmEvaluation, /`index\.js` is safe to import as a library/);
 });

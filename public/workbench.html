@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Free2PA — Skill Content Credentials</title>
+  <title>Free2PA — Sign and verify files</title>
   <link rel="icon" href="/free2pa-mark.svg" type="image/svg+xml" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -558,11 +558,11 @@
 </head>
 <body>
 
-<h1>Free2PA</h1>
-<p class="subtitle">Provenance, trust verification, and optional LLM security auditing for AI agent skills</p>
+<h1>Sign and verify agent files</h1>
+<p class="subtitle">Create a signed receipt, check a receipt, or run an optional behavior audit.</p>
 <nav class="utility-row" aria-label="Utilities">
   <details class="demo-menu">
-    <summary>Demo files</summary>
+    <summary>Download test files</summary>
     <div class="demo-links">
       <a href="/demo/trusted/SKILL.md" download>Trusted skill</a>
       <a href="/demo/trusted/SKILL.md.c2pa.json" download>Trusted sidecar</a>
@@ -579,9 +579,9 @@
 <section class="nerve-center" aria-labelledby="nerveTitle">
   <div class="nerve-heading">
     <div>
-      <div class="nerve-kicker">Reference implementation</div>
-      <h2 id="nerveTitle">Free2PA at the Nerve Center</h2>
-      <p>These files tell an agent who it is and what it can do. Each has a signed receipt beside it. Free2PA checks that receipt before the agent loads the file.</p>
+      <div class="nerve-kicker">What the verifier decides</div>
+      <h2 id="nerveTitle">LOAD or REJECT before the agent reads the file</h2>
+      <p>Pick a case. The same checks used by the CLI, API, and MCP server decide whether a file may load.</p>
     </div>
     <div class="scenario-tabs" role="tablist" aria-label="Verification scenario">
       <button type="button" class="scenario-tab" role="tab" data-scenario="trusted" aria-selected="true">Trusted</button>
@@ -592,28 +592,28 @@
 
   <div class="nerve-flow" aria-live="polite">
     <div class="nerve-stage">
-      <div class="stage-label">Files that guide the agent</div>
+      <div class="stage-label">Files the agent reads</div>
       <div class="control-file"><span>SKILL.md</span><span class="sidecar-mark">sidecar</span></div>
       <div class="control-file"><span>SOUL.md</span><span class="sidecar-mark">sidecar</span></div>
       <div class="control-file"><span>agent.config</span><span class="sidecar-mark">sidecar</span></div>
     </div>
     <div class="nerve-stage">
-      <div class="stage-label">Check the signed receipt</div>
+      <div class="stage-label">Check the receipt</div>
       <div class="gate-row"><span>Signature</span><span class="gate-state state-pass" id="nerveSignature">pass</span></div>
-      <div class="gate-row"><span>File unchanged</span><span class="gate-state state-pass" id="nerveIntegrity">pass</span></div>
-      <div class="gate-row"><span>Receipt current</span><span class="gate-state state-pass" id="nerveValidity">pass</span></div>
+      <div class="gate-row"><span>Hash match</span><span class="gate-state state-pass" id="nerveIntegrity">pass</span></div>
+      <div class="gate-row"><span>Cert current</span><span class="gate-state state-pass" id="nerveValidity">pass</span></div>
     </div>
     <div class="nerve-stage">
-      <div class="stage-label">People this group trusts</div>
+      <div class="stage-label">Trusted publishers</div>
       <div class="policy-row"><span>class-publisher</span><span>trusted</span></div>
       <div class="policy-row"><span>project-lead</span><span>trusted</span></div>
-      <div class="gate-row"><span>Publisher match</span><span class="gate-state state-pass" id="nerveTrust">pass</span></div>
+      <div class="gate-row"><span>Signer trusted</span><span class="gate-state state-pass" id="nerveTrust">pass</span></div>
     </div>
     <div class="nerve-stage decision-stage">
-      <div class="stage-label">Programmatic response</div>
+      <div class="stage-label">App receives</div>
       <div class="decision-code" id="nerveDecision">LOAD</div>
-      <div class="decision-reason" id="nerveReason">Signed, unchanged, and inside this group's trust policy.</div>
-      <label class="response-policy-label" for="nervePolicy">On verification failure</label>
+      <div class="decision-reason" id="nerveReason">Receipt is valid, hash matches, and signer is trusted here.</div>
+      <label class="response-policy-label" for="nervePolicy">If check fails</label>
       <select class="response-policy" id="nervePolicy">
         <option value="block">Block or quarantine</option>
         <option value="alert">Alert and continue</option>
@@ -621,27 +621,27 @@
       </select>
     </div>
   </div>
-  <p class="nerve-footnote">No person has to watch this screen. Free2PA returns machine-readable results when the agent starts or loads a file. A mismatch may reveal an attack, an outside edit, or the agent changing its own instructions; the host application decides whether to block, alert, or log.</p>
+  <p class="nerve-footnote">In an app, this runs at the file read boundary. The agent only receives the text after the host gets LOAD.</p>
 </section>
 
 <div class="panels">
 
   <!-- ── SIGN ── -->
   <div class="panel">
-    <h2>Sign a Skill</h2>
-    <p class="section-note">Upload a <code>.md</code> file. A <code>.c2pa.json</code> sidecar will be generated and downloaded — keep it alongside your skill file.</p>
+    <h2>1. Sign a file</h2>
+    <p class="section-note">Upload a prompt, skill, policy, or other text file. Free2PA downloads a signed <code>.c2pa.json</code> receipt. Keep it beside the file.</p>
 
     <div class="drop-zone" id="signDrop">
       <input type="file" id="signFile" accept=".md,.txt,.skills" />
       <div class="dz-icon">📄</div>
-      <div class="dz-label">Drop skill.md here or click to choose</div>
+      <div class="dz-label">Drop .md or .txt here</div>
       <div class="dz-name" id="signFilename"></div>
     </div>
 
     <div class="field-group">
-      <h3>Provenance</h3>
-      <label for="signTitle">Skill name</label>
-      <input type="text" id="signTitle" placeholder="weather" />
+      <h3>Receipt label</h3>
+      <label for="signTitle">File name</label>
+      <input type="text" id="signTitle" placeholder="agent-policy" />
       <label for="signActor">Your name / handle</label>
       <input type="text" id="signActor" placeholder="publisher-name" />
       <label for="signEmail">Your email</label>
@@ -649,15 +649,15 @@
     </div>
 
     <div class="field-group">
-      <h3>org.free2pa.skill assertion</h3>
+      <h3>Purpose</h3>
       <label for="signPurpose">Purpose</label>
-      <input type="text" id="signPurpose" placeholder="Get current weather and forecasts for any location." />
+      <input type="text" id="signPurpose" placeholder="Instructions loaded by the support agent." />
     </div>
 
     <div class="field-group">
-      <h3>Signing Certificate</h3>
+      <h3>Signing key</h3>
 
-      <label for="signCertSelect">Active certificate</label>
+      <label for="signCertSelect">Publisher identity</label>
       <div class="cert-row">
         <select id="signCertSelect">
           <option value="">Loading certificates…</option>
@@ -667,23 +667,23 @@
       </div>
       <div class="cert-detail" id="certDetail"></div>
 
-      <button type="button" class="btn-secondary" id="toggleGenCert">+ Generate New Certificate</button>
+      <button type="button" class="btn-secondary" id="toggleGenCert">+ Create publisher identity</button>
 
       <div class="gen-cert-form" id="genCertForm" style="display:none;">
-        <label for="genCertName">Common Name</label>
+        <label for="genCertName">Publisher name</label>
         <input type="text" id="genCertName" placeholder="study-group-publisher" />
         <label for="genCertOrg">Organization</label>
         <input type="text" id="genCertOrg" placeholder="AI Lab Study Group" />
         <label for="genCertDays">Validity (days)</label>
         <input type="text" id="genCertDays" placeholder="365" />
-        <button type="button" id="genCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Generate Certificate</button>
+        <button type="button" id="genCertBtn" style="margin-top:0.5rem; font-size:0.82rem; padding:0.5rem 1rem;">Create identity</button>
         <div class="result" id="genCertResult"></div>
       </div>
 
-      <button type="button" class="btn-secondary" id="toggleImportCert" style="margin-top:0.5rem;">+ Import Certificate(s)</button>
+      <button type="button" class="btn-secondary" id="toggleImportCert" style="margin-top:0.5rem;">+ Trust another publisher</button>
 
       <div class="gen-cert-form" id="importCertForm" style="display:none;">
-        <p class="section-note" style="margin-bottom:0.6rem;">Drop one <code>.crt</code> file to import a peer cert, or multiple files to import a team bundle all at once.</p>
+        <p class="section-note" style="margin-bottom:0.6rem;">Import public <code>.crt</code> files for publishers this verifier should trust.</p>
         <div class="drop-zone" id="importCertDrop">
           <input type="file" id="importCertFile" accept=".crt" multiple />
           <div class="dz-icon">🔑</div>
@@ -697,37 +697,37 @@
       </div>
     </div>
 
-    <button type="button" id="signBtn" disabled>Sign &amp; Download Sidecar</button>
+    <button type="button" id="signBtn" disabled>Sign and download receipt</button>
     <div class="result" id="signResult"></div>
   </div>
 
   <!-- ── VERIFY ── -->
   <div class="panel">
-    <h2>Verify a Skill</h2>
-    <p class="section-note">Upload the <code>.md</code> file and its <code>.c2pa.json</code> sidecar together. Three things are checked independently.</p>
+    <h2>2. Verify a file</h2>
+    <p class="section-note">Upload the file and its receipt. Free2PA returns the facts your app uses before loading the text.</p>
 
     <div class="drop-zone" id="verifyDrop">
       <input type="file" id="verifyFile" accept=".md,.txt,.skills" />
       <div class="dz-icon">📄</div>
-      <div class="dz-label">Drop skill.md here</div>
+      <div class="dz-label">Drop the file here</div>
       <div class="dz-name" id="verifyFilename"></div>
     </div>
 
     <div class="drop-zone" id="sidecarDrop">
       <input type="file" id="sidecarFile" accept=".json" />
       <div class="dz-icon">🔏</div>
-      <div class="dz-label">Drop .c2pa.json sidecar here</div>
+      <div class="dz-label">Drop the receipt here</div>
       <div class="dz-name" id="sidecarFilename"></div>
     </div>
 
-    <label for="trustProfile">Trust profile</label>
+    <label for="trustProfile">Trust mode</label>
     <select id="trustProfile">
-      <option value="dev">Server / Dev  — any cert in this server's trust store</option>
+      <option value="dev">Local verifier — any cert in this server's trust store</option>
       <option value="org">Org           — shared CA bundle (not yet configured)</option>
       <option value="public">Public        — public trust list (not yet configured)</option>
     </select>
 
-    <label for="verifyCertSelect">Match against specific cert <span style="color:#727a75; font-weight:400;">(optional)</span></label>
+    <label for="verifyCertSelect">Require one publisher <span style="color:#727a75; font-weight:400;">(optional)</span></label>
     <div class="cert-row">
       <select id="verifyCertSelect">
         <option value="">Loading certificates…</option>
@@ -735,7 +735,7 @@
       <button type="button" class="btn-icon" id="refreshVerifyCertsBtn" title="Refresh certificate list">↺</button>
     </div>
     <div class="cert-detail" id="verifyCertDetail"></div>
-    <p class="section-note" style="margin-bottom:0.75rem;">Leave blank to accept any cert in this server's trust store. Select a cert to verify the skill was signed by that specific issuer.</p>
+    <p class="section-note" style="margin-bottom:0.75rem;">Leave blank to accept any trusted publisher. Select one to require that exact publisher.</p>
 
     <button type="button" id="verifyBtn" disabled>Verify</button>
 
@@ -763,22 +763,22 @@
 
   <!-- AUDIT -->
   <div class="panel">
-    <h2>Audit a Skill</h2>
-    <p class="section-note">The operator's optional LLM provider reviews behavioral risk independently from signature and trust verification.</p>
+    <h2>3. Optional audit</h2>
+    <p class="section-note">After provenance checks, an optional LLM can review what the file asks the agent to do.</p>
 
     <div class="drop-zone" id="auditDrop">
       <input type="file" id="auditFile" accept=".md,.txt,.skills" />
       <div class="dz-icon">AI</div>
-      <div class="dz-label">Drop SKILL.md here</div>
+      <div class="dz-label">Drop the file here</div>
       <div class="dz-name" id="auditFilename"></div>
     </div>
 
     <div class="field-group">
-      <h3>Security review</h3>
-      <p class="section-note">Checks prompt injection, secret access, data exfiltration, destructive actions, supply-chain behavior, and excessive permissions.</p>
+      <h3>Behavior review</h3>
+      <p class="section-note">Looks for prompt injection, secret access, exfiltration, destructive actions, unsafe downloads, and excessive permissions.</p>
     </div>
 
-    <button type="button" id="auditBtn" disabled>Run LLM Audit</button>
+    <button type="button" id="auditBtn" disabled>Run behavior audit</button>
     <div class="result" id="auditError"></div>
     <div class="audit-summary" id="auditResult" style="display:none;"></div>
   </div>
@@ -792,17 +792,17 @@
     trusted: {
       signature: true, integrity: true, validity: true, trust: true,
       decision: 'LOAD',
-      reason: "Signed, unchanged, and inside this group's trust policy.",
+      reason: 'Receipt is valid, hash matches, and signer is trusted here.',
     },
     changed: {
       signature: true, integrity: false, validity: true, trust: true,
       decision: 'QUARANTINE',
-      reason: 'The current bytes no longer match the signed sidecar.',
+      reason: 'The file changed after signing.',
     },
     outside: {
       signature: true, integrity: true, validity: true, trust: false,
       decision: 'REJECT',
-      reason: "Authentic and unchanged, but this group has not admitted the publisher.",
+      reason: 'Signature is real, but this verifier does not trust the signer.',
     },
   };
   let activeNerveScenario = 'trusted';
@@ -826,10 +826,10 @@
     let reason = state.reason;
     if (!verified && policy === 'alert') {
       action = 'ALERT + CONTINUE';
-      reason = `Verification failed. The host records an alert and continues by policy. ${state.reason}`;
+      reason = `Check failed. The app alerts and continues by policy. ${state.reason}`;
     } else if (!verified && policy === 'log') {
       action = 'LOG + CONTINUE';
-      reason = `Verification failed. The host records the event and continues by policy. ${state.reason}`;
+      reason = `Check failed. The app logs and continues by policy. ${state.reason}`;
     }
 
     const decision = document.getElementById('nerveDecision');
@@ -1139,12 +1139,12 @@
       a.href = url; a.download = name; a.click();
       setTimeout(() => URL.revokeObjectURL(url), 5000);
 
-      show(signResult, 'success', `Sidecar downloaded: ${name}\nKeep it next to your .md file for verification.`);
+      show(signResult, 'success', `Receipt downloaded: ${name}\nKeep it next to the file.`);
     } catch (e) {
       show(signResult, 'error', `Network error: ${e.message}`);
     } finally {
       signBtn.disabled = false;
-      signBtn.textContent = 'Sign & Download Sidecar';
+      signBtn.textContent = 'Sign and download receipt';
     }
   });
 
@@ -1270,8 +1270,8 @@
       sigOk ? '✅' : '❌',
       sigOk ? 'Signature valid' : 'Signature invalid',
       sigOk
-        ? 'ECDSA P-256 signature over the claim verified successfully.'
-        : (data.signatureError || 'Signature did not verify against the cert in the sidecar.')
+        ? 'The receipt was signed by the certificate it contains.'
+        : (data.signatureError || 'The receipt signature did not verify.')
     );
 
     // 2. Hash / binding
@@ -1280,10 +1280,10 @@
     setVerdict('vHash',
       hashOk ? 'ok' : 'fail',
       hashOk ? '✅' : '❌',
-      hashOk ? 'Bound to this file (hash match)' : 'File has been modified (hash mismatch)',
+      hashOk ? 'Hash matches' : 'File changed after signing',
       hashOk
-        ? 'SHA-256 of the uploaded file matches the hash recorded at signing time.'
-        : 'The file content has changed since it was signed. Differences are highlighted below.'
+        ? 'The uploaded file is the same content that was signed.'
+        : 'The uploaded file no longer matches the receipt. Differences are highlighted below.'
     );
 
     if (!hashOk) {
@@ -1294,7 +1294,7 @@
         diffEl.style.display = 'block';
       } else {
         // Sidecar was created before content embedding — can't diff
-        diffEl.innerHTML = '<div class="diff-no-content" style="padding:0.5rem 0.75rem;">Diff unavailable — this sidecar was signed before content embedding was introduced. Re-sign the file to enable diffing.</div>';
+        diffEl.innerHTML = '<div class="diff-no-content" style="padding:0.5rem 0.75rem;">Diff unavailable. Re-sign the file with this version of Free2PA to embed the original content.</div>';
         diffEl.style.display = 'block';
       }
     } else {
@@ -1309,7 +1309,7 @@
     setVerdict('vTrust',
       trustOk ? 'ok' : trustWarn ? 'warn' : 'fail',
       trustOk ? '✅' : trustWarn ? '⚠️' : '❌',
-      `Trusted under profile: ${t.label}`,
+      trustOk ? 'Signer trusted here' : trustWarn ? 'Trust not configured' : 'Signer not trusted here',
       t.detail
     );
 
@@ -1366,7 +1366,7 @@
       auditError.style.display = 'block';
     } finally {
       auditBtn.disabled = false;
-    auditBtn.textContent = 'Run LLM Audit';
+    auditBtn.textContent = 'Run behavior audit';
     }
   });
 
@@ -1420,7 +1420,7 @@
         toggleImportCert.disabled = true;
         importCertBtn.disabled = true;
         genCertBtn.disabled = true;
-        show(signResult, 'success', 'This public verifier is read-only. Use the Free2PA CLI to create and sign credentials.');
+        show(signResult, 'success', 'This public verifier is read-only. Use the Free2PA CLI to create identities and sign files.');
       }
     } catch {}
   }

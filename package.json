@@ -1,7 +1,7 @@
 {
   "name": "free2pa",
-  "version": "0.4.1",
-  "description": "Provenance, trust verification, and security auditing for AI agent skills",
+  "version": "0.4.2",
+  "description": "Provenance, trust verification, and security auditing for AI agent control files",
   "main": "index.js",
   "type": "module",
   "exports": {
@@ -51,6 +51,7 @@
     "docs/IMPLEMENTATION_RUNBOOK.md",
     "docs/AUDITOR_PROVIDERS.md",
     "!public/free2pa.png",
+    "!public/workbench.html",
     "!public/test.html",
     "index.js",
     "README.md",

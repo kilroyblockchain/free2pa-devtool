@@ -11,7 +11,7 @@ function isValidName(name) {
   return /^[a-zA-Z0-9_-]+$/.test(name);
 }
 
-// GET /api/skills — list skill folders in radio_intern
+// GET /api/skills — list skill folders in the configured skill directory
 router.get('/skills', async (_req, res) => {
   try {
     const entries = await readdir(config.skillsDir, { withFileTypes: true });

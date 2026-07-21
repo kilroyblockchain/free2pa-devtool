@@ -1,89 +1,107 @@
 # Judge Guide
 
-Free2PA is a Developer Tools submission for OpenAI Build Week. The fastest
-evaluation path uses the public, read-only deployment and requires no account,
-rebuild, API key, or payment.
+Free2PA is a Developer Tools submission for OpenAI Build Week.
 
-The deployment is a reference verifier. The submitted product is the toolkit:
-developers install it, provide the public certificates their group accepts,
-and integrate the CLI, CI action, HTTP API, or MCP tools into their own system.
-The surrounding application consumes the verification result at startup or
-file-load time and applies its own programmed response: block, guarded repair,
-alert and continue, or log.
+It solves one developer problem:
 
-## Live test in two minutes
+> Agent control files are supply-chain inputs. Free2PA verifies them before the
+> agent loads them.
 
-Open <https://free2pa-buildweek.azurewebsites.net>. No files are required for
-the primary test; each button calls the submitted verifier with a prepared
-public fixture.
+The live demo requires no account, rebuild, API key, payment, or uploaded file:
 
-1. Leave **Changed** and **Block** selected, then choose **Run file**. The
-   unchecked lane loads the altered file. The protected lane returns
-   `SIGN PASS`, `FILE FAIL`, and `GROUP PASS`, then `QUARANTINE`.
-2. Set the policy to **Repair + report** and run again. Free2PA verifies the
-   embedded original, returns `RESTORE + REPORT`, and preserves the rejected
-   copy as evidence in the command-line workflow.
-3. Select **Outside group** and run again. Signature and file integrity pass,
-   local trust fails with `UNTRUSTED_ISSUER`, and the host returns `REJECT`.
-4. Select **Trusted**. Every gate passes and the host returns `LOAD`.
-5. Open **Hello World example** to inspect one real LLM host integration, or
-   open **Research workbench**, download the behavioral-risk fixture from
-   **Demo files**, and run **GPT-5.6 Audit**. The structured result records the
-   model, Azure managed-identity provider, audit time, and asset hash.
+<https://free2pa-buildweek.azurewebsites.net>
 
-The hosted verifier is intentionally read-only. Trust-store mutation, signing,
-and key generation return HTTP 403 so public visitors cannot alter its policy.
+## Two-minute evaluation path
 
-## Install and test
+1. Open the live demo.
+2. Leave **Changed** selected and **Block** as the policy.
+3. Click **Run file**.
 
-Supported platforms: macOS and Linux. Both require Node.js 20 or newer and
-OpenSSL on `PATH`. The build is verified locally on macOS and in public CI on
-GitHub-hosted Ubuntu.
+Expected result:
+
+- The unprotected lane loads the changed instruction file.
+- The protected lane calls `/api/verify`.
+- Signature passes.
+- Publisher trust passes.
+- File hash fails.
+- The host returns `QUARANTINE` / `CONTENT_CHANGED`.
+
+Then test the other two cases:
+
+| Scenario | What it proves | Expected protected result |
+|---|---|---|
+| **Outside group** | A real signature is not enough if this verifier does not trust the publisher. | `REJECT` / `UNTRUSTED_ISSUER` |
+| **Trusted** | Unchanged file from a locally trusted publisher may load. | `LOAD` / `VERIFIED` |
+
+Optional: switch the policy to **Repair + report** for the changed case. Free2PA
+restores only the signed original embedded in a valid, current, locally trusted
+receipt.
+
+## Local install and test
+
+Supported platforms: macOS and Linux. Requirements: Node.js 20+ and OpenSSL.
 
 ```bash
 git clone https://github.com/kilroyblockchain/free2pa-devtool.git
 cd free2pa-devtool
 npm ci
 npm test
-npm link
-free2pa --version
 ```
 
-Run the bundled deterministic trust cases:
+Run the deterministic fixture checks:
 
 ```bash
-free2pa scan public/demo/trusted --trust-store demo_certs
-free2pa scan public/demo/outside --trust-store demo_certs
+node bin/free2pa.js verify public/demo/trusted/SKILL.md --trust-store demo_certs
+node bin/free2pa.js verify public/demo/tampered/SKILL.md --trust-store demo_certs
+node bin/free2pa.js verify public/demo/outside/SKILL.md --trust-store demo_certs
 ```
 
-The first command passes. The second intentionally exits with status 1 and
-reports `UNTRUSTED_ISSUER`.
+Expected:
 
-The repository's Hello World agent uses the operator's configured OpenAI or
-Azure OpenAI account:
-
-```bash
-npm run demo:hello -- trusted
-npm run demo:hello -- changed
-npm run demo:hello -- changed repair
+```text
+trusted  -> PASS
+tampered -> FAIL / CONTENT_CHANGED
+outside  -> FAIL / UNTRUSTED_ISSUER
 ```
 
-## Interfaces
+## Developer integration surfaces
 
-- CLI: `free2pa --help`
-- Browser and HTTP API: `free2pa serve --port 4001`
-- MCP: Streamable HTTP at `POST /mcp`
-- CI: reusable action in `action.yml`
+The same verification core is exposed through:
 
-The MCP server's primary integration tool is `verify_asset`. A host sends the
-exact control-file text and its sidecar before loading the file into model
-context. The structured response includes `verdict`, `decision`, four separate
-gate booleans, and a stable `reason_code`. `decision: "LOAD"` is returned only
-when signature, file integrity, certificate validity, and local publisher
-trust all pass.
+- CLI: `free2pa verify`, `free2pa scan`, `free2pa repair`
+- Node API: `loadVerifiedFile()` from `free2pa/load-gate`
+- HTTP API: local verifier service
+- MCP: `verify_asset`
+- CI: reusable GitHub Action
+- Codex skill: `free2pa codex-skill install`
 
-Public repository: <https://github.com/kilroyblockchain/free2pa-devtool>
+Primary Node integration:
 
-Freeware release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1>
+```js
+import { loadVerifiedFile } from 'free2pa/load-gate';
 
-Public CI evidence: <https://github.com/kilroyblockchain/free2pa-devtool/actions/runs/29704365424>
+const instructions = await loadVerifiedFile({
+  assetPath: 'agent/SOUL.md',
+  trustStore: '.free2pa/trusted-publishers',
+});
+```
+
+Primary MCP contract:
+
+```text
+verify_asset(content, sidecar) -> LOAD | REJECT
+```
+
+## What GPT-5.6 does
+
+GPT-5.6 is optional and deliberately separate.
+
+Free2PA's hard gate is deterministic: signature, hash, certificate window, and
+local publisher trust. GPT-5.6 can review behavioral risk in a verified skill,
+but it cannot turn a failed gate into `LOAD`.
+
+## Public links
+
+- Repository: <https://github.com/kilroyblockchain/free2pa-devtool>
+- Release: <https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.2>
+- Live demo: <https://free2pa-buildweek.azurewebsites.net>

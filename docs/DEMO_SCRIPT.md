@@ -1,98 +1,101 @@
 # Free2PA Demo Script
 
-Rendered final duration: 2 minutes 51.4 seconds. Hard limit: 3 minutes.
+Goal: under three minutes, no vocabulary tax, no research preamble.
 
-English narration uses Azure Neural HD with no background music. The final
-1920x1080 H.264/AAC file has no unintended silence longer than 0.8 seconds.
+Core line:
 
-## 0:00-0:30 - The Nerve Center
+> Free2PA stops changed or outside-publisher agent control files before they
+> load.
 
-Visual: Live Agentic Factory overview and the two agent lanes.
+## 0:00-0:20 — The problem
 
-Narration:
-
-> I'm Karen Kilroy, co-chair of the C2PA AI and Machine Learning Task Force.
-> C2PA has a formal conformance program for Content Credentials. Free2PA
-> explores an adjacent, local problem. Agent frameworks put developers in the
-> driver's seat. Free2PA is the seat belt for the files that steer the agent.
-> It puts a signed receipt beside skills, SOUL.md, and other Nerve Center
-> controls, then checks the file and its publisher before an agent uses it.
-
-## 0:30-0:55 - The same changed file, two lanes
-
-Visual: Run the changed-file case with the protected lane set to Block.
+Visual: landing page hero and three scenario buttons.
 
 Narration:
 
-> Here the same changed file enters two agent lanes. Without Free2PA, the
-> instructions load unchecked. With Free2PA, the live verifier runs
-> programmatically. The publisher's signature passes. Local group trust passes.
-> But the current file no longer matches its signed receipt, so the host
-> quarantines it. No person needs to watch a dashboard; the agent runtime
-> consumes the result in code.
+> AI agents read plain-text files that act like code: system prompts, skills,
+> tools, and policy. If one of those files changes, the agent changes with it.
+> Free2PA is a developer load gate for those files.
 
-## 0:55-1:20 - Programmable response and repair
+## 0:20-0:55 — Changed instructions
 
-Visual: Switch the protected response policy to Repair + report and re-run.
+Visual: select **Changed**, policy **Block**, click **Run file**.
 
 Narration:
 
-> A failure is a signal, not one forced response. The application can stop and
-> report, alert and continue, or log. For a trusted receipt whose file was
-> changed, Free2PA can also restore the signed original, preserve the rejected
-> copy as evidence, and report the repair. It refuses repair when the signature
-> is invalid, the certificate is expired, or the publisher is outside this
-> group.
+> Here the same changed instruction file goes through two lanes. The
+> unprotected lane reads the file directly, so the changed instructions reach
+> the agent. The protected lane calls the live Free2PA verifier before loading
+> the text.
 
-## 1:20-1:44 - Ad-hoc group trust
+## 0:55-1:20 — The hard gate
 
-Visual: Show the outside-group rejection, then the trusted publisher PASS.
+Visual: focus on signature/hash/trust checks and `QUARANTINE`.
 
 Narration:
 
-> Ad-hoc means trust belongs to each verifier. This outside publisher's file is
-> authentic and unchanged, but the project never admitted its public
-> certificate, so group trust fails. Add the certificate and the same receipt
-> passes this verifier. Remove it later and trust ends on the next check. There
-> is no global registry and no permanent relationship.
+> The signature is valid and the publisher is trusted, but the file hash no
+> longer matches the signed receipt. Free2PA returns `REJECT` with
+> `CONTENT_CHANGED`, and the host quarantines the file before model context.
 
-## 1:44-2:17 - Codex installs the trust gate
+## 1:20-1:45 — Outside publisher
 
-Visual: Installable Codex skill frame with the command, prompt, and four-step
-retrofit workflow.
+Visual: select **Outside group**, click **Run file**.
 
 Narration:
 
-> Codex is how developers make this practical. Free2PA now ships an installable
-> Codex skill. Ask Codex to make an agent application tamper-evident. It finds
-> the app's Nerve Center, installs pinned freeware, places verification before
-> the load boundary, and proves trusted, changed, and outside-group cases. The
-> human chooses publishers; Codex handles the integration work. Command line,
-> HTTP, MCP, and continuous integration expose the same machine-readable
-> decision.
+> A valid signature is not enough. This file is authentic and unchanged, but it
+> came from a publisher this project never admitted. Local trust fails, so the
+> verifier returns `UNTRUSTED_ISSUER`.
 
-## 2:17-2:51 - GPT-5.6 and Build Week work
+## 1:45-2:10 — Trusted file and repair
 
-Visual: GPT-5.6 critical behavioral audit, then the research-to-product closing
-frame.
+Visual: select **Trusted**, then briefly show **Repair + report** on Changed.
 
 Narration:
 
-> Cryptography proves provenance, not intent, so GPT-5.6 separately audits
-> behavioral risk and never overrides a failed gate. The original research
-> demo was created for a presentation to the University of Arkansas AI Club
-> and predates the competition. During Build Week, Karen Kilroy directed the
-> trust model and product decisions. Codex turned the research into the
-> Agentic Factory, guarded repair, installable skill, tested Azure deployment,
-> and freeware release. Your group. Your verifier. Your trust decisions.
+> When the file is unchanged and the publisher is in this project's trust
+> store, Free2PA returns `LOAD`. For changed files with a valid trusted receipt,
+> the host can also restore the signed original and preserve the rejected file
+> as evidence.
+
+## 2:10-2:35 — Developer integration
+
+Visual: show README integration snippet.
+
+Narration:
+
+> Developers can add the gate where the app already reads instructions. In
+> Node, `loadVerifiedFile()` returns content only after every check passes. The
+> same core also ships as a CLI, HTTP API, MCP `verify_asset` tool, and GitHub
+> Action.
+
+## 2:35-2:50 — Codex and GPT-5.6
+
+Visual: show Codex skill command and optional audit note.
+
+Narration:
+
+> The included Codex skill finds the real load boundary in an existing agent
+> app and adds tests for trusted, changed, and outside-publisher cases. GPT-5.6
+> is used separately for optional behavioral audit; it never overrides the
+> deterministic trust gate.
+
+## 2:50-3:00 — Close
+
+Visual: final `LOAD | REJECT` frame.
+
+Narration:
+
+> Your project. Your trust store. No global registry. Agent control files load
+> only when this verifier says they may.
 
 ## Recording checklist
 
-- [x] Final video is under 3:00.
-- [x] Browser contains no bookmarks, notifications, email, or private data.
-- [x] Demo calls the submitted verifier and uses prepared public fixtures.
-- [x] Changed, outside-group, and trusted results match production API output.
-- [x] GPT-5.6 output was generated by the submitted Azure build.
-- [x] Audio has no background music or unintended gaps longer than 0.8 seconds.
-- [x] Every claim in narration is visible or supported by the README.
-- [x] Public YouTube upload has working audio and a processed 1080p rendition.
+- [ ] First 20 seconds state the developer problem.
+- [ ] Changed-file block is the primary demo.
+- [ ] Outside-publisher rejection is shown as the unique trust-model point.
+- [ ] CLI / Node / MCP / CI are evidence, not separate storylines.
+- [ ] GPT-5.6 is described as optional behavioral review, not the hard gate.
+- [ ] C2PA relationship is documented in README/Devpost, not over-explained in
+      the live demo.

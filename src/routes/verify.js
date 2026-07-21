@@ -8,6 +8,17 @@ import { verifySkill } from '../services/verifier.js';
 const router = Router();
 const upload = multer({ dest: config.uploadDir, limits: { fileSize: 10 * 1024 * 1024 } });
 
+export function loadDecision(result) {
+  if (result.success !== true) return { decision: 'REJECT', reasonCode: 'INVALID_RECEIPT' };
+  if (result.signatureValid !== true) return { decision: 'REJECT', reasonCode: 'INVALID_SIGNATURE' };
+  if (result.hashMatch !== true) return { decision: 'REJECT', reasonCode: 'CONTENT_CHANGED' };
+  if (result.certificate?.valid !== true) return { decision: 'REJECT', reasonCode: 'CERTIFICATE_NOT_CURRENT' };
+  if (result.trust?.trusted !== true) {
+    return { decision: 'REJECT', reasonCode: result.trust?.reason || 'UNTRUSTED_ISSUER' };
+  }
+  return { decision: 'LOAD', reasonCode: 'VERIFIED' };
+}
+
 export async function cleanupUploads(files) {
   const uploaded = Object.values(files ?? {}).flat();
   await Promise.all(uploaded.map((file) => unlink(file.path).catch(() => {})));
@@ -51,7 +62,7 @@ router.post('/verify', upload.fields([
     ]);
 
     const result = await verifySkill({ content, sidecarText, trustProfile, certPath });
-    res.json(result);
+    res.json({ ...result, ...loadDecision(result) });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   } finally {

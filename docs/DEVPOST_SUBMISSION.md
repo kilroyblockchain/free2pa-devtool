@@ -6,376 +6,211 @@ Free2PA
 
 ## Tagline
 
-Agent frameworks put developers in the driver's seat. Free2PA is the seat belt
-for the files that steer the agent.
+Stop changed or outside-publisher agent instructions before they load.
 
 ## Category
 
 Developer Tools
 
+## Short description
+
+Free2PA is a developer load gate for AI agent control files. It verifies a
+signed sidecar before an agent loads prompts, skills, tools, policies, or other
+instruction files. If the file changed after signing, or if the publisher is
+not in this project's local trust store, Free2PA returns `REJECT` before the
+text reaches model context.
+
 ## Inspiration
 
-Karen Kilroy co-chairs the C2PA AI/ML Task Force. She developed the original Free2PA
-research demo in response to a practical need she observed among college
-students collaborating through OpenClaw agentic nerve centers: they needed
-publisher trust groups that could form quickly around a project and end when
-the collaboration ended.
+Agent frameworks increasingly rely on editable text files: system prompts,
+`AGENTS.md`, `SOUL.md`, `SKILL.md`, tool manifests, policy files, and workflow
+definitions. Those files are powerful supply-chain inputs. A one-line change
+can redirect every later agent action.
 
-Karen calls the collection of skills and critical agent-control files the
-**Nerve Center**. It can include files such as `SKILL.md` and `SOUL.md` that
-shape what an agent can do. A file may be changed by an external attack, an
-engineering mistake, someone outside the trust group, or the agent itself
-acting on a misunderstanding. In every case, Free2PA establishes the two
-provenance facts at the heart of C2PA: who originated this file, and whether its
-signed bytes were edited. The local verifier then decides whether that origin
-and edit history is acceptable for its temporary trust group. Free2PA detects
-the change without guessing its cause.
+The missing control is simple: before loading one of these files, the host
+should know whether this is the exact file someone signed and whether this
+project currently trusts that publisher.
 
-People form temporary trust groups constantly. A college class trusts its
-members for a semester. Two teams trust each other for one assignment. A
-project accepts a contractor's work for the length of an engagement.
+Free2PA focuses on temporary, local trust groups: a class, a project team, an
+open-source collaboration, or a contractor engagement. These groups do not need
+a global registry to get value. They need a verifier they control.
 
-AI agent skills are executable instructions, but most skill-sharing workflows
-do not preserve a deliberate answer to two separate questions: who published
-this exact file, and does this particular group trust that publisher?
-
-Public provenance infrastructure is designed for broad, durable ecosystems.
-Free2PA explores the smaller and more immediate case: a group that wants to
-stand up its own verifier, admit a few public certificates, and reject everyone
-outside that boundary.
+The fit is especially direct for OpenClaw-style projects and other agent apps
+where local files define identity, tools, skills, or startup behavior.
 
 ## What it does
 
-Free2PA puts a signed receipt beside the files that tell an AI agent who it is
-and what it can do. Before the agent uses one, Free2PA checks two facts anyone
-can understand: has this file changed, and did it come from someone this group
-trusts?
+Free2PA puts a signed receipt beside each protected agent control file.
 
-Free2PA signs AI agent skill files with ECDSA P-256 credentials and binds each
-credential to the exact file content with SHA-256. A verifier checks:
+At load time, the verifier checks four facts:
 
-1. whether the credential signature is valid;
-2. whether the skill is unchanged; and
-3. whether the publisher belongs to that verifier's local trust group.
+1. Is the sidecar signature valid?
+2. Does the current file match the signed hash?
+3. Is the signing certificate current?
+4. Is the publisher in this verifier's local trust store?
 
-The trust store is the policy. Adding a public certificate admits a publisher.
-Removing it revokes trust on the next verification without modifying any
-credential. Trust can be one-way, team-wide, class-wide, or deliberately
-short-lived.
+All four pass: `LOAD`.
 
-No human has to inspect every receipt. Verification happens programmatically
-when an agent starts, loads a skill, or accepts a changed control file. Free2PA
-returns machine-readable facts; the host application can block or quarantine,
-alert and continue, log the event, or restore a known trusted version. The
-`repair` command restores only content embedded in a valid, current, locally
-trusted signed receipt and preserves the rejected file for reporting. Critical Nerve Center files should
-normally fail closed, but enforcement remains an application policy rather
-than a hidden decision inside Free2PA.
+Anything fails: `REJECT` with a stable reason code such as `CONTENT_CHANGED`,
+`UNTRUSTED_ISSUER`, `INVALID_SIGNATURE`, or `EXPIRED_CERT`.
 
-Free2PA places that decision at the Nerve Center's admission boundary. The
-sidecar preserves the signed publisher and asset hash. If a protected file
-changes, even when an agent rewrites its own `SOUL.md`, the integrity gate
-fails and the implementation can quarantine the file instead of loading it.
-The primary live Agentic Factory demonstrates that general contract without an
-LLM: `SKILL.md`, `SOUL.md`, and `TOOL.md` fixtures pass through the real
-verifier, which returns `LOAD`, `QUARANTINE`, `REJECT`, or guarded recovery
-facts for the surrounding host.
+The host application owns the response policy: block, quarantine, guarded
+repair, alert and continue, or log only. Critical instruction files should
+normally fail closed.
 
-Free2PA's signing, verification, trust, repair, and load-gate features are
-model-independent and run without ChatGPT or an OpenAI API. A verifier operator
-may optionally add their own LLM account for behavioral review. OpenAI, Azure
-OpenAI, and OpenAI-compatible accounts are supported directly; other local or
-hosted LLMs can be installed as auditor modules through a documented provider
-contract. The configured provider reviews prompt injection, secret access, data
-exfiltration, destructive actions, unsafe downloads, supply-chain behavior,
-and excessive permissions. Cryptographic verification remains the hard gate;
-an LLM can never turn a failed credential into a pass.
+## Live demo
 
-Developers can use Free2PA through an installable CLI, browser interface, HTTP
-API, or Streamable HTTP MCP server. The generic MCP `verify_asset` tool accepts
-any Nerve Center file and sidecar, then returns structured `PASS`/`FAIL`,
-`LOAD`/`REJECT`, four independent gate results, and a stable reason code. JSON
-output and nonzero exit codes support CI and agent-policy enforcement.
+The live page shows a small Hello World agentic application and the general
+Free2PA load gate. The Hello World app reads `SOUL.md`, sends `hello` to the
+model, and expects an optimistic greeting. Free2PA is applied at the file-read
+boundary before that model call.
 
-The repository also includes a Codex skill for retrofitting Free2PA into an
-existing OpenClaw project, ChatGPT app, MCP server, or other agentic system. A
-developer can ask Codex to fact-gather the real entry point, Nerve Center,
-load boundary, and existing security checks before editing. Codex reports the
-facts and unknown owner decisions, then installs the pinned freeware release,
-places verification before the load boundary, and proves that both changed
-files and publishers outside the project group are rejected. The developer
-still owns every trust and signing decision. The packaged CLI installs the
-skill with `free2pa codex-skill install`.
+The primary changed-file case shows:
 
-Custom Node harnesses can import `loadVerifiedFile()` from
-`free2pa/load-gate`. It returns content only after every deterministic check
-passes and throws before rejected text reaches the agent. Fixed loaders can use
-a fail-closed CLI preflight, while MCP-capable frameworks can call
-`verify_asset`. The implementation runbook identifies which tool runs at every
-stage from download through runtime enforcement and CI.
+- signature passes;
+- local publisher trust passes;
+- file hash fails;
+- the protected app returns `QUARANTINE` / `CONTENT_CHANGED` and skips the
+  model call.
 
-The Azure page is a reference verifier and judge sandbox, not a centralized
-Free2PA service. The repository is the product: each developer decides where
-the verifier runs, which public certificates define that deployment's trust
-group, and which interface fits the surrounding agent system.
+The outside-publisher case shows the unique trust model:
 
-## Reference integration: Hello World
+- signature passes;
+- file hash passes;
+- local publisher trust fails;
+- the protected app returns `REJECT` / `UNTRUSTED_ISSUER` and skips the model
+  call.
 
-A separate Hello World reference application shows one minimal host placing
-the general Free2PA load gate before a real Azure-hosted GPT-5.6 agent consumes
-`SOUL.md`. It is an example of the toolkit inside an application, not the
-Free2PA product boundary.
+The trusted case returns `LOAD`.
 
-Its signed soul permits `Hello, <optimistic adjective> world!`; a changed soul
-requests bitter adjectives. The unprotected comparison passes the changed soul
-to the model. Under Block, Free2PA quarantines it and skips the protected model
-call. Under Repair + report, Free2PA recovers the hash-verified signed original
-before starting the protected agent. A valid soul from a publisher outside the
-local trust group is also stopped before model context.
+## Developer interfaces
+
+Free2PA ships one verification core across multiple developer surfaces:
+
+- CLI for startup scripts and local workflows;
+- `free2pa/load-gate` Node API for direct runtime integration;
+- HTTP API for local verifier services;
+- Streamable HTTP MCP server with `verify_asset`;
+- GitHub Action for pull-request enforcement;
+- guarded `repair` command;
+- installable Codex skill for retrofitting existing agent apps.
+
+The simplest Node integration is:
+
+```js
+import { loadVerifiedFile } from 'free2pa/load-gate';
+
+const instructions = await loadVerifiedFile({
+  assetPath: 'agent/SOUL.md',
+  trustStore: '.free2pa/trusted-publishers',
+});
+
+startAgent({ instructions });
+```
+
+The file content is returned only when every deterministic check passes.
+
+## Codex and GPT-5.6
+
+Codex was used to turn the original research idea into a distributable
+developer tool: CLI, load-gate API, MCP verifier, CI action, Azure-hosted demo,
+guarded repair, tests, docs, and an installable Codex integration skill.
+
+The included `$free2pa-protect-agent` skill asks Codex to inspect an existing
+agent repository, identify which files enter model context, find the real load
+boundary, and wire Free2PA before that read. It also adds tests proving
+trusted, changed, and outside-publisher behavior.
+
+GPT-5.6 is optional and deliberately separate from the hard gate. Cryptographic
+verification decides whether a file may load. GPT-5.6 can review verified
+instructions for behavioral risks such as prompt injection, secret access,
+destructive actions, exfiltration, or excessive permissions, but it cannot
+turn a failed gate into `LOAD`.
+
+## Technical implementation
+
+The implementation uses Node.js 20, Express, Node's native crypto and X.509
+APIs, OpenSSL for publisher identity generation, the Model Context Protocol
+SDK, and the OpenAI Responses API for optional GPT-5.6 structured audits.
+
+Signing creates a canonical JSON claim containing:
+
+- SHA-256 hash of the file;
+- base64 copy of the signed original;
+- publisher certificate;
+- signed metadata;
+- ES256 signature.
+
+Verification enforces:
+
+- sidecar parse validity;
+- declared algorithm support;
+- X.509 certificate parse and validity window;
+- signature verification over canonical JSON;
+- exact-file SHA-256 match;
+- membership in the local trust directory.
+
+The test suite covers signing, trust admission and revocation, tamper
+detection, outside-publisher rejection, guarded repair, CLI behavior, MCP
+structured results, HTTP cleanup/security behavior, and optional GPT-5.6 audit
+contracts.
 
 ## Why it matters
 
-Agent developers are the primary audience. A single changed instruction in a
-high-leverage control file can alter every later action an agent takes, yet
-asking people to review sidecars or hashes by hand does not scale. Free2PA
-makes provenance an automatic load-time control that can be added to an
-existing ChatGPT app, MCP server, OpenClaw project, or agent framework without
-requiring a permanent central authority.
+AI agent security often focuses on model behavior, but the files loaded before
+the model runs are just as important. Free2PA gives developers a practical
+runtime control for those files without asking them to adopt a permanent public
+PKI or manually inspect receipts.
 
-The distinctive behavior is verifier-local trust. The same authentic,
-unchanged file can pass for the temporary group that admitted its publisher
-and fail everywhere else. That makes the boundary useful for classes, small
-teams, open-source collaborations, and short engagements where the members and
-their trust relationships change faster than a durable public PKI.
+The central idea is verifier-local trust. The same signed, unchanged file can
+load in the project that admitted the publisher and fail everywhere else.
+Removing a public certificate revokes that publisher on the next verification.
 
-The result is practical defense in depth: deterministic checks decide whether
-the file may load, the host chooses what happens on failure, and GPT-5.6 can
-separately explain behavioral risk. Developers get tamper evidence and policy
-enforcement; users do not acquire another security chore.
+That fits real-world collaboration: classes, hackathon teams, contractors,
+client work, open-source maintainers, and short-lived project groups.
 
-## How we built it
+## What changed during Build Week
 
-The implementation uses Node.js 20, Express, the Model Context Protocol SDK,
-OpenSSL, Node's native cryptography and X.509 APIs, and the OpenAI Responses API
-with a strict JSON schema for GPT-5.6 audits. The public Azure deployment calls
-GPT-5.6 Sol through a scoped managed identity, so no model API key is stored.
+The project began as C2PA-inspired research around provenance for agent skill
+files. During Build Week, it was turned into a judgeable developer tool:
 
-The same verification core is composed into several developer-facing surfaces
-rather than being tied to the demo UI: terminal commands for local workflows,
-structured output for automation, a framework-neutral Node load-gate API, a
-reusable CI action, HTTP endpoints for applications, and MCP tools for agents.
-
-The signing envelope contains a canonical JSON claim, SHA-256 content binding,
-an embedded X.509 public certificate, and an ES256 signature. Verifiers enforce
-the declared algorithm, current certificate validity, signature correctness,
-content integrity, and local certificate membership. Trust results include
-machine-readable reason codes such as `LOCAL_TRUST`, `EXPLICIT_MATCH`,
-`UNTRUSTED_ISSUER`, and `EXPIRED_CERT`.
-
-## How we used Codex and GPT-5.6
-
-Karen Kilroy supplied the central product concept and made the key trust-policy
-and scope decisions. Codex audited three related research repositories, helped
-select the focused agent-skill baseline, implemented the distributable CLI and
-verifier workflow, built the load-gate API, added tests and security hardening,
-reviewed dependency and browser risks, and prepared the fact-gathering skill,
-implementation runbook, reproducible release, and judging materials.
-
-Codex accelerated implementation but did not define the trust model. During
-development, Karen rejected an unnecessary signed group-policy layer and
-restated the simpler invariant that now anchors the product: the verifier is
-where trust lives.
-
-GPT-5.6 was used during Build Week and is the optional auditor configured on the
-judge deployment. It evaluates a skill's behavioral risk as untrusted input and
-returns structured evidence, impact, and remediation. Other operators bring
-their own account or install another provider. The core Free2PA trust gate does
-not depend on a model.
-
-## Challenges
-
-The hardest design problem was keeping authenticity, integrity, trust, and
-behavioral safety separate. Combining them into one AI-generated score would
-make the system difficult to reason about. Free2PA instead uses deterministic
-cryptographic gates and presents GPT-5.6 analysis as a distinct assessment.
-
-Another challenge was making a research prototype judge-ready without claiming
-old work as new. The public repository identifies sanitized commit `cd5c2c3` as
-the content-equivalent pre-event baseline and documents every submitted Build
-Week extension separately.
-
-## Accomplishments
-
-- Live two-lane Agentic Factory comparing the same control file with and
-  without programmatic Free2PA verification.
-- Explicit Block, Repair-and-report, Alert-and-continue, and Log host policies.
-- Guarded `repair` command that restores a trusted signed original while
-  preserving the rejected file as evidence.
-- Installable `free2pa-protect-agent` Codex skill with a one-command installer.
-- Fact-gather-first integration workflow that traces the target harness before
-  changing its loader or trust policy.
-- `free2pa/load-gate` API that returns only verified content to custom Node
-  harnesses and throws before rejected text reaches the agent.
-- Download-to-done implementation runbook for custom, fixed-loader, MCP, and
-  CI integrations.
-- Complete ad-hoc verifier lifecycle from the command line.
-- Outside-group rejection, certificate admission, and immediate revocation.
-- Tamper detection with a human-readable diff.
-- GPT-5.6 structured audits through CLI, HTTP, browser, and MCP.
-- Optional auditor-provider contract for operator-supplied OpenAI, Azure
-  OpenAI, OpenAI-compatible, local, or other LLM accounts.
-- Generic MCP load gate for arbitrary Nerve Center files, not only bundled
-  server fixtures.
-- Reusable GitHub Action for pull-request trust enforcement and JSON evidence.
-- Twenty-one automated tests covering signing, trust, tampering, CLI behavior,
-  load-gate safety, and API contracts.
-- Read-only and rate-limited public-demo mode.
-- Zero known npm vulnerabilities at release-check time.
-- Apache-2.0 packaging with private keys excluded.
-
-## What we learned
-
-Trust does not need to be global to be useful. For small agent ecosystems, a
-flat, explicit, non-transitive trust store is often easier to operate and audit
-than permanent public PKI. We also learned that provenance and behavioral
-review complement one another only when their responsibilities remain clear.
-
-## What's next
-
-- Signed verification-event logs for group accountability.
-- Optional skill dependency and ingredient assertions.
-- Additional version-specific convenience adapters built on the generic load
-  gate for popular agent frameworks.
-- Publisher discovery URLs and certificate fingerprint confirmation.
-- Versioned supersession and provenance-completeness assertions.
+- installable CLI;
+- explicit local trust-store lifecycle;
+- load-gate API;
+- generic MCP `verify_asset` tool;
+- HTTP verifier;
+- guarded repair;
+- GitHub Action;
+- Codex retrofit skill;
+- live load-gate demo;
+- optional GPT-5.6 behavioral audit;
+- automated test suite and judge fixtures.
 
 ## C2PA disclosure
 
-C2PA has a formal conformance program in which conforming Content Credentials
-are verified by conforming verifiers. Free2PA `0.4.1` is C2PA-inspired but is
-not a conforming C2PA implementation. It uses sidecar files to carry C2PA-style
-provenance credentials in a Free2PA format: a signed publisher identity traces
-origin and asset binding reveals edits. It then addresses an adjacent concern
-at an agentic nerve center: which publishers a local, temporary group chooses
-to trust. Free2PA does not replace or claim interoperability with C2PA
-conformance. Karen's task-force role provided domain context; this submission
-does not claim C2PA endorsement.
+Free2PA is C2PA-inspired but is not a conforming C2PA implementation and does
+not claim interoperability with C2PA Content Credentials. It uses a Free2PA
+sidecar format to bring signed provenance receipts to text-based agent control
+files, then applies a local project trust decision before loading those files.
 
-## Submission links
+## Public links
 
-- Repository: https://github.com/kilroyblockchain/free2pa-devtool
-- Freeware release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1
 - Live demo: https://free2pa-buildweek.azurewebsites.net
-- Backup demo video: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-Build-Week-v0.4.1.mp4
-- YouTube demo: https://youtu.be/ENMRlkhARVQ
-- Primary Codex `/feedback` Session ID: `019f72ea-75e0-7670-8c90-48602c610d24`
+- Repository: https://github.com/kilroyblockchain/free2pa-devtool
+- Release: https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.2
+- Video: https://youtu.be/ENMRlkhARVQ
 
-## Judge testing instructions
+## Suggested video title
 
-No account, rebuild, API key, or payment is required.
+Free2PA: Stop Changed Agent Instructions Before They Load
 
-1. Open the live Agentic Factory. Leave **Changed** and **Block** selected and
-   choose **Run file**. The unchecked lane loads the altered file. Free2PA
-   returns `CONTENT_CHANGED` and the host quarantines before load.
-2. Select **Repair + report** and run again. Observe `RESTORE + REPORT`; the
-   command-line workflow also preserves the rejected copy as evidence.
-3. Run **Outside group**. Signature and file checks pass while local group
-   trust fails with `UNTRUSTED_ISSUER`, so the host returns `REJECT`.
-4. Run **Trusted** and observe that every check passes and the host returns
-   `LOAD`.
-5. Open **Hello World example** for one real LLM reference integration. Open
-   **Research workbench** for the separate optional GPT-5.6 behavioral audit.
+## Suggested video description
 
-Supported installation platforms are macOS and Linux with Node.js 20 or newer
-and OpenSSL. Full install and CLI instructions are in `docs/JUDGE_GUIDE.md`.
-
-## Devpost custom answers
-
-These IDs match the live OpenAI Build Week submission form fetched on July 19,
-2026. The first two answers require Karen's explicit legal confirmation before
-submission.
-
-### 27945 - Submitter Type
-
-`Individual` - pending Karen's confirmation.
-
-### 27946 - Country of Residence
-
-`United States` - pending Karen's confirmation.
-
-### 27947 - Category
-
-`Developer Tools`
-
-### 27948 - Code repository
-
-https://github.com/kilroyblockchain/free2pa-devtool
-
-### 27949 - Judge sandbox and instructions
-
-> Live sandbox: https://free2pa-buildweek.azurewebsites.net
->
-> No account, API key, payment, rebuild, or credentials are required. On the
-> Agentic Factory, run Changed with Block. The unchecked lane loads the altered
-> file; Free2PA reports CONTENT_CHANGED and the host quarantines before load.
-> Repair + report returns the hash-verified signed original. Outside group
-> rejects a valid, unchanged file as UNTRUSTED_ISSUER. Trusted passes every
-> gate. Hello World is a separate real LLM reference integration. Research
-> workbench provides the optional GPT-5.6 behavioral audit.
-
-### 27950 - Primary Codex session
-
-`019f72ea-75e0-7670-8c90-48602c610d24`
-
-### 27951 - Developer-tool installation and testing
-
-> Platforms: macOS and Linux with Node.js 20+ and OpenSSL on PATH. Clone
-> https://github.com/kilroyblockchain/free2pa-devtool, run `npm install`,
-> `npm link`, and `free2pa --version`. The exact freeware package is also at
-> https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1.
-> Run the included trusted and tampered fixtures using the commands at the top
-> of README.md, or run `npm run check` for all 21 tests. Custom Node harnesses
-> import `loadVerifiedFile` from `free2pa/load-gate`; fixed loaders use a
-> fail-closed CLI preflight; MCP-capable frameworks call `verify_asset` and
-> continue only on `LOAD`. Install the Codex implementer with
-> `free2pa codex-skill install`. Core Free2PA requires no LLM account. Optional
-> auditors use the operator's own account or an installed provider module. The
-> included Hello World example uses the operator's own OpenAI or Azure OpenAI
-> account. The cryptographic trust gate does not require an LLM.
-
-## YouTube upload
-
-Title:
-
-> Free2PA Agentic Factory: A Seat Belt for Agent Control Files | OpenAI Build Week
-
-Description:
-
-> Agent frameworks put developers in the driver's seat. Free2PA is the seat
-> belt for the files that steer the agent. This Apache-2.0 developer toolkit
-> adds signed receipts, exact-file integrity, and project-local publisher trust
-> to an agentic Nerve Center. The host consumes PASS or FAIL programmatically
-> and can block, repair and report, alert and continue, or log. Free2PA also
-> ships an installable Codex skill and an independent GPT-5.6 behavioral audit.
->
-> Live demo: https://free2pa-buildweek.azurewebsites.net
->
-> Source: https://github.com/kilroyblockchain/free2pa-devtool
-
-The public video is https://youtu.be/ENMRlkhARVQ. The uploaded master is 2:55.7,
-1920x1080 H.264/AAC, has Azure Neural HD English narration, no music, and
-normalized speech at approximately -16.7 dB mean volume. The source decoded
-without error and contains no unexplained audio dropouts. YouTube's public
-rendition was independently checked with 1080p video and 48 kHz audio available.
-
-## Gallery assets
-
-The final set contains fifteen 1800x1200 images. It moves from product identity
-through real verifier outcomes, enforcement policy, the trust model, MCP and
-Codex integrations, GPT-5.6, and the Build Week provenance disclosure.
-
-- Exact gallery ZIP: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-Devpost-Gallery-v0.4.1.zip
-- Contact sheet: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/contact-sheet.png
-- Refined logo: https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/Free2PA-logo.png
-- Upload order and captions: `docs/COLLATERAL.md`
-- Gallery ZIP SHA-256: `f645d53e2b67219bf4c92b8aa8ec487dd32af0eb5ffba2ce50a97e152f8b3786`
+Free2PA is a Developer Tools project for OpenAI Build Week. It verifies signed
+sidecars for AI agent control files before those files enter model context. The
+demo shows changed instructions blocked as `CONTENT_CHANGED`, a valid
+outside-publisher file rejected as `UNTRUSTED_ISSUER`, and a trusted unchanged
+file allowed to `LOAD`. Codex helped turn the research prototype into an
+installable CLI, Node load gate, MCP verifier, CI action, guarded repair flow,
+and retrofit skill. GPT-5.6 is used separately for optional behavioral audit
+and never overrides the deterministic trust gate.

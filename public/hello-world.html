@@ -3,236 +3,729 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Free2PA | Hello World reference integration</title>
-  <meta name="description" content="A minimal reference application showing Free2PA at the SOUL.md load boundary of a real LLM agent.">
+  <title>Free2PA | Hello World app</title>
+  <meta name="description" content="A real model example: Free2PA verifies signed agent control files before they enter model context.">
   <link rel="icon" href="/free2pa-mark.svg" type="image/svg+xml">
   <style>
     :root {
-      color-scheme: dark;
-      --ink: #0c0f0d;
-      --surface: #141815;
-      --surface-2: #1a201c;
-      --line: #343c37;
-      --line-soft: #252b27;
-      --paper: #f0f2ef;
-      --muted: #929b95;
-      --green: #42dc8d;
-      --green-dark: #122c1e;
-      --amber: #f3b84b;
-      --amber-dark: #30230f;
-      --red: #ff6b68;
-      --red-dark: #321514;
-      --blue: #76a9ff;
-      --radius: 8px;
+      --bg: #e9e2cf;
+      --ink: #171717;
+      --muted: #6a6254;
+      --paper: #fffdf4;
+      --panel: #f7f1de;
+      --line: #171717;
+      --yellow: #ffe45c;
+      --green: #0a8f4b;
+      --green-soft: #dff4e7;
+      --red: #c72b2b;
+      --red-soft: #ffe0dc;
+      --blue-soft: #dfeaff;
     }
 
     * { box-sizing: border-box; }
-    html { background: var(--ink); }
     body {
       margin: 0;
-      min-width: 320px;
-      min-height: 100vh;
-      background: var(--ink);
-      color: var(--paper);
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 18px 18px, rgba(23,23,23,.08) 1px, transparent 1px),
+        var(--bg);
+      background-size: 24px 24px;
+      color: var(--ink);
+      font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
     }
     button, select { font: inherit; }
     button { cursor: pointer; }
-    code, .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
+    .shell { width: min(1320px, calc(100% - 40px)); margin: 0 auto; }
 
-    .shell { width: min(1480px, calc(100% - 40px)); margin: 0 auto; }
     .topbar {
-      height: 70px;
+      min-height: 58px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--line);
-    }
-    .brand { display: flex; align-items: center; gap: 11px; color: var(--paper); text-decoration: none; }
-    .brand img { width: 34px; height: 34px; color: var(--green); filter: invert(79%) sepia(50%) saturate(574%) hue-rotate(91deg) brightness(93%); }
-    .brand-name { font-size: 1.05rem; font-weight: 760; }
-    .brand-tag { margin-left: 4px; color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
-    .nav { display: flex; align-items: center; gap: 18px; }
-    .nav a { color: var(--muted); text-decoration: none; font-size: 0.76rem; }
-    .nav a:hover { color: var(--paper); }
-
-    .intro {
-      display: grid;
-      grid-template-columns: minmax(0, 1.5fr) minmax(280px, 0.8fr);
-      gap: 48px;
-      align-items: end;
-      padding: 38px 0 28px;
-    }
-    .eyebrow { color: var(--green); font-size: 0.68rem; font-weight: 760; text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 10px; }
-    h1 { max-width: 880px; margin: 0; color: var(--paper); font-size: clamp(2rem, 4.2vw, 4.15rem); line-height: 1.02; font-weight: 760; letter-spacing: 0; }
-    .intro-copy { color: var(--muted); font-size: 0.93rem; line-height: 1.65; max-width: 540px; }
-    .intro-copy strong { color: var(--paper); font-weight: 650; }
-
-    .factory {
-      border: 1px solid var(--line);
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--surface);
-      box-shadow: 0 18px 50px rgba(0,0,0,.28);
-    }
-    .factory-toolbar {
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      gap: 18px;
-      align-items: center;
-      min-height: 66px;
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--line);
-      background: #111512;
-    }
-    .factory-title { font-size: 0.8rem; font-weight: 720; }
-    .factory-title span { display: block; color: var(--muted); font-size: 0.66rem; font-weight: 500; margin-top: 3px; }
-    .segmented { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
-    .segment {
-      min-height: 34px;
-      padding: 0 12px;
-      border: 0;
-      border-right: 1px solid var(--line);
-      background: var(--surface-2);
-      color: var(--muted);
-      font-size: 0.7rem;
-      font-weight: 650;
-      white-space: nowrap;
-    }
-    .segment:last-child { border-right: 0; }
-    .segment[aria-selected="true"] { background: var(--green); color: #08150e; }
-    .policy-control { display: flex; align-items: center; gap: 8px; }
-    .policy-control label { color: var(--muted); font-size: 0.67rem; }
-    select {
-      height: 34px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--surface-2);
-      color: var(--paper);
-      padding: 0 30px 0 10px;
-      font-size: 0.7rem;
-    }
-    .run-button {
-      height: 36px;
-      border: 0;
-      border-radius: 6px;
-      background: var(--green);
-      color: #08150e;
+      border: 2px solid var(--line);
+      border-top: 0;
+      background: var(--paper);
       padding: 0 16px;
-      font-size: 0.72rem;
-      font-weight: 760;
     }
-    .run-button:disabled { opacity: .55; cursor: wait; }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 900; }
+    .brand img { width: 28px; height: 28px; }
+    .brand span:last-child { color: var(--muted); font-size: .68rem; text-transform: uppercase; }
+    .nav { display: flex; gap: 16px; align-items: center; }
+    .nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); font-size: .72rem; }
+    .nav a:hover { background: var(--yellow); }
 
-    .factory-grid { display: grid; grid-template-columns: 210px minmax(0,1fr); min-height: 430px; }
-    .input-rack { border-right: 1px solid var(--line); padding: 16px; background: #111512; }
-    .rack-label, .lane-label { color: var(--muted); font-size: 0.63rem; font-weight: 750; text-transform: uppercase; letter-spacing: 0.08em; }
-    .rack-help { color: #717a74; font-size: 0.67rem; line-height: 1.45; margin: 7px 0 14px; }
-    .file-button {
-      width: 100%; min-height: 58px; margin-bottom: 8px; padding: 9px 10px;
-      text-align: left; border: 1px solid var(--line-soft); border-radius: 6px;
-      background: var(--surface); color: var(--paper);
+    .hero { padding: 36px 0 20px; }
+    h1 { margin: 0; font-size: clamp(1.6rem, 3.2vw, 3.2rem); line-height: .98; letter-spacing: -.06em; }
+    .hero-subhead {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: clamp(.82rem, 1.15vw, 1.05rem);
+      line-height: 1.35;
+      font-weight: 700;
     }
-    .file-button[aria-selected="true"] { border-color: var(--green); background: var(--green-dark); }
-    .file-name { display: block; font-size: 0.73rem; font-weight: 700; }
-    .file-note { display: block; color: var(--muted); font-size: 0.62rem; margin-top: 4px; line-height: 1.25; }
-    .file-button[data-case="changed"] .file-note { color: var(--amber); }
-    .file-button[data-case="outside"] .file-note { color: var(--blue); }
 
-    .lanes { display: grid; grid-template-rows: 1fr 1fr; min-width: 0; }
-    .lane { position: relative; min-width: 0; padding: 16px 18px; }
-    .lane + .lane { border-top: 1px solid var(--line); }
-    .lane-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
-    .lane-badge { font-size: 0.61rem; padding: 3px 6px; border-radius: 4px; border: 1px solid var(--line); color: var(--muted); }
-    .lane.with .lane-badge { color: var(--green); border-color: #286a48; background: var(--green-dark); }
-    .flow {
+    .scenario-area {
+      margin: 14px 0 0;
+    }
+    .verify-ready {
       display: grid;
-      grid-template-columns: minmax(110px, .85fr) 34px minmax(140px, 1.1fr) 34px minmax(120px, .9fr) 34px minmax(150px, 1.1fr);
-      align-items: stretch;
-      min-height: 132px;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: center;
+      border: 2px solid var(--line);
+      border-radius: 12px;
+      background: var(--green-soft);
+      padding: 12px 14px;
+      margin-bottom: 10px;
     }
-    .flow-node {
-      display: flex; flex-direction: column; justify-content: center; min-width: 0;
-      border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); padding: 10px;
+    .verify-ready .warning-icon {
+      display: block;
+      color: var(--ink);
+      font-size: 2rem;
+      line-height: 1;
     }
-    .node-top { color: var(--muted); font-size: 0.59rem; font-weight: 730; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 7px; }
-    .node-main { font-size: 0.72rem; font-weight: 700; overflow-wrap: anywhere; }
-    .node-sub { color: var(--muted); font-size: 0.61rem; line-height: 1.4; margin-top: 5px; }
-    .flow-arrow { display: flex; align-items: center; justify-content: center; color: #657068; font-size: 1.05rem; }
-    .bypass { border-style: dashed; color: var(--amber); }
-    .gate { border-color: #286a48; background: var(--green-dark); }
-    .checks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-top: 7px; }
-    .check { padding: 4px 3px; border-radius: 4px; background: #0e1b14; color: var(--muted); text-align: center; font-size: .55rem; }
-    .check.pass { color: var(--green); }
-    .check.fail { color: var(--red); background: var(--red-dark); }
-    .outcome { border-color: var(--line); }
-    .outcome.good { border-color: #286a48; background: var(--green-dark); }
-    .outcome.warn { border-color: #745827; background: var(--amber-dark); }
-    .outcome.bad { border-color: #7d3533; background: var(--red-dark); }
-    .outcome .node-main { font-size: .78rem; }
+    .verify-ready strong {
+      display: block;
+      font-size: .82rem;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .verify-ready span {
+      display: block;
+      color: var(--muted);
+      font-size: .72rem;
+      line-height: 1.35;
+    }
+    .file-heading {
+      border: 2px solid var(--line);
+      border-bottom: 0;
+      border-radius: 12px 12px 0 0;
+      background: var(--green-soft);
+      padding: 11px 14px;
+      font-size: .76rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .policy {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--paper);
+      border: 2px solid var(--line);
+      padding: 5px 8px;
+      font-size: .72rem;
+      font-weight: 900;
+    }
+    .guard-policy { margin-bottom: 14px; }
+    .fixed-policy {
+      display: block;
+      line-height: 1.4;
+    }
+    .fixed-policy span {
+      display: block;
+      color: var(--muted);
+      font-weight: 700;
+      font-size: .68rem;
+      margin-top: 3px;
+    }
+    select {
+      height: 30px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+    }
+    .run {
+      min-height: 56px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--green);
+      color: var(--ink);
+      padding: 0 30px;
+      font-weight: 900;
+      font-size: 1.05rem;
+      box-shadow: 5px 5px 0 var(--line);
+      animation: helloPulse 1.6s ease-in-out infinite;
+    }
+    .run:disabled {
+      opacity: .65;
+      animation: none;
+    }
+    @keyframes helloPulse {
+      0%, 100% { transform: scale(1); box-shadow: 5px 5px 0 var(--line); }
+      50% { transform: scale(1.045); box-shadow: 8px 8px 0 var(--line); }
+    }
+    @keyframes calmSwirl {
+      0% { background-position: 0% 0%, 100% 0%, 48% 48%, 0 0; }
+      100% { background-position: 18% 24%, 78% 20%, 55% 52%, 0 0; }
+    }
 
-    .machine-log {
-      display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: center;
-      min-height: 46px; padding: 8px 16px; border-top: 1px solid var(--line);
-      background: #0a0d0b; font-family: "SFMono-Regular", Consolas, monospace; font-size: .63rem;
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(340px, .95fr) minmax(180px, .42fr) minmax(420px, 1.1fr);
+      gap: 22px;
+      align-items: start;
+      margin: 24px 0 36px;
     }
-    .log-pulse { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
-    .log-pulse.live { background: var(--green); box-shadow: 0 0 0 4px rgba(66,220,141,.1); }
-    .log-text { color: #a8b1ab; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .log-time { color: #68706b; }
 
+    .app-window, .guard-window, .file-window {
+      border: 2px solid var(--line);
+      background: var(--paper);
+      box-shadow: 8px 8px 0 var(--line);
+    }
+    .is-muted {
+      filter: grayscale(1);
+      opacity: .34;
+      transition: opacity .25s ease, filter .25s ease;
+      pointer-events: none;
+    }
+    .device-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: .68rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .app-window {
+      width: min(100%, 440px);
+      margin: 0 auto;
+      padding: 12px;
+      border: 4px solid var(--line);
+      border-radius: 34px;
+      background: var(--ink);
+      box-shadow: 12px 12px 0 var(--line);
+    }
+    .app-window > .window-bar {
+      border: 2px solid var(--line);
+      border-bottom: 0;
+      border-radius: 22px 22px 0 0;
+      background: var(--paper);
+    }
+    .app-window .app-body {
+      border: 2px solid var(--line);
+      border-radius: 0 0 22px 22px;
+      background:
+        radial-gradient(circle at 18% 22%, rgba(223, 244, 231, .92) 0 12%, transparent 28%),
+        radial-gradient(circle at 82% 18%, rgba(223, 234, 255, .82) 0 10%, transparent 30%),
+        conic-gradient(from 145deg at 52% 52%, rgba(255, 228, 92, .22), rgba(10, 143, 75, .18), rgba(223, 234, 255, .28), rgba(255, 228, 92, .22)),
+        var(--paper);
+      background-size: 140% 140%, 135% 135%, 180% 180%, auto;
+      animation: calmSwirl 18s ease-in-out infinite alternate;
+    }
+    .guard-window {
+      width: min(100%, 460px);
+      margin: 0 auto;
+      padding: 12px;
+      border: 4px solid var(--line);
+      border-radius: 34px;
+      background: var(--ink);
+      box-shadow: 12px 12px 0 var(--line);
+    }
+    .guard-window > .window-bar {
+      border: 2px solid var(--line);
+      border-bottom: 0;
+      border-radius: 22px 22px 0 0;
+      background: var(--paper);
+    }
+    .guard-window .guard-body {
+      border: 2px solid var(--line);
+      border-radius: 0 0 22px 22px;
+      background: var(--paper);
+    }
+    .boundary {
+      margin-top: 112px;
+      display: grid;
+      gap: 12px;
+    }
+    .boundary-card {
+      border: 2px solid var(--line);
+      background: var(--paper);
+      box-shadow: 6px 6px 0 var(--line);
+      padding: 14px;
+    }
+    .boundary-title {
+      font-size: .68rem;
+      font-weight: 900;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .boundary-main {
+      font-size: 1.25rem;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .boundary-copy {
+      margin: 0;
+      color: var(--muted);
+      font-size: .76rem;
+      line-height: 1.45;
+    }
+    .boundary-flow {
+      display: grid;
+      gap: 8px;
+    }
+    .boundary-step {
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 9px 10px;
+      font-size: .72rem;
+      font-weight: 900;
+    }
+    .boundary-step strong {
+      display: block;
+      color: var(--muted);
+      font-size: .58rem;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .boundary-arrow {
+      text-align: center;
+      font-size: 1.4rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .verify-tooltip {
+      position: relative;
+      justify-self: end;
+    }
+    .verify-tooltip summary {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      background: var(--paper);
+      color: var(--ink);
+      font-weight: 900;
+      cursor: pointer;
+      list-style: none;
+    }
+    .verify-tooltip summary::-webkit-details-marker { display: none; }
+    .verify-tooltip[open] summary { background: var(--green-soft); }
+    .tooltip-panel {
+      position: absolute;
+      z-index: 10;
+      top: calc(100% + 10px);
+      right: 0;
+      width: min(360px, calc(100vw - 80px));
+      border: 2px solid var(--line);
+      border-radius: 18px 18px 18px 4px;
+      background: var(--green-soft);
+      box-shadow: 6px 6px 0 var(--line);
+      padding: 14px;
+      font-size: .76rem;
+      line-height: 1.45;
+    }
+    .tooltip-panel h2 {
+      margin: 0 0 8px;
+      font-size: .92rem;
+      line-height: 1.1;
+    }
+    .tooltip-panel p { margin: 0 0 10px; color: var(--muted); }
+    .tooltip-panel dl {
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+    .tooltip-panel dt {
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: .62rem;
+      color: var(--muted);
+    }
+    .tooltip-panel dd { margin: 2px 0 0; }
+    .tooltip-panel .passes {
+      display: grid;
+      gap: 4px;
+      margin: 8px 0 10px;
+    }
+    .tooltip-panel .passes span {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      padding: 6px 8px;
+    }
+    .window-bar {
+      min-height: 40px;
+      border-bottom: 2px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: .72rem;
+    }
+    .app-body {
+      padding: 18px;
+      min-height: 520px;
+    }
+    .app-body:not(.is-idle) {
+      display: flex;
+      flex-direction: column;
+    }
+    .app-body.is-idle {
+      display: grid;
+      place-items: center;
+      align-content: center;
+    }
+    .pixel-pal {
+      --pixel-size: 7px;
+      display: grid;
+      grid-template-columns: repeat(8, var(--pixel-size));
+      grid-template-rows: repeat(8, var(--pixel-size));
+      gap: 0;
+      width: calc(var(--pixel-size) * 8);
+      height: calc(var(--pixel-size) * 8);
+      image-rendering: pixelated;
+      filter: drop-shadow(4px 4px 0 rgba(13, 22, 24, .3));
+    }
+    .message-sprite {
+      display: flex;
+      align-items: end;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .pixel-pal span { width: var(--pixel-size); height: var(--pixel-size); }
+    .pixel-pal [data-p="0"] { background: transparent; }
+    .pixel-pal [data-p="1"] { background: var(--ink); }
+    .pixel-pal [data-p="2"] { background: var(--green); }
+    .pixel-pal [data-p="3"] { background: var(--yellow); }
+    .pixel-pal [data-p="4"] { background: #ef7aa2; }
+    .pixel-pal [data-p="5"] { background: #7aa7ff; }
+    .pixel-pal [data-p="6"] { background: var(--paper); }
+    .app-actions {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+    .app-body:not(.is-idle) .app-actions {
+      order: 2;
+      margin: 14px 0 0;
+    }
+    .app-body.is-idle .app-actions { margin-bottom: 0; }
+    .chat {
+      order: 1;
+      border: 2px solid var(--line);
+      border-radius: 22px;
+      background:
+        radial-gradient(ellipse at 20% 18%, rgba(255,255,255,.86), transparent 36%),
+        radial-gradient(ellipse at 86% 28%, rgba(223,234,255,.62), transparent 42%),
+        radial-gradient(ellipse at 42% 96%, rgba(223,244,231,.72), transparent 45%),
+        linear-gradient(145deg, rgba(255,255,255,.68), rgba(255,255,255,.18)),
+        var(--panel);
+      padding: 16px;
+      min-height: 405px;
+      flex: 1;
+      display: grid;
+      align-content: start;
+      gap: 12px;
+    }
+    .chat[hidden] { display: none; }
+    .bubble {
+      width: fit-content;
+      max-width: 82%;
+      border: 2px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper);
+      padding: 11px 13px;
+      font-size: .86rem;
+      line-height: 1.35;
+      box-shadow: 3px 3px 0 rgba(13, 22, 24, .22);
+    }
+    .bubble strong {
+      display: block;
+      font-size: .62rem;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .model-answer {
+      display: block;
+      margin-top: 2px;
+      color: var(--ink);
+      font-size: 1.18rem;
+      font-weight: 900;
+      letter-spacing: -.02em;
+    }
+    .bubble.user {
+      margin-left: auto;
+      border-radius: 18px 18px 4px 18px;
+      background: var(--blue-soft);
+    }
+    .bubble.agent {
+      border-radius: 18px 18px 18px 4px;
+      background: var(--green-soft);
+    }
+    .bubble.unchecked { background: var(--paper); }
+    .bubble.waiting { background: var(--yellow); }
+    .bubble.service { background: var(--red-soft); }
+    .bubble.warning { background: #fff0cf; }
+    .bubble.blocked { background: var(--red-soft); }
+    .soul-panel {
+      border: 2px solid var(--line);
+      border-radius: 0 12px 12px 12px;
+      background: var(--paper);
+      position: relative;
+      z-index: 1;
+    }
+    .file-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .file-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .file-actions button {
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      color: var(--ink);
+      padding: 4px 8px;
+      font-size: .62rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      box-shadow: 2px 2px 0 var(--line);
+    }
+    .file-actions button.primary { background: var(--yellow); }
+    .file-actions button.sign { background: var(--green-soft); }
+    .file-body { padding: 12px; }
+    pre, .soul-editor {
+      margin: 0;
+      white-space: pre-wrap;
+      max-height: 220px;
+      overflow: auto;
+      font-size: .7rem;
+      line-height: 1.45;
+    }
+    .soul-editor {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border: 0;
+      outline: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      white-space: pre;
+    }
+    .soul-controlled-editor {
+      display: grid;
+      gap: 0;
+      max-height: 260px;
+      overflow: auto;
+      font-size: .7rem;
+      line-height: 1.45;
+      white-space: pre-wrap;
+    }
+    .soul-controlled-editor[hidden] { display: none; }
+    .controlled-line { display: block; }
+    .controlled-line select {
+      height: 24px;
+      margin-right: 3px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--yellow);
+      color: var(--ink);
+      font-size: .62rem;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .edit-status {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: .66rem;
+      line-height: 1.35;
+    }
+    .edit-status.warning { color: var(--red); font-weight: 900; }
+    .edit-status.signed { color: var(--green); font-weight: 900; }
+    .diff-line {
+      display: block;
+      padding: 1px 4px;
+    }
+    .diff-same { color: var(--ink); }
+    .diff-removed { background: var(--red-soft); color: var(--red); }
+    .diff-added { background: var(--green-soft); color: var(--green); }
+
+    .guard-body {
+      padding: 16px;
+      max-height: 620px;
+      overflow: auto;
+      scroll-behavior: smooth;
+    }
+    .guard-title { font-size: 1.1rem; font-weight: 900; margin-bottom: 8px; }
+    .guard-copy { color: var(--muted); font-size: .76rem; line-height: 1.45; margin-bottom: 14px; }
+    .process {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .process[hidden] { display: none; }
+    .process-step {
+      display: none;
+      grid-template-columns: 28px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 8px;
+      font-size: .72rem;
+    }
+    .process-step.visible { display: grid; }
+    .process-step.active {
+      display: grid;
+      background: var(--yellow);
+      box-shadow: 4px 4px 0 var(--line);
+    }
+    .process-step span {
+      display: grid;
+      place-items: center;
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--line);
+      border-radius: 50%;
+      background: var(--paper);
+      font-weight: 900;
+    }
+    .process-step strong { font-size: .72rem; }
+    .process-step em {
+      color: var(--muted);
+      font-style: normal;
+      font-weight: 900;
+      text-transform: uppercase;
+      font-size: .62rem;
+    }
+    .process-step.done { background: var(--green-soft); }
+    .process-step.warn { background: var(--yellow); }
+    .process-step.fail { background: var(--red-soft); }
+    .alert-banner {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 2px solid var(--line);
+      background: var(--yellow);
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: .74rem;
+      line-height: 1.35;
+    }
+    .alert-banner span:first-child { font-size: 1.6rem; line-height: 1; }
+    .alert-banner strong {
+      display: block;
+      text-transform: uppercase;
+      font-size: .68rem;
+      margin-bottom: 2px;
+    }
+    .checks { display: grid; gap: 9px; margin-bottom: 14px; }
+    .check {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 10px;
+      font-size: .78rem;
+    }
+    .check span:last-child { font-weight: 900; }
+    .pass { color: var(--green); }
+    .fail { color: var(--red); }
+    .decision {
+      border: 2px solid var(--line);
+      background: var(--green-soft);
+      padding: 18px;
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: -.06em;
+      margin-bottom: 10px;
+    }
+    .decision-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: start;
+    }
+    .load-payload summary {
+      width: auto;
+      min-width: 58px;
+      border-radius: 999px;
+      padding: 0 10px;
+      font-size: .68rem;
+      text-transform: uppercase;
+    }
+    .load-payload .tooltip-panel {
+      width: min(420px, calc(100vw - 80px));
+      background: var(--paper);
+    }
+    .load-payload pre {
+      max-height: 180px;
+      font-size: .68rem;
+    }
+    .decision.reject { background: var(--red-soft); }
+    .decision.restored { background: var(--yellow); }
+    .decision.warn { background: #fff0cf; }
+    .reason {
+      border-left: 4px solid var(--line);
+      padding-left: 10px;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.45;
+      min-height: 3.2em;
+    }
+    .policy-result {
+      margin-top: 12px;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 10px;
+      font-size: .76rem;
+      line-height: 1.45;
+    }
+    .policy-result strong {
+      display: block;
+      text-transform: uppercase;
+      font-size: .62rem;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
     .below {
-      display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(300px, .85fr);
-      gap: 0; margin: 28px 0 48px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+      margin-bottom: 48px;
     }
-    .below section { padding: 24px 26px; }
-    .below section + section { border-left: 1px solid var(--line); }
-    .below h2 { margin: 0 0 8px; font-size: 1rem; }
-    .below p { margin: 0; color: var(--muted); font-size: .76rem; line-height: 1.55; }
-    .install-row { display: flex; gap: 8px; margin-top: 14px; }
-    .install-code { flex: 1; min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 6px; background: #0a0d0b; color: #c5cdc8; font-size: .65rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .copy-button { width: 78px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface-2); color: var(--paper); font-size: .68rem; }
-    .skill-link { display: inline-block; margin-top: 12px; color: var(--green); font-size: .7rem; text-decoration: none; }
-    .skill-link:hover { text-decoration: underline; }
-    .three-facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 14px; }
-    .fact { border-left: 2px solid var(--line); padding-left: 9px; }
-    .fact strong { display: block; font-size: .68rem; margin-bottom: 3px; }
-    .fact span { color: var(--muted); font-size: .62rem; line-height: 1.35; }
+    .note {
+      border: 2px solid var(--line);
+      background: var(--paper);
+      box-shadow: 6px 6px 0 var(--line);
+      padding: 16px;
+    }
+    .note h2 { margin: 0 0 8px; font-size: 1rem; }
+    .note p { margin: 0; color: var(--muted); font-size: .78rem; line-height: 1.5; }
+    .note a { color: var(--ink); font-weight: 900; }
 
-    @media (max-width: 1050px) {
-      .factory-toolbar { grid-template-columns: 1fr auto; }
-      .factory-title { grid-column: 1 / -1; }
-      .factory-grid { grid-template-columns: 175px minmax(0,1fr); }
-      .flow { grid-template-columns: minmax(90px,.8fr) 22px minmax(120px,1fr) 22px minmax(105px,.9fr) 22px minmax(120px,1fr); }
+    @media (max-width: 900px) {
+      .workspace, .below { grid-template-columns: 1fr; }
+      .boundary { margin-top: 0; }
+      .brand span:last-child { display: none; }
     }
-    @media (max-width: 780px) {
-      .shell { width: min(100% - 24px, 1480px); }
-      .brand-tag { display: none; }
-      .nav .secondary-link { display: none; }
-      .intro { grid-template-columns: 1fr; gap: 14px; padding-top: 28px; }
-      .factory-toolbar { grid-template-columns: 1fr; }
-      .segmented { width: 100%; }
-      .segment { flex: 1; padding: 0 7px; }
-      .policy-control { justify-content: space-between; }
-      .run-button { width: 100%; }
-      .factory-grid { grid-template-columns: 1fr; }
-      .input-rack { border-right: 0; border-bottom: 1px solid var(--line); }
-      .file-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-      .file-button { margin: 0; }
-      .flow { grid-template-columns: 1fr; gap: 6px; }
-      .flow-arrow { transform: rotate(90deg); min-height: 14px; }
-      .below { grid-template-columns: 1fr; }
-      .below section + section { border-left: 0; border-top: 1px solid var(--line); }
-    }
-    @media (max-width: 510px) {
-      .topbar { height: 58px; }
+    @media (max-width: 560px) {
+      .shell { width: min(100% - 24px, 1320px); }
       .nav { gap: 10px; }
-      h1 { font-size: 2rem; }
-      .file-list { grid-template-columns: 1fr; }
-      .lane { padding: 14px 10px; }
-      .three-facts { grid-template-columns: 1fr; }
-      .machine-log { grid-template-columns: auto 1fr; }
-      .log-time { display: none; }
+      .nav a:nth-child(2) { display: none; }
+      h1 { font-size: 1.6rem; }
+      .policy, .run { width: 100%; }
+      .app-actions { justify-content: stretch; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .app-window .app-body { animation: none; }
     }
   </style>
 </head>
@@ -240,253 +733,611 @@
   <header class="shell topbar">
     <a class="brand" href="/" aria-label="Free2PA home">
       <img src="/free2pa-mark.svg" alt="">
-      <span class="brand-name">Free2PA</span>
-      <span class="brand-tag">Hello World reference integration</span>
+      <span>Free2PA</span>
+      <span>Real model example</span>
     </a>
     <nav class="nav" aria-label="Project links">
-      <a href="/">Toolkit factory</a>
-      <a class="secondary-link" href="/workbench.html">Research workbench</a>
-      <a href="https://github.com/kilroyblockchain/free2pa-devtool">Repository</a>
-      <a href="https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.1">Freeware</a>
+      <a href="/hello-world.html">Hello demo</a>
+      <a href="/how-it-works.html">How it works</a>
+      <a href="/install.html">Install</a>
+      <a href="https://github.com/kilroyblockchain/free2pa-devtool">GitHub</a>
+      <a href="/llms.txt">LLM brief</a>
+      <a href="https://github.com/kilroyblockchain/free2pa-devtool/releases/tag/v0.4.2">Package</a>
     </nav>
   </header>
 
   <main class="shell">
-    <section class="intro">
-      <div>
-        <div class="eyebrow">Reference integration / Hello World</div>
-        <h1>One small agent protected by the Free2PA toolkit.</h1>
-      </div>
-      <p class="intro-copy"><strong>This is one implementation example, not the Free2PA product boundary.</strong> It shows a developer placing the general load gate before a real LLM consumes <code>SOUL.md</code>.</p>
+    <section class="hero">
+      <h1>Tamper-evident controls for your agents.</h1>
+      <p class="hero-subhead">C2PA-style tamper detection for agent control files like <code>SOUL.md</code>, <code>TOOLS.md</code>, <code>SKILLS.md</code>, and <code>AGENTS.md</code> — detecting unauthorized changes from internal, external, and agentic sources.</p>
     </section>
 
-    <section class="factory" aria-labelledby="factoryTitle">
-      <div class="factory-toolbar">
-        <div class="factory-title" id="factoryTitle">Run the Hello World reference application<span>Both lanes use the live Azure model. Only the protected lane applies Free2PA before loading <code>SOUL.md</code>.</span></div>
-        <div class="segmented" role="tablist" aria-label="Nerve Center file scenario">
-          <button class="segment" type="button" role="tab" data-case="trusted" aria-selected="false">Trusted</button>
-          <button class="segment" type="button" role="tab" data-case="changed" aria-selected="true">Changed</button>
-          <button class="segment" type="button" role="tab" data-case="outside" aria-selected="false">Outside group</button>
+    <section class="workspace" aria-label="Hello World app demo">
+      <div>
+        <p class="device-label">User phone</p>
+        <section class="app-window" id="helloApp">
+          <div class="window-bar">
+            <span>Hello World Agent</span>
+          </div>
+          <div class="app-body is-idle" id="appBody">
+            <div class="app-actions">
+              <button class="run" id="runFactory" type="button">👋 Say Hello</button>
+            </div>
+            <div class="chat" id="chatPanel" hidden>
+              <div class="bubble user"><strong>You</strong>hello</div>
+              <div class="bubble waiting" id="protectedOutput"><strong>Hello World Agent</strong>Thinking…</div>
+              <div class="bubble service" id="serviceOutput" hidden><strong>Demo service</strong>not run</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="boundary" id="boundaryInfo" aria-label="Free2PA load boundary">
+        <div class="boundary-card">
+          <div class="boundary-title">Load boundary</div>
+          <div class="boundary-main">Before model context</div>
+          <p class="boundary-copy">The app tries to read an agent control file. Free2PA checks its signed receipt first.</p>
         </div>
-        <div class="policy-control">
-          <label for="responsePolicy">Protected lane policy</label>
-          <select id="responsePolicy">
-            <option value="block">Block</option>
-            <option value="repair">Repair + report</option>
-            <option value="alert">Alert + continue</option>
-            <option value="log">Log only</option>
-          </select>
-          <button class="run-button" id="runFactory" type="button">Say hello</button>
+        <div class="boundary-flow">
+          <div class="boundary-step"><strong>1 App asks</strong>Say hello</div>
+          <div class="boundary-arrow">↓</div>
+          <div class="boundary-step"><strong>2 Gate checks</strong>signature + file hash + trusted publisher</div>
+          <div class="boundary-arrow">↓</div>
+          <div class="boundary-step"><strong>3 Safe context</strong>verification reaches the model</div>
         </div>
       </div>
 
-      <div class="factory-grid">
-        <aside class="input-rack" aria-label="Nerve Center files">
-          <div class="rack-label">Nerve Center input</div>
-          <p class="rack-help">The soul may change through an attack, an engineering mistake, or an agent's own misunderstanding. Free2PA detects the changed bytes, not a guessed cause.</p>
-          <div class="file-list">
-            <button class="file-button" type="button" data-case="trusted" aria-selected="false">
-              <span class="file-name mono">SOUL.md</span>
-              <span class="file-note">Signed optimistic soul</span>
-            </button>
-            <button class="file-button" type="button" data-case="changed" aria-selected="true">
-              <span class="file-name mono">SOUL.md</span>
-              <span class="file-note">Changed to bitter adjectives</span>
-            </button>
-            <button class="file-button" type="button" data-case="outside" aria-selected="false">
-              <span class="file-name mono">SOUL.md</span>
-              <span class="file-note">Valid soul, outside this group</span>
-            </button>
+      <div>
+        <p class="device-label">Free2PA verify console</p>
+        <aside class="guard-window" id="verifyConsole">
+          <div class="window-bar">
+            <span>Free2PA verify console</span>
+            <span id="guardState">ready</span>
+          </div>
+          <div class="guard-body">
+            <div class="decision-row">
+              <div class="decision" id="gateStatus">READY</div>
+              <details class="verify-tooltip load-payload">
+                <summary aria-label="LOAD payload">LOAD</summary>
+                <div class="tooltip-panel">
+                  <h2>Return payload</h2>
+                  <pre id="machineLog">ready: model call waits for verification</pre>
+                </div>
+              </details>
+            </div>
+            <div class="process" id="verificationProcess" aria-label="Free2PA verification sequence" hidden>
+              <div class="process-step" id="stepSignature"><span>1</span><strong>Check receipt signature</strong><em>waiting</em></div>
+              <div class="process-step" id="stepReceipt"><span>2</span><strong>Compare file to receipt</strong><em>waiting</em></div>
+              <div class="process-step" id="stepPublisher"><span>3</span><strong>Check trusted publisher</strong><em>waiting</em></div>
+              <div class="process-step" id="stepLoad"><span>4</span><strong>Return LOAD</strong><em>waiting</em></div>
+            </div>
+            <div class="alert-banner">
+              <span aria-hidden="true">✓</span>
+              <span>
+                <strong>Verification pending</strong>
+                <span id="alertSummary">Waiting for the Hello World app to read its control file.</span>
+              </span>
+              <details class="verify-tooltip">
+                <summary aria-label="How Free2PA verifies it">?</summary>
+                <div class="tooltip-panel">
+                  <h2>How Free2PA verifies it</h2>
+                  <p>Use this with any agent control file: prompts, skills, policies, tool manifests, or this demo's <code>SOUL.md</code>. Free2PA returns <code>LOAD</code> only when the proof matches.</p>
+                  <dl>
+                    <div>
+                      <dt>Publisher: Trusted</dt>
+                      <dd>The receipt is signed by a certificate in this verifier's trusted-publisher group.</dd>
+                    </div>
+                    <div>
+                      <dt>Checks</dt>
+                      <dd class="passes">
+                        <span>Signature <strong>PASS</strong></span>
+                        <span>File matches receipt <strong>PASS</strong></span>
+                        <span>Publisher trusted <strong>PASS</strong></span>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Verification result</dt>
+                      <dd><code>LOAD</code>: the verified control file is allowed into model context.</dd>
+                    </div>
+                  </dl>
+                </div>
+              </details>
+            </div>
+            <div class="scenario-area">
+              <div class="verify-ready">
+                <span class="warning-icon" aria-hidden="true">✓</span>
+                <span>
+                  <strong>Signed file ready</strong>
+                  <span>Free2PA verifies this file before its text can enter model context.</span>
+                </span>
+              </div>
+              <div class="file-heading">
+                <span id="soulHeading">Signed SOUL.md</span>
+                <span class="file-actions">
+                  <button id="editSoul" type="button">Edit</button>
+                  <button class="primary" id="saveSoul" type="button" hidden>Save</button>
+                  <button class="sign" id="signSoul" type="button" hidden>Sign it</button>
+                </span>
+              </div>
+              <div class="soul-panel">
+                <div class="file-body">
+                  <pre id="soulText">Loading SOUL.md…</pre>
+                  <textarea class="soul-editor" id="soulEditor" hidden spellcheck="false"></textarea>
+                  <div class="soul-controlled-editor" id="soulControlledEditor" hidden></div>
+                  <p class="edit-status" id="editStatus">Signed original loaded from receipt demo fixture.</p>
+                </div>
+              </div>
+            </div>
           </div>
         </aside>
-
-        <div class="lanes">
-          <div class="lane without">
-            <div class="lane-heading"><div class="lane-label">Agent without Free2PA</div><span class="lane-badge">No provenance check</span></div>
-            <div class="flow">
-              <div class="flow-node"><div class="node-top">Control file</div><div class="node-main mono lane-file">SOUL.md</div><div class="node-sub lane-file-note">Changed after signing</div></div>
-              <div class="flow-arrow">›</div>
-              <div class="flow-node bypass"><div class="node-top">Load boundary</div><div class="node-main">Unchecked</div><div class="node-sub">No signed receipt is inspected.</div></div>
-              <div class="flow-arrow">›</div>
-              <div class="flow-node"><div class="node-top">Agent runtime</div><div class="node-main">Azure-hosted LLM</div><div class="node-sub">Receives the unchecked soul and “hello”.</div></div>
-              <div class="flow-arrow">›</div>
-              <div class="flow-node outcome warn" id="plainOutcome"><div class="node-top">Hello World Agent</div><div class="node-main" id="plainAction">WAITING</div><div class="node-sub" id="plainReason">The unprotected lane will run the current soul.</div></div>
-            </div>
-          </div>
-
-          <div class="lane with">
-            <div class="lane-heading"><div class="lane-label">Agent with Free2PA</div><span class="lane-badge">Real verifier response</span></div>
-            <div class="flow">
-              <div class="flow-node"><div class="node-top">Control file + receipt</div><div class="node-main mono lane-file">SOUL.md</div><div class="node-sub">Neighboring <span class="mono">.c2pa.json</span> sidecar</div></div>
-              <div class="flow-arrow">›</div>
-              <div class="flow-node gate"><div class="node-top">Free2PA gate</div><div class="node-main" id="gateStatus">Ready to verify</div><div class="checks"><span class="check" id="checkSig">SIGN</span><span class="check" id="checkHash">FILE</span><span class="check" id="checkTrust">GROUP</span></div></div>
-              <div class="flow-arrow">›</div>
-              <div class="flow-node"><div class="node-top">Host policy + model</div><div class="node-main" id="policyName">Block</div><div class="node-sub">Code decides whether Azure receives the soul.</div></div>
-              <div class="flow-arrow">›</div>
-              <div class="flow-node outcome" id="protectedOutcome"><div class="node-top">Hello World Agent</div><div class="node-main" id="protectedAction">WAITING</div><div class="node-sub" id="protectedReason">Say hello through the protected load boundary.</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="machine-log" aria-live="polite">
-        <span class="log-pulse" id="logPulse"></span>
-        <span class="log-text" id="machineLog">verifier.ready { interface: "HTTP", consumer: "agent runtime" }</span>
-        <span class="log-time" id="logTime">waiting</span>
       </div>
     </section>
 
-    <div class="below">
-      <section>
-        <div class="eyebrow">Return to the toolkit</div>
-        <h2>Use the general Agentic Factory.</h2>
-        <p>The root experience verifies multiple Nerve Center file types without any model dependency and exposes the reusable CLI, Node, HTTP, MCP, CI, and Codex surfaces.</p>
-        <a class="skill-link" href="/">Open the Free2PA toolkit factory →</a>
-      </section>
-      <section>
-        <div class="eyebrow">Reference source</div>
-        <h2>A minimal host integration.</h2>
-        <p>The packaged example shows the exact pre-load call, blocked model path, and guarded repair path. The core verification remains deterministic and model-independent.</p>
-        <div class="install-row">
-          <div class="install-code mono" id="installCommand">npm install free2pa-0.4.1.tgz</div>
-          <button class="copy-button" id="copyInstall" type="button">Copy URL</button>
-        </div>
-        <div class="three-facts">
-          <div class="fact"><strong>Example</strong><span>One protected <code>SOUL.md</code> boundary.</span></div>
-          <div class="fact"><strong>Proof</strong><span>Blocked files never reach the model.</span></div>
-          <div class="fact"><strong>Reusable</strong><span>The same gate fits other control files.</span></div>
-        </div>
-      </section>
-    </div>
+    <section class="below">
+      <div class="note">
+        <h2>What this page proves</h2>
+        <p>The app reads an agent control file. Free2PA verifies the signed receipt before the agent can consume it. If the file still matches, Free2PA returns <code>LOAD</code>. If a critical control file was edited without a valid new signature, Free2PA restores the signed original first, then lets only that verified text enter model context.</p>
+      </div>
+      <div class="note">
+        <h2>Where to add this in your app</h2>
+        <p>Put <code>loadVerifiedFile()</code>, the CLI, or MCP <code>verify_asset</code> exactly where your app reads prompts, skills, policies, or tool files. <a href="/install.html">See this installed in Hello World.</a></p>
+      </div>
+    </section>
   </main>
 
   <script>
     const cases = {
       trusted: {
-        display: 'SOUL.md', note: 'Signed optimistic soul'
+        file: '/demo/hello-agent/trusted/SOUL.md',
+        label: 'Signed SOUL.md',
+        state: 'original',
       },
-      changed: {
-        display: 'SOUL.md', note: 'Changed to bitter adjectives'
-      },
-      outside: {
-        display: 'SOUL.md', note: 'Valid soul, outside this group'
-      }
     };
-    const installUrl = 'https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/free2pa-0.4.1.tgz';
-    let activeCase = 'changed';
 
     const byId = (id) => document.getElementById(id);
-    const all = (selector) => Array.from(document.querySelectorAll(selector));
+    let originalSoulText = '';
+    let savedSoulText = null;
+    let signedEditedSoulText = null;
+    let signedEditedSidecar = null;
+    const pixelFlowers = [
+      [
+        '00044000',
+        '00434400',
+        '04333440',
+        '00434400',
+        '00022000',
+        '00022000',
+        '00200200',
+        '02000002',
+      ],
+      [
+        '00055000',
+        '00535500',
+        '05333550',
+        '00535500',
+        '00022000',
+        '00022000',
+        '00200200',
+        '02000002',
+      ],
+      [
+        '00033000',
+        '00343300',
+        '03444330',
+        '00343300',
+        '00022000',
+        '00022000',
+        '00200200',
+        '02000002',
+      ],
+    ];
 
-    function selectCase(name) {
-      activeCase = name;
-      all('[data-case]').forEach((item) => item.setAttribute('aria-selected', String(item.dataset.case === name)));
-      const selected = cases[name];
-      all('.lane-file').forEach((item) => { item.textContent = selected.display; });
-      all('.lane-file-note').forEach((item) => { item.textContent = selected.note; });
-      byId('plainReason').textContent = 'The unprotected lane will run the current soul.';
-      byId('plainAction').textContent = 'WAITING';
-      byId('plainOutcome').className = 'flow-node outcome warn';
-      resetProtected();
+    function scenarioForRun() {
+      return 'trusted';
     }
 
-    function resetProtected() {
-      ['checkSig', 'checkHash', 'checkTrust'].forEach((id) => { byId(id).className = 'check'; });
-      byId('gateStatus').textContent = 'Ready to verify';
-      byId('protectedAction').textContent = 'WAITING';
-      byId('protectedReason').textContent = 'Run this file through the live verifier.';
-      byId('protectedOutcome').className = 'flow-node outcome';
-      byId('plainAction').textContent = 'WAITING';
-      byId('plainReason').textContent = 'The unprotected lane will run the current soul.';
-      byId('plainOutcome').className = 'flow-node outcome warn';
-      byId('logPulse').className = 'log-pulse';
-      byId('machineLog').textContent = 'verifier.ready { interface: "HTTP", consumer: "agent runtime" }';
-      byId('logTime').textContent = 'waiting';
+    function createPixelPal() {
+      const pal = document.createElement('span');
+      pal.className = 'pixel-pal';
+      pal.setAttribute('aria-hidden', 'true');
+      const pattern = pixelFlowers[Math.floor(Math.random() * pixelFlowers.length)];
+      for (const row of pattern) {
+        for (const pixel of row) {
+          const cell = document.createElement('span');
+          cell.dataset.p = pixel;
+          pal.append(cell);
+        }
+      }
+      return pal;
     }
 
-    function setCheck(id, pass) {
-      byId(id).className = `check ${pass ? 'pass' : 'fail'}`;
-      byId(id).textContent = `${id === 'checkSig' ? 'SIGN' : id === 'checkHash' ? 'FILE' : 'GROUP'} ${pass ? 'PASS' : 'FAIL'}`;
+    async function fetchSoul(file) {
+      const response = await fetch(file);
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`.trim());
+      return response.text();
+    }
+
+    async function loadSoulText() {
+      const scenario = scenarioForRun();
+      const selected = cases[scenario];
+      byId('soulText').textContent = `Loading ${selected.label}…`;
+      try {
+        originalSoulText = await fetchSoul(selected.file);
+        byId('soulText').textContent = originalSoulText;
+      } catch (error) {
+        byId('soulText').textContent = `Could not load SOUL.md: ${error.message}`;
+      }
+    }
+
+    function currentSoulText() {
+      return savedSoulText ?? signedEditedSoulText ?? originalSoulText;
+    }
+
+    function showSoulText(text = currentSoulText()) {
+      byId('soulText').textContent = text;
+      byId('soulText').hidden = false;
+      byId('soulEditor').hidden = true;
+      byId('soulControlledEditor').hidden = true;
+      byId('saveSoul').hidden = true;
+      byId('editSoul').hidden = false;
+    }
+
+    function bitterDirective(text = currentSoulText()) {
+      return /^\s*- Always use a bitter, hostile, pessimistic, or ambiguous adjective\./m.test(text) ? 'Always' : 'Never';
+    }
+
+    function composeSoulText(directive) {
+      return originalSoulText.replace(
+        /^- (Always|Never) use a bitter, hostile, pessimistic, or ambiguous adjective\./m,
+        `- ${directive} use a bitter, hostile, pessimistic, or ambiguous adjective.`,
+      );
+    }
+
+    function renderControlledSoulEditor(text = currentSoulText()) {
+      const editor = byId('soulControlledEditor');
+      editor.replaceChildren();
+      const directive = bitterDirective(text);
+      for (const line of composeSoulText(directive).split('\n')) {
+        const row = document.createElement('span');
+        row.className = 'controlled-line';
+        const match = line.match(/^- (Always|Never) use a bitter, hostile, pessimistic, or ambiguous adjective\.$/);
+        if (match) {
+          row.append(document.createTextNode('- '));
+          const select = document.createElement('select');
+          select.id = 'bitterDirective';
+          select.setAttribute('aria-label', 'Bitter adjective rule');
+          for (const value of ['Never', 'Always']) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            option.selected = value === directive;
+            select.append(option);
+          }
+          row.append(select, document.createTextNode('use a bitter, hostile, pessimistic, or ambiguous adjective.'));
+        } else {
+          row.textContent = line || ' ';
+        }
+        editor.append(row);
+      }
+    }
+
+    function startSoulEdit() {
+      renderControlledSoulEditor(currentSoulText());
+      byId('soulText').hidden = true;
+      byId('soulEditor').hidden = true;
+      byId('soulControlledEditor').hidden = false;
+      byId('saveSoul').hidden = false;
+      byId('editSoul').hidden = true;
+      byId('signSoul').hidden = true;
+      byId('editStatus').className = 'edit-status';
+      byId('editStatus').textContent = 'Change only this one control word, then save.';
+      byId('bitterDirective').focus();
+    }
+
+    function saveSoulEdit() {
+      savedSoulText = composeSoulText(byId('bitterDirective').value);
+      signedEditedSoulText = null;
+      signedEditedSidecar = null;
+      byId('soulHeading').textContent = 'Unsigned saved SOUL.md';
+      byId('signSoul').hidden = false;
+      byId('editStatus').className = 'edit-status warning';
+      byId('editStatus').textContent = 'Saved revision is not signed yet. A new signature is required before this version can be trusted.';
+      showSoulText(savedSoulText);
+    }
+
+    async function signSoulEdit() {
+      if (savedSoulText === null) return;
+      const button = byId('signSoul');
+      button.disabled = true;
+      button.textContent = 'Signing…';
+      byId('editStatus').className = 'edit-status';
+      byId('editStatus').textContent = 'Local Free2PA console is signing the saved SOUL.md edit.';
+      try {
+        const response = await fetch('/api/hello-agent/sign-edited', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content: savedSoulText }),
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error || `Signing returned ${response.status}`);
+        signedEditedSoulText = savedSoulText;
+        signedEditedSidecar = result.sidecar;
+        savedSoulText = null;
+        byId('soulHeading').textContent = 'Signed edited SOUL.md';
+        byId('signSoul').hidden = true;
+        byId('editStatus').className = 'edit-status signed';
+        byId('editStatus').textContent = 'Signed by the local Free2PA console. Run Say Hello to verify and load this approved version.';
+        showSoulText(signedEditedSoulText);
+      } catch (error) {
+        byId('editStatus').className = 'edit-status warning';
+        byId('editStatus').textContent = `Signature failed: ${error.message}`;
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Sign it';
+      }
+    }
+
+    function resetResult() {
+      for (const id of ['stepSignature', 'stepReceipt', 'stepPublisher', 'stepLoad']) {
+        const step = byId(id);
+        step.className = 'process-step';
+        step.querySelector('em').textContent = 'waiting';
+      }
+      byId('verificationProcess').hidden = true;
+      byId('gateStatus').textContent = 'READY';
+      byId('gateStatus').className = 'decision';
+      byId('guardState').textContent = 'ready';
+      byId('alertSummary').textContent = 'Waiting for the Hello World app to read its control file.';
+      byId('appBody').classList.add('is-idle');
+      byId('boundaryInfo').classList.add('is-muted');
+      byId('verifyConsole').classList.add('is-muted');
+      byId('chatPanel').hidden = true;
+      byId('serviceOutput').hidden = true;
+      setBubble('protectedOutput', 'Hello World Agent', waitingText(), 'bubble waiting');
+      byId('machineLog').textContent = 'ready: model call waits for verification';
+    }
+
+    function setStep(id, status, label) {
+      const step = byId(id);
+      step.className = `process-step visible ${status}`;
+      step.querySelector('em').textContent = label;
+    }
+
+    function sleep(ms) {
+      return new Promise((resolve) => setTimeout(resolve, ms));
+    }
+
+    function scrollCheckIntoView(id) {
+      byId(id).scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function startStep(id, label) {
+      const step = byId(id);
+      byId('verificationProcess').hidden = false;
+      step.className = 'process-step active';
+      step.querySelector('em').textContent = label;
+      scrollCheckIntoView(id);
+    }
+
+    async function playVerificationSequence(results) {
+      const steps = [
+        ['stepSignature', results.signature ? 'done' : 'fail', results.signature ? 'valid' : 'failed'],
+        ['stepReceipt', results.integrity ? 'done' : 'warn', results.integrity ? 'match' : 'changed'],
+        ['stepPublisher', results.trusted ? 'done' : 'fail', results.trusted ? 'trusted' : 'untrusted'],
+        ['stepLoad', results.repaired ? 'warn' : results.passed ? 'done' : 'fail', results.repaired ? 'RESTORE + LOAD' : results.passed ? 'LOAD' : 'REJECT'],
+      ];
+
+      for (const [id, status, label] of steps) {
+        startStep(id, 'checking');
+        await sleep(360);
+        setStep(id, status, label);
+        await sleep(160);
+      }
+    }
+
+    function setBubble(id, label, text, className, answer = null, includeSprite = false) {
+      const bubble = byId(id);
+      bubble.hidden = false;
+      bubble.className = className;
+      bubble.replaceChildren();
+      const strong = document.createElement('strong');
+      strong.textContent = label;
+      bubble.append(strong);
+      if (text) {
+        bubble.append(document.createTextNode(text));
+      }
+      if (answer) {
+        const answerNode = document.createElement('span');
+        answerNode.className = 'model-answer';
+        answerNode.textContent = answer;
+        if (includeSprite) {
+          const message = document.createElement('span');
+          message.className = 'message-sprite';
+          message.append(createPixelPal(), answerNode);
+          bubble.append(message);
+        } else {
+          bubble.append(answerNode);
+        }
+      }
+    }
+
+    function waitingText() {
+      return 'Thinking…';
+    }
+
+    function protectedTransaction({ action, reasonCode, output, passed, repaired }) {
+      if (passed) {
+        return {
+          text: '',
+          answer: output,
+        };
+      }
+      if (repaired) {
+        return {
+          text: '',
+          answer: output,
+        };
+      }
+      if (reasonCode === 'UNTRUSTED_ISSUER') {
+        return { text: `${action}: publisher is outside the trusted group. Model call skipped.`, answer: null };
+      }
+      if (reasonCode === 'CONTENT_CHANGED') {
+        return { text: `${action}: file did not match its signed receipt. Model call skipped.`, answer: null };
+      }
+      return { text: `${action}: ${reasonCode}. Model call skipped.`, answer: null };
     }
 
     async function runFactory() {
       const button = byId('runFactory');
-      const scenario = cases[activeCase];
       button.disabled = true;
-      button.textContent = 'Checking';
-      byId('gateStatus').textContent = 'Verifying in code';
-      byId('logPulse').className = 'log-pulse live';
-      byId('machineLog').textContent = `POST /api/hello-agent/compare { input: "hello", scenario: "${activeCase}", policy: "${byId('responsePolicy').value}" }`;
-      byId('logTime').textContent = 'running';
+      button.textContent = '…';
+      byId('appBody').classList.remove('is-idle');
+      byId('boundaryInfo').classList.remove('is-muted');
+      byId('verifyConsole').classList.remove('is-muted');
+      byId('chatPanel').hidden = false;
+      setBubble('protectedOutput', 'Hello World Agent', waitingText(), 'bubble waiting');
+      byId('guardState').textContent = 'checking';
+      byId('gateStatus').textContent = 'CHECKING';
+      byId('alertSummary').textContent = savedSoulText !== null && savedSoulText !== originalSoulText
+        ? 'Checking saved SOUL.md edit against the signed receipt.'
+        : savedSoulText !== null
+          ? 'Saved SOUL.md revision needs a new signature before this app can use it.'
+        : signedEditedSidecar
+          ? 'Checking the new SOUL.md signature from the local Free2PA console.'
+        : 'Checking the signed receipt before the control file reaches model context.';
+      for (const id of ['stepSignature', 'stepReceipt', 'stepPublisher', 'stepLoad']) {
+        const step = byId(id);
+        step.className = 'process-step';
+        step.querySelector('em').textContent = 'waiting';
+      }
+      byId('verificationProcess').hidden = false;
+      const scenario = scenarioForRun();
+      byId('serviceOutput').hidden = true;
+      const edited = savedSoulText !== null && savedSoulText !== originalSoulText;
+      const signedEdited = signedEditedSidecar && signedEditedSoulText;
+      if (savedSoulText !== null && !edited) {
+        byId('gateStatus').textContent = 'SIGN REQUIRED';
+        byId('gateStatus').className = 'decision warn';
+        byId('guardState').textContent = 'unsigned';
+        byId('alertSummary').textContent = 'This saved revision matches the old text, but it is still a new local write. Sign it before the app can use it.';
+        byId('machineLog').textContent = JSON.stringify({
+          action: 'SIGN REQUIRED',
+          reason: 'UNSIGNED_LOCAL_REVISION',
+          model_started: false,
+        });
+        setBubble('protectedOutput', 'Hello World Agent', 'Saved SOUL.md revision needs a new signature before it can be used.', 'bubble agent blocked');
+        button.disabled = false;
+        button.textContent = '👋 Say Hello';
+        return;
+      }
+      const policy = edited ? 'repair' : 'block';
+      const endpoint = signedEdited ? '/api/hello-agent/run-signed-edited' : edited ? '/api/hello-agent/run-edited' : '/api/hello-agent/run';
+      byId('machineLog').textContent = edited
+        ? `POST ${endpoint} { content: saved SOUL.md edit, policy: "${policy}" }`
+        : signedEdited
+          ? `POST ${endpoint} { content: signed SOUL.md edit, sidecar: signed receipt, policy: "${policy}" }`
+        : `POST ${endpoint} { scenario: "${scenario}", policy: "${policy}" }`;
 
       try {
-        const response = await fetch('/api/hello-agent/compare', {
+        const requestBody = signedEdited
+          ? { content: signedEditedSoulText, sidecar: signedEditedSidecar, policy }
+          : edited
+            ? { content: savedSoulText, policy }
+            : { scenario, policy };
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ scenario: activeCase, policy: byId('responsePolicy').value }),
+          body: JSON.stringify(requestBody),
         });
         const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.error || `Verifier returned ${response.status}`);
+        if (!response.ok || !result.success) {
+          const error = new Error(result.error || `Verifier returned ${response.status}`);
+          error.status = response.status;
+          throw error;
+        }
 
-        const signature = result.protected.checks.signatureValid === true;
-        const integrity = result.protected.checks.fileUnchanged === true;
-        const trusted = result.protected.checks.publisherTrusted === true && result.protected.checks.certificateCurrent === true;
+        const signature = result.checks.signatureValid === true;
+        const integrity = result.checks.fileUnchanged === true;
+        const trusted = result.checks.publisherTrusted === true && result.checks.certificateCurrent === true;
         const passed = signature && integrity && trusted;
-        setCheck('checkSig', signature);
-        setCheck('checkHash', integrity);
-        setCheck('checkTrust', trusted);
-        byId('gateStatus').textContent = passed ? 'Verification passed' : 'Verification failed';
 
-        byId('plainAction').textContent = result.unprotected.agent.output;
-        byId('plainReason').textContent = 'RUN UNCHECKED · current SOUL.md reached the Azure model.';
-        byId('plainOutcome').className = `flow-node outcome ${activeCase === 'changed' ? 'bad' : 'warn'}`;
+        const protectedAgent = result.agent;
+        const action = result.action || '';
+        const repaired = action.startsWith('RESTORE');
+        await playVerificationSequence({ signature, integrity, trusted, passed, repaired });
+        byId('gateStatus').textContent = passed ? 'LOAD' : repaired ? 'RESTORED' : 'REJECT';
+        byId('gateStatus').className = `decision ${passed ? '' : repaired ? 'restored' : 'reject'}`;
+        byId('guardState').textContent = passed ? 'load' : repaired ? 'restored' : 'reject';
 
-        const protectedAgent = result.protected.agent;
-        const action = result.protected.action;
-        const reason = protectedAgent.started
-          ? `${action} · ${protectedAgent.provider} / ${protectedAgent.model}`
-          : `${action} · ${result.protected.reasonCode}; protected model call skipped.`;
-        const outcomeClass = protectedAgent.started
-          ? passed || action.startsWith('RESTORE') ? 'good' : 'warn'
-          : 'bad';
-        byId('protectedAction').textContent = protectedAgent.output || 'AGENT NOT STARTED';
-        byId('protectedReason').textContent = reason;
-        byId('protectedOutcome').className = `flow-node outcome ${outcomeClass}`;
+        if (protectedAgent.started) {
+          const transaction = protectedTransaction({
+            action,
+            reasonCode: result.reasonCode,
+            output: protectedAgent.output,
+            passed,
+            repaired,
+          });
+          setBubble(
+            'protectedOutput',
+            'Hello World Agent',
+            '',
+            'bubble agent',
+            transaction.answer,
+            true,
+          );
+          if (passed) {
+            byId('alertSummary').textContent = signedEdited
+              ? 'Signed edit verified. Free2PA returned LOAD for the approved version.'
+              : 'Control file verified. Free2PA returned LOAD.';
+          } else if (repaired) {
+            byId('alertSummary').textContent = 'Saved edit detected. Free2PA restored the signed original and returned LOAD.';
+          } else {
+            byId('alertSummary').textContent = 'Control file did not verify, so the model call was stopped.';
+          }
+        } else {
+          byId('alertSummary').textContent = 'File rejected before model context load.';
+          const transaction = protectedTransaction({
+            action,
+            reasonCode: result.reasonCode,
+            output: protectedAgent.output,
+            passed,
+            repaired,
+          });
+          setBubble('protectedOutput', 'Hello World Agent', transaction.text, 'bubble agent blocked', transaction.answer);
+        }
+
         byId('machineLog').textContent = JSON.stringify({
-          input: result.input,
-          passed,
           action,
+          protected_started: protectedAgent.started,
+          protected_output: protectedAgent.output,
+          reason: result.reasonCode,
           signature,
           integrity,
-          group_trust: trusted,
-          agent_started: protectedAgent.started,
-          protected_output: protectedAgent.output,
-          unprotected_output: result.unprotected.agent.output,
-          reason: result.protected.reasonCode,
+          trusted,
         });
-        byId('logTime').textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
       } catch (error) {
-        byId('gateStatus').textContent = 'Verifier unavailable';
-        byId('protectedAction').textContent = 'ERROR';
-        byId('protectedReason').textContent = error.message;
-        byId('protectedOutcome').className = 'flow-node outcome bad';
-        byId('machineLog').textContent = JSON.stringify({ passed: false, error: error.message });
-        byId('logTime').textContent = 'error';
+        byId('guardState').textContent = 'error';
+        byId('gateStatus').textContent = 'ERROR';
+        byId('gateStatus').className = 'decision reject';
+        byId('alertSummary').textContent = 'Demo service error before verification completed.';
+        setBubble('protectedOutput', 'Hello World Agent', waitingText(), 'bubble waiting');
+        const serviceMessage = error.status === 429
+          ? 'Local demo model limit reached. Restart the test server with higher limits or wait for the hourly window to reset.'
+          : `The demo service could not complete the model request: ${error.message}`;
+        setBubble('serviceOutput', 'Demo service', serviceMessage, 'bubble service');
+        byId('machineLog').textContent = JSON.stringify({ service_error: error.message, status: error.status || null });
       } finally {
         button.disabled = false;
-        button.textContent = 'Say hello';
+        button.textContent = '👋 Say Hello';
       }
     }
 
-    all('[data-case]').forEach((item) => item.addEventListener('click', () => selectCase(item.dataset.case)));
-    byId('responsePolicy').addEventListener('change', () => { byId('policyName').textContent = byId('responsePolicy').selectedOptions[0].textContent; resetProtected(); });
     byId('runFactory').addEventListener('click', runFactory);
-    byId('copyInstall').addEventListener('click', async () => {
-      await navigator.clipboard.writeText(installUrl);
-      byId('copyInstall').textContent = 'Copied';
-      setTimeout(() => { byId('copyInstall').textContent = 'Copy URL'; }, 1400);
-    });
-    selectCase(activeCase);
+    byId('editSoul').addEventListener('click', startSoulEdit);
+    byId('saveSoul').addEventListener('click', saveSoulEdit);
+    byId('signSoul').addEventListener('click', signSoulEdit);
+    resetResult();
+    loadSoulText();
   </script>
 </body>
 </html>

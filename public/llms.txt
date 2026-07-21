@@ -1,0 +1,68 @@
+# Free2PA
+
+Free2PA is a Developer Tools project for agent-control-file provenance.
+It prevents unapproved text files such as SOUL.md, AGENTS.md, SKILL.md,
+TOOLS.md, prompts, policies, and tool manifests from entering model context.
+
+Primary human demo:
+- /hello-world.html
+
+Implementation explainer:
+- /how-it-works.html
+
+Install walkthrough using the Hello World app:
+- /install.html
+
+LLM-readable evaluation brief:
+- /llm-evaluation.md
+
+Repository:
+- https://github.com/kilroyblockchain/free2pa-devtool
+
+Core claim:
+Free2PA installs at the load boundary: the exact place an agent app reads a
+control file before passing it to a model. It verifies a signed sidecar receipt
+beside the file and returns LOAD, REJECT, RESTORE + RUN + REPORT, or SIGN
+REQUIRED depending on host policy and local revision state.
+
+Hello World demo summary:
+The demo app reads public/demo/hello-agent/trusted/SOUL.md. Free2PA verifies
+SOUL.md.c2pa.json and the local trusted-publishers directory before SOUL.md can
+enter model context. The UI lets an evaluator edit one control word: Never or
+Always in the bitter/hostile/pessimistic adjective rule.
+
+Important semantics:
+- Unsaved or unsigned local revisions are not trusted.
+- A saved revision requires a new signature even if its bytes match an earlier
+  signed version. This models a strict local-write approval boundary.
+  The demo reports this as SIGN REQUIRED / UNSIGNED_LOCAL_REVISION.
+- If a changed file is not signed, Free2PA rejects the changed bytes. With
+  repair policy, it restores the signed original from the trusted receipt.
+- If the local console signs the edit, the new receipt verifies and the edited
+  control file becomes the approved version.
+- Team members are added by publisher certificate, not by sharing private keys.
+  Each member runs keygen locally, uploads only their .crt public certificate,
+  and keeps their .key private. The app owner adds the .crt to the local
+  trusted-publishers group. Removing that certificate stops future approvals
+  from that publisher.
+
+Deterministic local checks:
+- npm run check
+- npm run demo:hello -- trusted block --fake-model
+- npm run demo:hello -- changed block --fake-model
+- npm run demo:hello -- changed repair --fake-model
+
+Expected fake-model behavior:
+- trusted/block exits 0 and returns LOAD / VERIFIED.
+- changed/block exits nonzero by design and returns QUARANTINE / CONTENT_CHANGED.
+- changed/repair exits 0 and returns RESTORE + RUN + REPORT.
+
+Node integration:
+import { loadVerifiedFile } from 'free2pa/load-gate';
+
+const instructions = await loadVerifiedFile({
+  assetPath: 'agent/SOUL.md',
+  trustStore: '.free2pa/trusted-publishers',
+});
+
+Only verified instructions should be passed to the model.

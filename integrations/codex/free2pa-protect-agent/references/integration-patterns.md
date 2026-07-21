@@ -19,7 +19,7 @@ read operation, and the supported extension points first.
 
 ## Load-gate contract
 
-Apply this order to every protected Nerve Center file:
+Apply this order to every protected agent control file:
 
 1. Locate the file and its neighboring `<filename>.c2pa.json` signed receipt.
 2. Verify the receipt signature and certificate validity.
@@ -56,7 +56,7 @@ an invalid, expired, or outside-group receipt.
   publisher-private/       # ignored by version control
 free2pa.config.json
 scripts/
-  verify-nerve-center.mjs
+  verify-control-files.mjs
 agent/
   SOUL.md
   SOUL.md.c2pa.json

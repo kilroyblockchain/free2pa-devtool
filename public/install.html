@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Free2PA | Install in Hello World</title>
+  <meta name="description" content="Install Free2PA in the Hello World agent by signing SOUL.md and verifying it before model context.">
+  <link rel="icon" href="/free2pa-mark.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg: #e9e2cf;
+      --ink: #171717;
+      --muted: #6a6254;
+      --paper: #fffdf4;
+      --panel: #f7f1de;
+      --line: #171717;
+      --yellow: #ffe45c;
+      --green-soft: #dff4e7;
+      --red-soft: #ffe0dc;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 18px 18px, rgba(23,23,23,.08) 1px, transparent 1px),
+        var(--bg);
+      background-size: 24px 24px;
+      color: var(--ink);
+      font-family: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    code, pre { font: inherit; }
+    .shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; }
+    .topbar {
+      min-height: 58px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 2px solid var(--line);
+      border-top: 0;
+      background: var(--paper);
+      padding: 0 16px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 900; }
+    .brand img { width: 28px; height: 28px; }
+    .brand span:last-child { color: var(--muted); font-size: .68rem; text-transform: uppercase; }
+    .nav { display: flex; gap: 16px; align-items: center; }
+    .nav a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--line); font-size: .72rem; }
+    .nav a:hover { background: var(--yellow); }
+
+    .hero { padding: 38px 0 20px; }
+    h1 { margin: 0; max-width: 1100px; font-size: clamp(1.8rem, 4vw, 3.8rem); line-height: .96; letter-spacing: -.07em; }
+    .hero-subhead {
+      margin: 14px 0 0;
+      max-width: 1120px;
+      color: var(--muted);
+      font-size: clamp(.84rem, 1.25vw, 1.08rem);
+      line-height: 1.42;
+      font-weight: 700;
+    }
+
+    .install-map {
+      display: grid;
+      grid-template-columns: minmax(330px, .75fr) minmax(0, 1.25fr);
+      gap: 22px;
+      align-items: start;
+      margin: 22px 0 42px;
+    }
+    .card {
+      border: 2px solid var(--line);
+      background: var(--paper);
+      box-shadow: 7px 7px 0 var(--line);
+      padding: 18px;
+    }
+    .card h2 { margin: 0 0 10px; font-size: 1.08rem; letter-spacing: -.03em; }
+    .card p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.55; }
+    .card p + p { margin-top: 10px; }
+    .card a { color: var(--ink); font-weight: 900; }
+
+    .tree {
+      margin: 12px 0 0;
+      border: 2px solid var(--line);
+      background: var(--panel);
+      padding: 14px;
+      overflow: auto;
+      font-size: .72rem;
+      line-height: 1.5;
+    }
+    .steps {
+      display: grid;
+      gap: 12px;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      padding: 12px;
+    }
+    .step span:first-child {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 2px solid var(--line);
+      border-radius: 999px;
+      background: var(--green-soft);
+      font-weight: 900;
+      font-size: .72rem;
+    }
+    .step strong { display: block; margin-bottom: 5px; font-size: .78rem; text-transform: uppercase; }
+    .step small { display: block; color: var(--muted); font-size: .72rem; line-height: 1.45; }
+
+    .code-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 22px;
+      margin-bottom: 42px;
+    }
+    pre {
+      margin: 12px 0 0;
+      overflow: auto;
+      border: 2px solid var(--line);
+      background: var(--ink);
+      color: var(--paper);
+      padding: 14px;
+      font-size: .72rem;
+      line-height: 1.5;
+    }
+    pre.tree {
+      background: var(--panel);
+      color: var(--ink);
+    }
+    .callout {
+      border: 2px solid var(--line);
+      background: var(--yellow);
+      box-shadow: 7px 7px 0 var(--line);
+      padding: 18px;
+      margin-bottom: 42px;
+    }
+    .callout h2 { margin: 0 0 8px; font-size: 1rem; }
+    .callout p { margin: 0; font-size: .82rem; line-height: 1.5; }
+    .cta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 0 0 50px;
+    }
+    .cta a {
+      display: inline-block;
+      border: 2px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 5px 5px 0 var(--line);
+      padding: 10px 12px;
+      text-decoration: none;
+      font-size: .76rem;
+      font-weight: 900;
+    }
+    .cta a:first-child { background: var(--green-soft); }
+    @media (max-width: 900px) {
+      .install-map, .code-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 24px, 1180px); }
+      .brand span:last-child { display: none; }
+      .nav { gap: 10px; }
+      h1 { font-size: 1.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell topbar">
+    <a class="brand" href="/hello-world.html" aria-label="Free2PA home">
+      <img src="/free2pa-mark.svg" alt="">
+      <span>Free2PA</span>
+      <span>Install</span>
+    </a>
+    <nav class="nav" aria-label="Project links">
+      <a href="/hello-world.html">Hello demo</a>
+      <a href="/how-it-works.html">How it works</a>
+      <a href="/install.html">Install</a>
+      <a href="https://github.com/kilroyblockchain/free2pa-devtool">GitHub</a>
+      <a href="/llms.txt">LLM brief</a>
+    </nav>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <h1>Here is Free2PA installed in Hello World.</h1>
+      <p class="hero-subhead">The demo is a normal tiny agent with one control file: <code>SOUL.md</code>. Free2PA is installed at the read path, so <code>SOUL.md</code> is verified before its text can become model instructions.</p>
+    </section>
+
+    <section class="install-map">
+      <article class="card">
+        <h2>The files added to Hello World</h2>
+        <p>The app still reads Markdown. Free2PA adds a signed receipt and a local trust group beside the demo.</p>
+        <pre class="tree">public/demo/hello-agent/
+  trusted/
+    SOUL.md
+    SOUL.md.c2pa.json
+  changed/
+    SOUL.md
+    SOUL.md.c2pa.json
+  trusted-publishers/
+    hello-group.crt
+    local-console.crt</pre>
+      </article>
+
+      <article class="card">
+        <h2>The install steps</h2>
+        <div class="steps">
+          <div class="step"><span>1</span><div><strong>Install the package</strong><small>Add Free2PA to the app so the loader can import the verifier.</small></div></div>
+          <div class="step"><span>2</span><div><strong>Create a publisher key</strong><small>The private key signs reviewed control files. It stays out of version control.</small></div></div>
+          <div class="step"><span>3</span><div><strong>Trust the publisher certificate</strong><small>The public certificate goes in this app's <code>trusted-publishers</code> directory.</small></div></div>
+          <div class="step"><span>4</span><div><strong>Sign SOUL.md</strong><small>Free2PA writes <code>SOUL.md.c2pa.json</code> beside the approved file.</small></div></div>
+          <div class="step"><span>5</span><div><strong>Verify before model context</strong><small>The app calls the load gate before passing <code>SOUL.md</code> to the model.</small></div></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="code-grid">
+      <article class="card">
+        <h2>Install and sign</h2>
+        <p>This is the generic command sequence for a Hello World-style app.</p>
+        <pre>npm install --save-dev \
+  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.2/free2pa-0.4.2.tgz
+
+npx free2pa keygen \
+  --name "Hello World Publisher" \
+  --id hello-world \
+  --out-dir .free2pa/private
+
+npx free2pa trust add \
+  .free2pa/private/hello-world.crt \
+  --store .free2pa/trusted-publishers \
+  --id hello-world
+
+npx free2pa sign agent/SOUL.md \
+  --cert .free2pa/private/hello-world.crt \
+  --key .free2pa/private/hello-world.key</pre>
+      </article>
+
+      <article class="card">
+        <h2>Wire the load gate</h2>
+        <p>Hello World's server calls the gate before starting the model call.</p>
+        <pre>import { loadVerifiedFile } from 'free2pa/load-gate';
+
+async function runHelloWorldAgent({ assetPath, trustStore }) {
+  const verifiedSoul = await loadVerifiedFile({
+    assetPath,
+    trustStore,
+  });
+
+  return startAgent(verifiedSoul);
+}
+
+await runHelloWorldAgent({
+  assetPath: 'public/demo/hello-agent/trusted/SOUL.md',
+  trustStore: 'public/demo/hello-agent/trusted-publishers',
+});</pre>
+      </article>
+    </section>
+
+    <section class="callout">
+      <h2>What the Hello World install proves</h2>
+      <p>If <code>SOUL.md</code> changes without a new trusted signature, the file no longer matches its receipt. Free2PA rejects the edit before model context. If the local console signs the edit, the new receipt verifies and the edited control file becomes the approved version.</p>
+    </section>
+
+    <section class="code-grid">
+      <article class="card">
+        <h2>Add a team member</h2>
+        <p>Each person who is allowed to approve agent control files gets their own publisher keypair. They generate it locally and upload only the public certificate.</p>
+        <pre>npx free2pa keygen \
+  --name "Ava from Agent Team" \
+  --id ava \
+  --out-dir .free2pa/private
+
+# Ava shares this file with the project:
+.free2pa/private/ava.crt
+
+# Ava does not upload this file:
+.free2pa/private/ava.key</pre>
+      </article>
+
+      <article class="card">
+        <h2>Trust or remove that publisher</h2>
+        <p>The verifier trusts public certificates in the local trust group. Adding a certificate lets that teammate sign reviewed control files. Removing it stops future approvals from that publisher.</p>
+        <pre>npx free2pa trust add ava.crt \
+  --store .free2pa/trusted-publishers \
+  --id ava
+
+npx free2pa sign agent/SOUL.md \
+  --cert .free2pa/private/ava.crt \
+  --key .free2pa/private/ava.key
+
+npx free2pa trust remove ava \
+  --store .free2pa/trusted-publishers</pre>
+      </article>
+    </section>
+
+    <section class="card">
+      <h2>Verify the install without a model account</h2>
+      <p>The example runner has a deterministic fake model so you can test the load gate before configuring OpenAI or Azure OpenAI.</p>
+      <pre>npm run demo:hello -- trusted block --fake-model
+npm run demo:hello -- changed block --fake-model
+npm run demo:hello -- changed repair --fake-model</pre>
+    </section>
+
+    <nav class="cta" aria-label="Next steps">
+      <a href="/hello-world.html">Back to the live demo →</a>
+      <a href="/how-it-works.html">See how verification works →</a>
+      <a href="/llms.txt">Open the LLM-readable brief →</a>
+    </nav>
+  </main>
+</body>
+</html>

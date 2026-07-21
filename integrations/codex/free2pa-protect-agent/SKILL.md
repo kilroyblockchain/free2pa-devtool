@@ -33,7 +33,7 @@ Start the user-facing response with a short **Free2PA fact sheet** containing:
 
 ```text
 Agent entry point:
-Candidate Nerve Center files:
+Candidate agent control files:
 Current load boundary:
 Existing security checks:
 Likely integration surface:
@@ -45,7 +45,7 @@ discovered, ask only for the missing owner decision. Typical owner decisions
 are who may publish, which files are in scope, and whether failure should block,
 repair, alert and continue, or only log. Never create trust policy by guessing.
 
-### 2. Find the Nerve Center
+### 2. Find the agent control files
 
 Inspect the application before editing. Identify every local file that can
 change model instructions, tool availability, permissions, identity, memory,
@@ -56,12 +56,12 @@ or startup behavior. Typical examples include:
 - agent, policy, workflow, and permission configuration; and
 - files read into model context during startup.
 
-Call this collection the project's **Nerve Center** in user-facing output. Do
-not claim that every application uses these exact filenames.
+Call this collection the project's **agent control files** in user-facing
+output. Do not claim that every application uses these exact filenames.
 
-### 3. Define the ad-hoc group
+### 3. Define the project trust group
 
-Ask who is allowed to publish Nerve Center files if the repository does not
+Ask who is allowed to publish agent control files if the repository does not
 make that clear. Keep trust local to this project. Never admit a certificate or
 sign unexplained file changes merely to make verification pass.
 
@@ -95,8 +95,8 @@ framework instead of replacing the application's loader architecture.
 ### 6. Sign reviewed files
 
 Generate or use an approved publisher identity. Keep the private key outside
-version control. Share only the public certificate. Sign each reviewed Nerve
-Center file so its `.c2pa.json` receipt sits beside it.
+version control. Share only the public certificate. Sign each reviewed agent
+control file so its `.c2pa.json` receipt sits beside it.
 
 An agent changing its own `SOUL.md` is still a change. Do not silently re-sign
 it. Show the diff and require the group owner to decide whether the new version
@@ -127,7 +127,7 @@ exact file contents and neighboring sidecar. Continue only when its structured
 
 Tell the developer:
 
-- which files form this application's Nerve Center;
+- which files this application loads as agent control files;
 - whose public certificates the project trusts;
 - exactly where verification blocks loading;
 - how to add or remove a group member; and

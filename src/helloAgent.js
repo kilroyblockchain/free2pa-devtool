@@ -1,10 +1,9 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { loadVerifiedFile, verifyFileForLoad } from './loadGate.js';
 import { DEFAULT_AUDIT_MODEL, getManagedIdentityAccessToken } from './services/auditor.js';
 
 const POLICIES = new Set(['block', 'alert', 'log', 'repair']);
-
 function outputText(response) {
   if (typeof response.output_text === 'string') return response.output_text;
   for (const item of response.output ?? []) {
@@ -18,6 +17,7 @@ function outputText(response) {
 export async function greetWithModel({
   soul,
   input = 'hello',
+  temperature = 0.9,
   model = process.env.AZURE_OPENAI_DEPLOYMENT || process.env.OPENAI_MODEL || DEFAULT_AUDIT_MODEL,
   azureEndpoint = process.env.AZURE_OPENAI_ENDPOINT,
   azureApiKey = process.env.AZURE_OPENAI_API_KEY,
@@ -68,6 +68,7 @@ export async function greetWithModel({
           },
         },
       },
+      temperature,
       max_output_tokens: 300,
     }),
   });
@@ -91,7 +92,10 @@ export async function greetWithModel({
 }
 
 async function startAgent(soul, runModel) {
-  const result = await runModel({ soul, input: 'hello' });
+  const result = await runModel({
+    soul,
+    input: `hello\n\nrun_id=${randomUUID()}`,
+  });
   return {
     name: 'Hello World Agent',
     started: true,

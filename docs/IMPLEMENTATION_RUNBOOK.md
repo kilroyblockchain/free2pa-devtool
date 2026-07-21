@@ -34,7 +34,7 @@ free2pa codex-skill install
 Open the target agent repository in Codex and invoke
 `$free2pa-protect-agent`. The skill must inspect before editing.
 
-**Done when:** `free2pa --version` prints `0.4.1`, and the skill exists at
+**Done when:** `free2pa --version` prints `0.4.2`, and the skill exists at
 `$CODEX_HOME/skills/free2pa-protect-agent`.
 
 ## 2. Establish the facts
@@ -43,7 +43,7 @@ Codex traces the target application's actual startup and file-loading paths. It
 reports:
 
 - agent entry point and start command;
-- candidate Nerve Center files;
+- candidate agent control files;
 - the function, hook, or process that reads each file;
 - existing integrity, policy, and failure handling;
 - best available integration surface; and
@@ -65,7 +65,7 @@ For a Node repository, pin the release artifact:
 
 ```bash
 npm install --save-dev \
-  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.1/free2pa-0.4.1.tgz
+  https://github.com/kilroyblockchain/free2pa-devtool/releases/download/v0.4.2/free2pa-0.4.2.tgz
 ```
 
 For another language, keep the Node CLI as a startup or build prerequisite. Do
@@ -101,7 +101,7 @@ Add another group member by importing their public `.crt` file with the same
 **Done when:** `npx free2pa trust list --store .free2pa/trusted-publishers`
 shows exactly the publishers the owner approved, and no private key is tracked.
 
-## 5. Sign reviewed Nerve Center files
+## 5. Sign reviewed agent control files
 
 Review each file before signing it:
 
@@ -113,7 +113,7 @@ npx free2pa sign agent/SOUL.md \
 ```
 
 Commit the file and its neighboring `agent/SOUL.md.c2pa.json`. Repeat for the
-approved Nerve Center list. Do not automatically re-sign a file merely because
+approved protected file list. Do not automatically re-sign a file merely because
 an agent or outside process changed it.
 
 **Done when:** every protected file has a sidecar and passes `free2pa verify`

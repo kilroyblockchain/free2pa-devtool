@@ -1,5 +1,5 @@
 name: Free2PA Verify
-description: Verify AI agent skills against an explicit publisher trust group
+description: Verify AI agent control files against an explicit publisher trust group
 author: Free2PA
 
 branding:
@@ -8,7 +8,7 @@ branding:
 
 inputs:
   path:
-    description: Repository-relative directory to scan for SKILL.md files
+    description: Repository-relative directory to scan for signed agent control files
     required: false
     default: .
   trust-store:
@@ -37,7 +37,7 @@ runs:
       working-directory: ${{ github.action_path }}
       run: npm ci --omit=dev --ignore-scripts
 
-    - name: Verify agent skills
+    - name: Verify agent control files
       id: verify
       shell: bash
       env:

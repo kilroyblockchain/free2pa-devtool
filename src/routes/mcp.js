@@ -79,7 +79,7 @@ export function buildMcpServer(clientId = 'mcp') {
   // ── Tool: list_skills ────────────────────────────────────────────────────
   server.tool(
     'list_skills',
-    'List all skills available in radio_intern, with whether each has a verification sidecar.',
+    'List all skills available in the configured skill directory, with whether each has a verification sidecar.',
     {},
     async () => {
       try {
@@ -133,8 +133,8 @@ export function buildMcpServer(clientId = 'mcp') {
   // ── Tool: verify_skill ───────────────────────────────────────────────────
   server.tool(
     'verify_skill',
-    'Verify a skill from radio_intern against its C2PA sidecar. Returns PASS or FAIL with signature, hash, and trust details.',
-    { name: z.string().describe('Skill folder name in radio_intern (e.g. "weather")') },
+    'Verify a named skill from the configured skill directory against its C2PA sidecar. Returns PASS or FAIL with signature, hash, and trust details.',
+    { name: z.string().describe('Skill folder name in the configured skill directory (e.g. "weather")') },
     async ({ name }) => {
       if (!isValidName(name)) {
         return { content: [{ type: 'text', text: 'Error: Invalid skill name.' }], isError: true };
@@ -149,6 +149,7 @@ export function buildMcpServer(clientId = 'mcp') {
           readFile(sidecarPath, 'utf-8'),
         ]);
 
+        const result = await verifySkill({ content, sidecarText, trustProfile: 'dev' });
         return verificationResponse(result, `${name}/SKILL.md`);
       } catch (err) {
         if (err.code === 'ENOENT') {

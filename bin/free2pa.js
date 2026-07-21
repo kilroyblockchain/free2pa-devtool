@@ -16,20 +16,20 @@ import { config } from '../src/config.js';
 import { signSkill } from '../src/services/signer.js';
 import { verifySkill } from '../src/services/verifier.js';
 
-const VERSION = '0.4.1';
+const VERSION = '0.4.2';
 const SIDECAR_SUFFIX = '.c2pa.json';
 const PACKAGE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function usage() {
-  return `Free2PA ${VERSION} - provenance and security for AI agent skills
+  return `Free2PA ${VERSION} - provenance and security for AI agent control files
 
 Usage:
   free2pa keygen [--name NAME] [--org ORG] [--out-dir DIR] [--days N]
-  free2pa sign <SKILL.md> [--cert FILE] [--key FILE] [--out FILE]
-  free2pa verify <SKILL.md> [--sidecar FILE] [--trust-store DIR] [--json]
+  free2pa sign <FILE> [--cert FILE] [--key FILE] [--out FILE]
+  free2pa verify <FILE> [--sidecar FILE] [--trust-store DIR] [--json]
   free2pa repair <FILE> [--sidecar FILE] [--trust-store DIR] [--backup FILE] [--no-backup]
   free2pa scan [DIR] [--trust-store DIR] [--json]
-  free2pa audit <SKILL.md> [--model MODEL] [--out FILE] [--json]
+  free2pa audit <FILE> [--model MODEL] [--out FILE] [--json]
   free2pa auditor status [--json]
   free2pa codex-skill install [--target DIR] [--force]
   free2pa trust add <CERT.crt> [--store DIR] [--id ID]
@@ -358,18 +358,39 @@ async function serve(options) {
 }
 
 async function findSkillFiles(root) {
-  const found = [];
+  const found = new Set();
+  const controlledNames = new Set([
+    'agents.md',
+    'soul.md',
+    'skill.md',
+    'skills.md',
+    'tools.md',
+    'tool.md',
+    'policy.md',
+    'policies.md',
+    'prompt.md',
+    'prompts.md',
+    'system.md',
+    'instructions.md',
+  ]);
+
   async function visit(directory) {
     const entries = await readdir(directory, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.name === '.git' || entry.name === 'node_modules') continue;
       const path = resolve(directory, entry.name);
       if (entry.isDirectory()) await visit(path);
-      else if (entry.isFile() && entry.name.toLowerCase() === 'skill.md') found.push(path);
+      else if (entry.isFile()) {
+        const lowerName = entry.name.toLowerCase();
+        if (controlledNames.has(lowerName)) found.add(path);
+        if (lowerName.endsWith(SIDECAR_SUFFIX)) {
+          found.add(path.slice(0, -SIDECAR_SUFFIX.length));
+        }
+      }
     }
   }
   await visit(root);
-  return found.sort();
+  return [...found].sort();
 }
 
 async function scan(directoryArgument, options) {
